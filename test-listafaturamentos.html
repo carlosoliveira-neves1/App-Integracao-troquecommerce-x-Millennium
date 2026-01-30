@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API listafaturamentos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .info {
+            background: #d1ecf1;
+            border-left-color: #0c5460;
+            color: #0c5460;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border-left: 4px solid #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste API listafaturamentos</h1>
+        
+        <div class="info">
+            <strong>Endpoint:</strong> GET /api/millenium_eco/pedido_venda/listafaturamentos
+            <br><strong>Objetivo:</strong> Buscar detalhes de faturamento de uma nota fiscal específica
+        </div>
+
+        <form id="testForm">
+            <div class="form-group">
+                <label>URL Base do Servidor:</label>
+                <input type="text" id="baseUrl" value="http://179.124.195.107:6017" placeholder="http://179.124.195.107:6017">
+            </div>
+
+            <div class="form-group">
+                <label>Usuário:</label>
+                <input type="text" id="username" placeholder="seu_usuario">
+            </div>
+
+            <div class="form-group">
+                <label>Senha:</label>
+                <input type="password" id="password" placeholder="sua_senha">
+            </div>
+
+            <div class="form-group">
+                <label>Vitrine:</label>
+                <input type="number" id="vitrine" value="101" placeholder="101">
+            </div>
+
+            <div class="form-group">
+                <label>Nota Fiscal:</label>
+                <input type="number" id="nota" value="71" placeholder="71">
+            </div>
+
+            <button type="submit" id="submitBtn">Testar API</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const vitrine = document.getElementById('vitrine').value.trim();
+            const nota = document.getElementById('nota').value.trim();
+            
+            if (!baseUrl || !username || !password || !vitrine || !nota) {
+                showResult('error', 'Por favor, preencha todos os campos!');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Testando... <span class="loading"></span>';
+
+            try {
+                const url = `${baseUrl}/api/MILLENIUM_ECO/pedido_venda/listafaturamentos?vitrine=${vitrine}&nota=${nota}&$format=json`;
+                
+                console.log('🔍 Testando URL:', url);
+                
+                const auth = btoa(`${username}:${password}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Basic ${auth}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                console.log('📥 Status:', response.status);
+                console.log('📥 Headers:', [...response.headers.entries()]);
+
+                const contentType = response.headers.get('content-type');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                let data;
+                if (contentType?.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new Error(`Resposta não é JSON. Content-Type: ${contentType}\n\n${text.substring(0, 500)}`);
+                }
+
+                console.log('✅ Dados recebidos:', data);
+                
+                // Analisar estrutura
+                const analysis = analyzeResponse(data);
+                
+                showResult('success', `
+                    <h3>✅ Sucesso!</h3>
+                    <p><strong>URL:</strong> ${url}</p>
+                    <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                    ${analysis}
+                    <h4>Response Completo:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `);
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                showResult('error', `
+                    <h3>❌ Erro</h3>
+                    <p>${error.message}</p>
+                    <pre>${error.stack || ''}</pre>
+                `);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Testar API';
+            }
+        });
+
+        function analyzeResponse(data) {
+            let html = '<h4>📊 Análise da Resposta:</h4><ul>';
+            
+            // Verificar se é array ou objeto
+            if (Array.isArray(data)) {
+                html += `<li><strong>Tipo:</strong> Array com ${data.length} item(ns)</li>`;
+                if (data.length > 0) {
+                    html += `<li><strong>Campos do primeiro item:</strong> ${Object.keys(data[0]).join(', ')}</li>`;
+                    
+                    // Destacar campos importantes
+                    const firstItem = data[0];
+                    if (firstItem.PEDIDOV || firstItem.SAIDA) {
+                        html += `<li>✅ <strong>PEDIDOV/SAIDA encontrado:</strong> ${firstItem.PEDIDOV || firstItem.SAIDA}</li>`;
+                    }
+                    if (firstItem.NF || firstItem.NOTA) {
+                        html += `<li>✅ <strong>Nota Fiscal:</strong> ${firstItem.NF || firstItem.NOTA}</li>`;
+                    }
+                    if (firstItem.CLIENTE || firstItem.DESC_CLIENTE) {
+                        html += `<li>✅ <strong>Cliente:</strong> ${firstItem.DESC_CLIENTE || firstItem.CLIENTE}</li>`;
+                    }
+                }
+            } else if (typeof data === 'object' && data !== null) {
+                html += `<li><strong>Tipo:</strong> Objeto</li>`;
+                html += `<li><strong>Campos:</strong> ${Object.keys(data).join(', ')}</li>`;
+                
+                // Verificar se tem propriedade 'value' (padrão OData)
+                if (data.value && Array.isArray(data.value)) {
+                    html += `<li><strong>OData Response:</strong> ${data.value.length} item(ns) em 'value'</li>`;
+                }
+            }
+            
+            html += '</ul>';
+            return html;
+        }
+
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+        }
+    </script>
+</body>
+</html>

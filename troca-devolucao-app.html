@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Troca/Devolução - Millennium</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .nota-info {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .nota-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .nota-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nota-info-item label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .nota-info-item span {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 600;
+        }
+
+        .produtos-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .produto-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .produto-item:hover {
+            border-color: #667eea;
+        }
+
+        .produto-item.selected {
+            background: #ede9fe;
+            border-color: #667eea;
+        }
+
+        .produto-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .produto-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .produto-info {
+            flex: 1;
+        }
+
+        .produto-nome {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 5px;
+        }
+
+        .produto-detalhes {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .produto-preco {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .produto-quantidade {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .produto-quantidade input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .fila-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 30px;
+        }
+
+        .fila-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .fila-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .fila-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .fila-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .fila-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .fila-item-title {
+            font-weight: 600;
+            color: #111827;
+            font-size: 16px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .fila-item-body {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .fila-item-body pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .config-section {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            font-size: 16px;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .pedido-sem-nf {
+            background: linear-gradient(135deg, #fff7ed, #fffbeb);
+            border: 1px solid #fed7aa;
+        }
+
+        .pedido-sem-nf h3 {
+            color: #9a3412;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+
+        .search-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-options button {
+            flex: 1;
+        }
+
+        .periodo-section {
+            display: none;
+            margin-bottom: 15px;
+        }
+
+        .periodo-section.active {
+            display: block;
+        }
+
+        .notas-list {
+            max-height: 600px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .nota-list-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .nota-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .nota-content {
+            flex: 1;
+        }
+
+        .nota-list-item:hover {
+            border-color: #667eea;
+            background: #f3f4f6;
+        }
+
+        .nota-list-item.selected {
+            background: #ede9fe;
+            border-color: #667eea;
+        }
+
+        .nota-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .nota-list-title {
+            font-weight: 600;
+            color: #111827;
+            font-size: 16px;
+        }
+
+        .nota-list-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .nota-list-details {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        .notas-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .notas-actions .btn {
+            flex: 1 1 calc(33.33% - 10px);
+        }
+
+        .notas-summary {
+            margin-top: 20px;
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .nota-summary-item {
+            text-align: center;
+        }
+
+        .nota-summary-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nota-summary-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #4c1d95;
+        }
+
+        .extra-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .extra-filters .form-group {
+            flex: 1;
+        }
+
+        .schedule-fields {
+            margin-top: 10px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 1px dashed #e5e7eb;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .weekdays label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .schedule-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .troque-reversa-list {
+            margin-top: 15px;
+        }
+
+        .troque-reversa-item {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: #f9fafb;
+        }
+
+        .troque-reversa-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .troque-reversa-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e0e7ff;
+            color: #3730a3;
+            font-weight: 600;
+        }
+
+        .troque-reversa-meta {
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔄 Sistema de Troca/Devolução - Millennium</h1>
+            <p>Gerencie trocas e devoluções com fila de processamento automático</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Coluna 1: Configuração e Busca -->
+            <div>
+                <div class="card">
+                    <h2>⚙️ Configuração</h2>
+                    <div class="config-section">
+                        <h3>Credenciais Millennium</h3>
+                        <div class="form-group">
+                            <label>URL Base</label>
+                            <input type="text" id="baseUrl" value="http://177.85.161.219:6017" placeholder="http://servidor:porta">
+                        </div>
+                <div class="card pedido-sem-nf" id="pedidoSemNotaCard" style="margin-top: 20px; display: none;">
+                    <h2>📄 Dados do Pedido (sem NF)</h2>
+                    <div id="pedidoSemNotaContainer" class="empty-state" style="padding: 20px;"></div>
+                </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Usuário</label>
+                                <input type="text" id="username" value="integracao">
+                            </div>
+                            <div class="form-group">
+                                <label>Senha</label>
+                                <input type="password" id="password" value="Gh8#esM47">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Parâmetros da Troca</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Vitrine</label>
+                                <input type="number" id="vitrine" value="101">
+                            </div>
+                            <div class="form-group">
+                                <label>Faturar</label>
+                                <select id="faturar">
+                                    <option value="A">A - Automático</option>
+                                    <option value="M">M - Manual</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Autorizar NF-e</label>
+                                <select id="autorizarNfe">
+                                    <option value="T">T - Sim</option>
+                                    <option value="F">F - Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo Autorização Troca</label>
+                                <input type="number" id="tipoAutorizacaoTroca" value="3">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tipo Pgto Crédito <span style="color: #ef4444;">*</span></label>
+                                <input type="number" id="tipoPgtoCredito" value="120" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Troca Valor Bruto</label>
+                                <select id="trocaValorBruto">
+                                    <option value="T">T - Sim</option>
+                                    <option value="F">F - Não</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>📱 Notificações WhatsApp</h3>
+                        <div class="form-group">
+                            <label>Número Principal (Fixo)</label>
+                            <input type="text" id="whatsappFixo" value="5511993110794" readonly style="background: #f3f4f6;">
+                            <small style="color: #6b7280; font-size: 12px;">Formato: 55 + DDD + Número (sem espaços ou caracteres especiais)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Números Adicionais (opcional)</label>
+                            <input type="text" id="whatsappAdicionais" placeholder="Ex: 5511999887766, 5511988776655">
+                            <small style="color: #6b7280; font-size: 12px;">Separe múltiplos números por vírgula</small>
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="enviarRelatorios" checked style="width: auto;">
+                                <span>Enviar relatórios automáticos via WhatsApp</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>🌐 Troquecommerce API</h3>
+                        <div class="form-group">
+                            <label>Base URL</label>
+                            <input type="text" id="troqueBaseUrl" value="https://www.troquecommerce.com.br/api/public" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label>Token de Acesso</label>
+                            <input type="text" id="troqueToken" placeholder="Informe o token da Troquecommerce">
+                            <small style="color:#6b7280; font-size:12px;">O token é enviado no header <code>token</code> (somente leitura já atende à listagem).</small>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>🕒 Agendamento do Processamento</h3>
+                        <div class="form-group">
+                            <label>Modo de agendamento</label>
+                            <select id="scheduleMode">
+                                <option value="off">Desativado</option>
+                                <option value="daily">Todos os dias</option>
+                                <option value="weekly">Dias específicos da semana</option>
+                                <option value="once">Data específica</option>
+                            </select>
+                        </div>
+
+                        <div id="scheduleDailyFields" class="schedule-fields" style="display: none;">
+                            <div class="form-group">
+                                <label>Horários (HH:MM)</label>
+                                <input type="text" id="scheduleDailyTimes" placeholder="Ex: 09:00, 18:30">
+                                <div class="schedule-hint">Separe múltiplos horários por vírgula.</div>
+                            </div>
+                        </div>
+
+                        <div id="scheduleWeeklyFields" class="schedule-fields" style="display: none;">
+                            <div class="form-group">
+                                <label>Dias da semana</label>
+                                <div class="weekdays">
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="1">Seg</label>
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="2">Ter</label>
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="3">Qua</label>
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="4">Qui</label>
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="5">Sex</label>
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="6">Sáb</label>
+                                    <label><input type="checkbox" class="schedule-day-checkbox" value="0">Dom</label>
+                                </div>
+                            </div>
+                            <input type="hidden" id="scheduleWeeklyDays" value="">
+                            <div class="form-group">
+                                <label>Horários (HH:MM)</label>
+                                <input type="text" id="scheduleWeeklyTimes" placeholder="Ex: 10:00, 22:00">
+                                <div class="schedule-hint">Será disparado nos dias selecionados e horários informados.</div>
+                            </div>
+                        </div>
+
+                        <div id="scheduleOnceFields" class="schedule-fields" style="display: none;">
+                            <div class="form-group">
+                                <label>Data específica</label>
+                                <input type="date" id="scheduleOnceDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Horário (HH:MM)</label>
+                                <input type="time" id="scheduleOnceTime">
+                            </div>
+                            <div class="schedule-hint">Após executar, o agendamento único será desativado automaticamente.</div>
+                        </div>
+
+                        <small class="schedule-hint">O processamento automático ocorre somente se houver itens pendentes na fila e a página estiver aberta.</small>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 30px;">
+                    <h2>🔍 Buscar Nota Fiscal</h2>
+                    <div id="alertContainer"></div>
+                    
+                    <div class="search-options">
+                        <button class="btn btn-primary" id="btnModoNota" style="opacity: 1;">
+                            📄 Por Nota
+                        </button>
+                        <button class="btn btn-primary" id="btnModoPeriodo" style="opacity: 0.6;">
+                            📅 Por Período
+                        </button>
+                        <button class="btn btn-primary" id="btnModoPedido" style="opacity: 0.6;">
+                            🧾 Por Pedido
+                        </button>
+                    </div>
+
+                    <!-- Busca por Nota -->
+                    <div id="buscaNotaSection">
+                        <div class="form-group">
+                            <label>Número da Nota Fiscal</label>
+                            <input type="number" id="numeroNota" placeholder="Ex: 71">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Data Inicial (quando não informar nota)</label>
+                                <input type="date" id="notaDataInicial">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Final (quando não informar nota)</label>
+                                <input type="date" id="notaDataFinal">
+                            </div>
+                        </div>
+                        <small style="color: #6b7280; display: block; margin-top: -10px; margin-bottom: 15px;">
+                            Se deixar o número da nota vazio, buscaremos as notas faturadas dentro deste período.
+                        </small>
+                        <button class="btn btn-primary" id="btnBuscar" style="width: 100%;">
+                            <span>🔍</span>
+                            <span>Buscar Nota</span>
+                        </button>
+                    </div>
+
+                    <!-- Busca por Período -->
+                    <div id="buscaPeriodoSection" class="periodo-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Data Inicial</label>
+                                <input type="date" id="dataInicial">
+                            </div>
+                            <div class="form-group">
+                                <label>Data Final</label>
+                                <input type="date" id="dataFinal">
+                            </div>
+                        </div>
+                        <div class="extra-filters">
+                            <div class="form-group">
+                                <label>Valor Mínimo (R$)</label>
+                                <input type="number" id="valorMin" step="0.01" placeholder="Ex: 100.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Valor Máximo (R$)</label>
+                                <input type="number" id="valorMax" step="0.01" placeholder="Ex: 500.00">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="btnListarNotas" style="width: 100%;">
+                            <span>📋</span>
+                            <span>Listar Notas do Período</span>
+                        </button>
+                        <div id="notasListContainer" class="notas-list scrollbar"></div>
+                        <div id="notasSummary" class="notas-summary" style="display: none;">
+                            <div class="nota-summary-item">
+                                <div class="nota-summary-label">Total de Notas</div>
+                                <div class="nota-summary-value" id="summaryTotalNotas">0</div>
+                            </div>
+                            <div class="nota-summary-item">
+                                <div class="nota-summary-label">Valor Total</div>
+                                <div class="nota-summary-value" id="summaryValorTotal">R$ 0,00</div>
+                            </div>
+                            <div class="nota-summary-item">
+                                <div class="nota-summary-label">Notas Selecionadas</div>
+                                <div class="nota-summary-value" id="summarySelecionadas">0</div>
+                            </div>
+                        </div>
+                        <div id="notasActionsContainer" class="notas-actions" style="display: none;">
+                            <button class="btn btn-secondary" id="btnSelecionarTodas">
+                                <span>☑️</span>
+                                <span>Selecionar Todas</span>
+                            </button>
+                            <button class="btn btn-secondary" id="btnDeselecionarTodas">
+                                <span>⬜</span>
+                                <span>Limpar Seleção</span>
+                            </button>
+                            <button class="btn btn-primary" id="btnCarregarSelecionadas">
+                                <span>📥</span>
+                                <span>Carregar Selecionadas</span>
+                            </button>
+                            <button class="btn btn-secondary" id="btnExportarNotas">
+                                <span>📄</span>
+                                <span>Exportar CSV</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Busca por Pedido -->
+                    <div id="buscaPedidoSection" class="periodo-section">
+                        <div class="form-group">
+                            <label>Número do Pedido</label>
+                            <input type="text" id="numeroPedido" placeholder="Ex: 1606840505580-01">
+                        </div>
+                        <button class="btn btn-primary" id="btnBuscarPedido" style="width: 100%;">
+                            <span>📦</span>
+                            <span>Buscar Pedido</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 30px;">
+                    <h2>🔁 Reversas Troquecommerce</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Status da reversa</label>
+                            <select id="troqueStatusFiltro">
+                                <option value="">Todos</option>
+                                <option value="pending">Pendente</option>
+                                <option value="in_transit">Em transporte</option>
+                                <option value="ready_to_return">Pronta para devolução</option>
+                                <option value="finished">Finalizada</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Data inicial</label>
+                            <input type="date" id="troqueDataInicial">
+                        </div>
+                        <div class="form-group">
+                            <label>Data final</label>
+                            <input type="date" id="troqueDataFinal">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="btnBuscarReversas" style="width: 100%; margin-bottom: 15px;">
+                        <span>🔁</span>
+                        <span>Buscar Reversas</span>
+                    </button>
+                    <div id="troqueReversasContainer" class="troque-reversa-list">
+                        <div class="empty-state" style="padding: 30px 20px;">
+                            <p>Use os filtros acima para listar as reversas abertas na Troquecommerce.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna 2: Dados da Nota e Produtos -->
+            <div>
+                <div class="card">
+                    <h2>📄 Dados da Nota</h2>
+                    <div id="notaInfoContainer">
+                        <div class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p>Busque uma nota fiscal para ver os detalhes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 30px;">
+                    <h2>📦 Produtos para Troca/Devolução</h2>
+                    <div id="produtosContainer">
+                        <div class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                            <p>Nenhum produto disponível</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="btnAdicionarFila" style="width: 100%; margin-top: 20px;" disabled>
+                        <span>➕</span>
+                        <span>Adicionar à Fila</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila de Processamento -->
+        <div class="fila-container">
+            <div class="fila-header">
+                <h2>📋 Fila de Processamento</h2>
+                <div class="fila-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statPending">0</div>
+                        <div class="stat-label">Pendentes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statSuccess">0</div>
+                        <div class="stat-label">Sucesso</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statError">0</div>
+                        <div class="stat-label">Erros</div>
+                    </div>
+                </div>
+                <button class="btn btn-success" id="btnProcessarFila" disabled>
+                    <span>▶️</span>
+                    <span>Processar Fila</span>
+                </button>
+            </div>
+            <div class="fila-list scrollbar" id="filaList">
+                <div class="empty-state">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p>Nenhuma troca/devolução na fila</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado da aplicação
+        const state = {
+            notaAtual: null,
+            produtosSelecionados: [],
+            fila: [],
+            processando: false,
+            notasEncontradas: [],
+            notasFiltradas: [],
+            scheduleTimer: null,
+            ultimoAgendamentoExecutado: null,
+            troqueReversas: []
+        };
+
+        const CONFIG_STORAGE_KEY = 'trocaDev_config';
+        const CONFIG_FIELD_IDS = [
+            'baseUrl','username','password','vitrine','faturar','autorizarNfe',
+            'tipoAutorizacaoTroca','tipoPgtoCredito','trocaValorBruto',
+            'whatsappFixo','whatsappAdicionais','enviarRelatorios',
+            'troqueBaseUrl','troqueToken',
+            'scheduleMode','scheduleDailyTimes','scheduleWeeklyTimes','scheduleWeeklyDays',
+            'scheduleOnceDate','scheduleOnceTime'
+        ];
+        const MAX_NOTAS_PROCESSADAS = 200;
+
+        // Elementos DOM
+        const elements = {
+            btnBuscar: document.getElementById('btnBuscar'),
+            btnAdicionarFila: document.getElementById('btnAdicionarFila'),
+            btnProcessarFila: document.getElementById('btnProcessarFila'),
+            btnModoNota: document.getElementById('btnModoNota'),
+            btnModoPeriodo: document.getElementById('btnModoPeriodo'),
+            btnModoPedido: document.getElementById('btnModoPedido'),
+            btnListarNotas: document.getElementById('btnListarNotas'),
+            btnSelecionarTodas: document.getElementById('btnSelecionarTodas'),
+            btnDeselecionarTodas: document.getElementById('btnDeselecionarTodas'),
+            btnCarregarSelecionadas: document.getElementById('btnCarregarSelecionadas'),
+            btnBuscarPedido: document.getElementById('btnBuscarPedido'),
+            numeroNota: document.getElementById('numeroNota'),
+            notaDataInicial: document.getElementById('notaDataInicial'),
+            notaDataFinal: document.getElementById('notaDataFinal'),
+            dataInicial: document.getElementById('dataInicial'),
+            dataFinal: document.getElementById('dataFinal'),
+            numeroPedido: document.getElementById('numeroPedido'),
+            valorMin: document.getElementById('valorMin'),
+            valorMax: document.getElementById('valorMax'),
+            buscaNotaSection: document.getElementById('buscaNotaSection'),
+            buscaPeriodoSection: document.getElementById('buscaPeriodoSection'),
+            buscaPedidoSection: document.getElementById('buscaPedidoSection'),
+            notasListContainer: document.getElementById('notasListContainer'),
+            notasActionsContainer: document.getElementById('notasActionsContainer'),
+            notasSummary: document.getElementById('notasSummary'),
+            summaryTotalNotas: document.getElementById('summaryTotalNotas'),
+            summaryValorTotal: document.getElementById('summaryValorTotal'),
+            summarySelecionadas: document.getElementById('summarySelecionadas'),
+            btnExportarNotas: document.getElementById('btnExportarNotas'),
+            notaInfoContainer: document.getElementById('notaInfoContainer'),
+            produtosContainer: document.getElementById('produtosContainer'),
+            filaList: document.getElementById('filaList'),
+            alertContainer: document.getElementById('alertContainer'),
+            statTotal: document.getElementById('statTotal'),
+            statPending: document.getElementById('statPending'),
+            statSuccess: document.getElementById('statSuccess'),
+            statError: document.getElementById('statError'),
+            pedidoSemNotaCard: document.getElementById('pedidoSemNotaCard'),
+            pedidoSemNotaContainer: document.getElementById('pedidoSemNotaContainer'),
+            statError: document.getElementById('statError'),
+            scheduleMode: document.getElementById('scheduleMode'),
+            scheduleDailyFields: document.getElementById('scheduleDailyFields'),
+            scheduleDailyTimes: document.getElementById('scheduleDailyTimes'),
+            scheduleWeeklyFields: document.getElementById('scheduleWeeklyFields'),
+            scheduleWeeklyTimes: document.getElementById('scheduleWeeklyTimes'),
+            scheduleWeeklyDays: document.getElementById('scheduleWeeklyDays'),
+            scheduleDayCheckboxes: document.querySelectorAll('.schedule-day-checkbox'),
+            scheduleOnceFields: document.getElementById('scheduleOnceFields'),
+            scheduleOnceDate: document.getElementById('scheduleOnceDate'),
+            scheduleOnceTime: document.getElementById('scheduleOnceTime'),
+            troqueBaseUrl: document.getElementById('troqueBaseUrl'),
+            troqueToken: document.getElementById('troqueToken'),
+            troqueStatusFiltro: document.getElementById('troqueStatusFiltro'),
+            troqueDataInicial: document.getElementById('troqueDataInicial'),
+            troqueDataFinal: document.getElementById('troqueDataFinal'),
+            btnBuscarReversas: document.getElementById('btnBuscarReversas'),
+            troqueReversasContainer: document.getElementById('troqueReversasContainer')
+        };
+
+        // Funções de utilidade
+        function showAlert(message, type = 'info') {
+            const alertClass = `alert-${type}`;
+            elements.alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+            setTimeout(() => {
+                elements.alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function updateScheduleFieldsVisibility() {
+            const mode = elements.scheduleMode.value;
+            elements.scheduleDailyFields.style.display = mode === 'daily' ? 'block' : 'none';
+            elements.scheduleWeeklyFields.style.display = mode === 'weekly' ? 'block' : 'none';
+            elements.scheduleOnceFields.style.display = mode === 'once' ? 'block' : 'none';
+        }
+
+        function getWeeklyDaysList() {
+            const raw = elements.scheduleWeeklyDays.value || '';
+            return raw.split(',').map(v => v.trim()).filter(Boolean);
+        }
+
+        function applyWeeklyDaysToCheckboxes() {
+            const ativos = new Set(getWeeklyDaysList());
+            elements.scheduleDayCheckboxes.forEach(cb => {
+                cb.checked = ativos.has(cb.value);
+            });
+        }
+
+        function updateWeeklyDaysFromCheckboxes() {
+            const selecionados = Array.from(elements.scheduleDayCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            elements.scheduleWeeklyDays.value = selecionados.join(',');
+        }
+
+        function parseScheduleTimes(value) {
+            if (!value) return [];
+            return value.split(',')
+                .map(v => v.trim())
+                .filter(Boolean)
+                .map(time => {
+                    const [h, m] = time.split(':').map(Number);
+                    if (Number.isInteger(h) && Number.isInteger(m) && h >= 0 && h < 24 && m >= 0 && m < 60) {
+                        return h * 60 + m;
+                    }
+                    return null;
+                })
+                .filter(v => v !== null);
+        }
+
+        function shouldTriggerDaily(nowMinutes) {
+            const times = parseScheduleTimes(elements.scheduleDailyTimes.value);
+            return times.includes(nowMinutes) ? `${nowMinutes}` : null;
+        }
+
+        function shouldTriggerWeekly(nowMinutes, weekday) {
+            const diasSelecionados = getWeeklyDaysList();
+            if (!diasSelecionados.includes(String(weekday))) return null;
+            const times = parseScheduleTimes(elements.scheduleWeeklyTimes.value);
+            return times.includes(nowMinutes) ? `${weekday}-${nowMinutes}` : null;
+        }
+
+        function shouldTriggerOnce(now) {
+            const data = elements.scheduleOnceDate.value;
+            const horario = elements.scheduleOnceTime.value;
+            if (!data || !horario) return null;
+            const dataAtual = now.toISOString().split('T')[0];
+            if (data !== dataAtual) return null;
+            const times = parseScheduleTimes(horario);
+            const minutos = now.getHours() * 60 + now.getMinutes();
+            return times.includes(minutos) ? `${data}-${minutos}` : null;
+        }
+
+        function hasPendingItems() {
+            return state.fila.some(item => item.status === 'pending');
+        }
+
+        function getBackendBaseUrl() {
+            if (window.BACKEND_BASE_URL) return window.BACKEND_BASE_URL;
+            const origin = window.location.origin;
+            if (origin && origin !== 'null' && !origin.startsWith('file:')) {
+                return origin;
+            }
+            return 'http://localhost:4000';
+        }
+
+        function getTroqueConfig() {
+            const baseUrl = elements.troqueBaseUrl?.value.trim();
+            const token = elements.troqueToken?.value.trim();
+            return { baseUrl, token };
+        }
+
+        function normalizarTroqueUrl(baseUrl = '') {
+            if (!baseUrl) return '';
+            return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        }
+
+        function formatarDataHora(dataString) {
+            if (!dataString) return 'N/A';
+            const date = new Date(dataString);
+            if (Number.isNaN(date.getTime())) return dataString;
+            return date.toLocaleString('pt-BR');
+        }
+
+        function formatarTroqueStatus(status) {
+            if (!status) return '—';
+            return status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        }
+
+        function renderTroqueReversas() {
+            const container = elements.troqueReversasContainer;
+            const reversas = state.troqueReversas || [];
+
+            if (!container) return;
+
+            if (reversas.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 30px 20px;"><p>Nenhuma reversa encontrada para os filtros informados.</p></div>';
+                return;
+            }
+
+            container.innerHTML = reversas.map((reversa, index) => {
+                const codigo = reversa.id || reversa.code || reversa.order_code || reversa.orderCode || `#${index + 1}`;
+                const pedidoOriginal = reversa?.original_order_number || reversa?.order_number || reversa?.orderNumber || 'N/A';
+                const status = formatarTroqueStatus(reversa.status || reversa.situation);
+                const createdAt = formatarDataHora(reversa.created_at || reversa.createdAt || reversa.dataCriacao);
+                const cliente = reversa?.customer?.name || reversa?.cliente?.nome || 'Cliente não informado';
+                const motivo = reversa?.reason || reversa?.motivo || '-';
+                const itens = Array.isArray(reversa?.items) ? reversa.items : (Array.isArray(reversa?.produtos) ? reversa.produtos : []);
+                const itensResumo = itens.length ? itens.map(item => `${item.quantity || item.quantidade || 1}x ${item.sku || item.codigo || item.description || item.descricao || 'Produto'}`).join('<br>') : 'Itens não informados';
+
+                return `
+                    <div class="troque-reversa-item">
+                        <div class="troque-reversa-header">
+                            <div>
+                                <strong>Reversa ${codigo}</strong><br>
+                                <small>Pedido original: ${pedidoOriginal}</small>
+                            </div>
+                            <span class="troque-reversa-status">${status}</span>
+                        </div>
+                        <div class="troque-reversa-meta">
+                            <p><strong>Cliente:</strong> ${cliente}</p>
+                            <p><strong>Criada em:</strong> ${createdAt}</p>
+                            <p><strong>Motivo:</strong> ${motivo}</p>
+                            <p><strong>Itens:</strong><br>${itensResumo}</p>
+                            <button class="btn btn-primary troque-reversa-carregar" data-index="${index}" style="margin-top:10px; width: 100%;">
+                                <span>📥</span>
+                                <span>Carregar nota no Millennium</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.troque-reversa-carregar').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const idx = parseInt(event.currentTarget.dataset.index, 10);
+                    await carregarReversaNoMillennium(idx);
+                });
+            });
+        }
+
+        async function buscarReversasTroque() {
+            const { baseUrl, token } = getTroqueConfig();
+            if (!baseUrl || !token) {
+                showAlert('Informe a Base URL e o Token da Troquecommerce antes de buscar as reversas.', 'error');
+                return;
+            }
+
+            const status = elements.troqueStatusFiltro?.value;
+            const dataInicial = elements.troqueDataInicial?.value;
+            const dataFinal = elements.troqueDataFinal?.value;
+            const params = new URLSearchParams();
+            if (status) params.append('status', status);
+            if (dataInicial) params.append('start_date', `${dataInicial}T00:00:00.000Z`);
+            if (dataFinal) params.append('end_date', `${dataFinal}T23:59:59.999Z`);
+
+            const backendUrl = getBackendBaseUrl();
+            const payload = {
+                baseUrl: normalizarTroqueUrl(baseUrl),
+                token,
+                status: status || undefined,
+                start_date: dataInicial ? `${dataInicial}T00:00:00.000Z` : undefined,
+                end_date: dataFinal ? `${dataFinal}T23:59:59.999Z` : undefined
+            };
+
+            elements.btnBuscarReversas.disabled = true;
+            const btnOriginalText = elements.btnBuscarReversas.innerHTML;
+            elements.btnBuscarReversas.innerHTML = '<span class="loading"></span> Buscando...';
+
+            try {
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+                }
+
+                const data = await response.json();
+                let reversas = [];
+                if (Array.isArray(data)) {
+                    reversas = data;
+                } else if (Array.isArray(data?.data)) {
+                    reversas = data.data;
+                } else if (Array.isArray(data?.orders)) {
+                    reversas = data.orders;
+                } else if (Array.isArray(data?.items)) {
+                    reversas = data.items;
+                }
+
+                state.troqueReversas = reversas;
+                renderTroqueReversas();
+                showAlert(`${reversas.length} reversa(s) encontrada(s) na Troquecommerce.`, 'success');
+
+            } catch (error) {
+                console.error('Erro ao buscar reversas na Troquecommerce:', error);
+                showAlert(`Erro ao buscar reversas: ${error.message}`, 'error');
+                state.troqueReversas = [];
+                renderTroqueReversas();
+            } finally {
+                elements.btnBuscarReversas.disabled = false;
+                elements.btnBuscarReversas.innerHTML = btnOriginalText;
+            }
+        }
+
+        async function carregarReversaNoMillennium(index) {
+            const reversa = state.troqueReversas?.[index];
+            if (!reversa) {
+                showAlert('Reversa selecionada não encontrada na lista atual.', 'error');
+                return;
+            }
+
+            const config = getConfig();
+            const numeroNotaDireto = reversa?.invoice?.number || reversa?.nota || reversa?.nf || reversa?.invoice_number;
+            if (numeroNotaDireto) {
+                await carregarNotaPorNumero(numeroNotaDireto, config.vitrine);
+                showAlert(`Nota ${numeroNotaDireto} carregada a partir da reversa ${reversa.id || reversa.code}.`, 'success');
+                return;
+            }
+
+            const numeroPedido = reversa?.original_order_number || reversa?.order_number || reversa?.orderNumber || reversa?.pedido || null;
+            if (!numeroPedido) {
+                showAlert('Não foi possível identificar o pedido original desta reversa.', 'error');
+                return;
+            }
+
+            showAlert(`Buscando pedido ${numeroPedido} no Millennium...`, 'info');
+            try {
+                const pedidos = await consultarPedidosMillennium({ numeroPedidoCliente: numeroPedido });
+                if (!pedidos || pedidos.length === 0) {
+                    throw new Error('Pedido não encontrado no Millennium');
+                }
+
+                const pedido = pedidos[0];
+                const numeroNotaPedido = obterNumeroNota(pedido);
+                if (!numeroNotaPedido || numeroNotaPedido === '0') {
+                    throw new Error('Pedido localizado, porém ainda sem nota fiscal emitida');
+                }
+
+                await carregarNotaPorNumero(numeroNotaPedido, config.vitrine);
+                showAlert(`Nota ${numeroNotaPedido} carregada (pedido ${numeroPedido}) para a reversa selecionada.`, 'success');
+
+            } catch (error) {
+                console.error('Erro ao carregar nota via reversa:', error);
+                showAlert(`Não foi possível carregar a nota para a reversa: ${error.message}`, 'error');
+            }
+        }
+
+        function startScheduleWatcher() {
+            if (state.scheduleTimer) {
+                clearInterval(state.scheduleTimer);
+            }
+            // Executar imediatamente e depois a cada 30s
+            checkScheduledProcessing();
+            state.scheduleTimer = setInterval(checkScheduledProcessing, 30000);
+        }
+
+        function resetOneTimeSchedule() {
+            elements.scheduleMode.value = 'off';
+            updateScheduleFieldsVisibility();
+            saveConfigToStorage();
+            showAlert('Agendamento único executado e desativado automaticamente.', 'info');
+        }
+
+        function checkScheduledProcessing() {
+            const mode = elements.scheduleMode.value;
+            if (mode === 'off') return;
+            if (state.processando) return;
+            if (!hasPendingItems()) return;
+
+            const now = new Date();
+            const minutosAtual = now.getHours() * 60 + now.getMinutes();
+            const dataKey = now.toISOString().split('T')[0];
+            let executionKey = null;
+
+            if (mode === 'daily') {
+                executionKey = shouldTriggerDaily(minutosAtual);
+                if (executionKey) executionKey = `${mode}-${dataKey}-${executionKey}`;
+            } else if (mode === 'weekly') {
+                executionKey = shouldTriggerWeekly(minutosAtual, now.getDay());
+                if (executionKey) executionKey = `${mode}-${dataKey}-${executionKey}`;
+            } else if (mode === 'once') {
+                const onceKey = shouldTriggerOnce(now);
+                if (onceKey) executionKey = `${mode}-${onceKey}`;
+            }
+
+            if (!executionKey) return;
+            if (state.ultimoAgendamentoExecutado === executionKey) return;
+
+            state.ultimoAgendamentoExecutado = executionKey;
+            showAlert('Processamento automático da fila iniciado pelo agendamento.', 'info');
+            processarFila();
+
+            if (mode === 'once') {
+                resetOneTimeSchedule();
+            }
+        }
+
+        function saveConfigToStorage() {
+            try {
+                const data = {};
+                CONFIG_FIELD_IDS.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (el.type === 'checkbox') {
+                        data[id] = el.checked;
+                    } else {
+                        data[id] = el.value;
+                    }
+                });
+                localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(data));
+            } catch (error) {
+                console.warn('Não foi possível salvar configurações:', error);
+            }
+        }
+
+        function loadConfigFromStorage() {
+            try {
+                const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                Object.entries(data).forEach(([id, value]) => {
+                    const el = document.getElementById(id);
+                    if (!el || value === undefined || value === null) return;
+                    if (el.type === 'checkbox') {
+                        el.checked = value;
+                    } else {
+                        el.value = value;
+                    }
+                });
+                updateScheduleFieldsVisibility();
+                applyWeeklyDaysToCheckboxes();
+            } catch (error) {
+                console.warn('Não foi possível carregar configurações:', error);
+            }
+        }
+
+        function setupConfigPersistence() {
+            CONFIG_FIELD_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const eventName = el.type === 'checkbox' ? 'change' : 'input';
+                el.addEventListener(eventName, saveConfigToStorage);
+            });
+
+            elements.scheduleMode.addEventListener('change', () => {
+                updateScheduleFieldsVisibility();
+                saveConfigToStorage();
+            });
+
+            elements.scheduleDayCheckboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    updateWeeklyDaysFromCheckboxes();
+                    saveConfigToStorage();
+                });
+            });
+        }
+
+        function atualizarResumoNotas() {
+            const totalNotas = state.notasFiltradas.length;
+            if (totalNotas === 0) {
+                elements.notasSummary.style.display = 'none';
+                elements.summaryTotalNotas.textContent = '0';
+                elements.summaryValorTotal.textContent = 'R$ 0,00';
+                elements.summarySelecionadas.textContent = '0';
+                return;
+            }
+
+            elements.notasSummary.style.display = 'grid';
+            elements.summaryTotalNotas.textContent = totalNotas;
+
+            const valorTotal = state.notasFiltradas.reduce((acc, nota) => acc + (parseFloat(nota.valor_final) || 0), 0);
+            elements.summaryValorTotal.textContent = formatarValor(valorTotal);
+
+            const selecionadas = document.querySelectorAll('.nota-checkbox:checked').length;
+            elements.summarySelecionadas.textContent = selecionadas.toString();
+        }
+
+        function aplicarFiltrosNotas() {
+            let filtradas = [...state.notasEncontradas];
+            const valorMin = parseFloat(elements.valorMin.value);
+            const valorMax = parseFloat(elements.valorMax.value);
+
+            if (!isNaN(valorMin)) {
+                filtradas = filtradas.filter(nota => (parseFloat(nota.valor_final) || 0) >= valorMin);
+            }
+            if (!isNaN(valorMax)) {
+                filtradas = filtradas.filter(nota => (parseFloat(nota.valor_final) || 0) <= valorMax);
+            }
+
+            state.notasFiltradas = filtradas;
+            renderListaNotas(state.notasFiltradas);
+        }
+
+        function exportarNotasCsv() {
+            if (!state.notasFiltradas || state.notasFiltradas.length === 0) {
+                showAlert('Não há notas para exportar', 'error');
+                return;
+            }
+
+            const headers = ['Nota', 'Saída', 'Cliente', 'CPF/CNPJ', 'Valor', 'Data'];
+            const rows = state.notasFiltradas.map(nota => {
+                const cliente = nota.cliente && nota.cliente.length > 0 ? nota.cliente[0] : null;
+                return [
+                    (nota.nf || nota.nota || '').replace(/;/g, ''),
+                    (nota.saida || '').toString().replace(/;/g, ''),
+                    (cliente?.nome || nota.nome_cliente || '').replace(/;/g, ''),
+                    (cliente?.cpf || cliente?.cnpj || '').replace(/;/g, ''),
+                    (parseFloat(nota.valor_final) || 0).toFixed(2).replace('.', ','),
+                    formatarData(nota.data_hora_emissao)
+                ];
+            });
+
+            const csvContent = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const fileName = `notas_${elements.dataInicial.value || 'inicio'}_${elements.dataFinal.value || 'fim'}.csv`;
+            link.href = url;
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(url);
+            showAlert('Arquivo CSV exportado com sucesso!', 'success');
+        }
+
+        function obterNumeroNota(pedido) {
+            return pedido?.nf || pedido?.NF || pedido?.nota || pedido?.NOTA || pedido?.NumeroNota;
+        }
+
+        function buildPedidoVendaRequestBody({ dataInicial, dataFinal, numeroPedidoCliente, codPedidoMktPlace, opcaoData = 1 } = {}) {
+            const defaultStart = dataInicial || '1900-01-01T00:00:00.000Z';
+            const defaultEnd = dataFinal || '2100-12-31T23:59:59.999Z';
+
+            return {
+                SCRIPTFILIAL: null,
+                DATAI: defaultStart,
+                DATAF: defaultEnd,
+                TIPO: "AC",
+                BLOQUEIOS: null,
+                CIDADE: null,
+                CLIENTE: null,
+                CLIENTE_ENTREGA: null,
+                CLI_GRUPO_LOJA: null,
+                COD_PEDIDOV: "",
+                COD_PEDIDO_MKT_PLACE: codPedidoMktPlace || null,
+                COLECAO_PEDIDO: null,
+                COLECAO_PRODUTO: null,
+                COMANDA: null,
+                CONSIGNACAO: null,
+                COR: null,
+                EFETUADO: 2,
+                ENDERECO_RETIRADA: null,
+                ENTREGA_IMEDIATA: null,
+                ESTADO: null,
+                ESTAMPA: null,
+                FILTROPRO: true,
+                GRUPO_LOJA: null,
+                GRUPO_PRODUTO: null,
+                IGNORA_PARAM: false,
+                LISTA_CASAMENTO: false,
+                N_PEDIDO_CLIENTE: numeroPedidoCliente || "",
+                OPCAO_DATA: opcaoData,
+                ORCAMENTO: null,
+                ORDEM: 0,
+                ORIGEM_PEDIDO: null,
+                PEDIDOV: null,
+                PONTO_RETIRADA: null,
+                PRESENTE: null,
+                PRODUTO: null,
+                SCRIPTREPRESENTANTE: null,
+                SCRIPTVENDEDOR: null,
+                STATUS_WORKFLOW: null,
+                SUSPENSO: null,
+                TABELA: null,
+                TAMANHO: null,
+                TIPO_PEDIDO: null,
+                TRANSPORTADORA: null
+            };
+        }
+
+        async function consultarPedidosMillennium(filtros = {}) {
+            const config = getConfig();
+            const body = buildPedidoVendaRequestBody(filtros);
+            const url = `${config.baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data?$format=json`;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': getAuthHeader(),
+                    'Content-Type': 'application/json',
+                    'x-http-method': 'GET',
+                    'x-dateformat': 'ISOTZ',
+                    'x-identifiercase': 'upper'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return Array.isArray(data) ? data : (data.value || []);
+        }
+
+        function getConfig() {
+            return {
+                baseUrl: document.getElementById('baseUrl').value.trim(),
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value.trim(),
+                vitrine: parseInt(document.getElementById('vitrine').value),
+                faturar: document.getElementById('faturar').value,
+                autorizarNfe: document.getElementById('autorizarNfe').value,
+                tipoAutorizacaoTroca: parseInt(document.getElementById('tipoAutorizacaoTroca').value),
+                tipoPgtoCredito: parseInt(document.getElementById('tipoPgtoCredito').value),
+                trocaValorBruto: document.getElementById('trocaValorBruto').value
+            };
+        }
+
+        function getAuthHeader() {
+            const config = getConfig();
+            const token = btoa(`${config.username}:${config.password}`);
+            return `Basic ${token}`;
+        }
+
+        // Alternar entre modos de busca
+        function alternarModo(modo) {
+            const isNota = modo === 'nota';
+            const isPeriodo = modo === 'periodo';
+            const isPedido = modo === 'pedido';
+
+            elements.buscaNotaSection.style.display = isNota ? 'block' : 'none';
+            elements.buscaPeriodoSection.classList.toggle('active', isPeriodo);
+            elements.buscaPedidoSection.classList.toggle('active', isPedido);
+
+            elements.btnModoNota.style.opacity = isNota ? '1' : '0.6';
+            elements.btnModoPeriodo.style.opacity = isPeriodo ? '1' : '0.6';
+            elements.btnModoPedido.style.opacity = isPedido ? '1' : '0.6';
+        }
+
+        // Formatar data para exibição
+        function formatarData(dataString) {
+            if (!dataString) return 'N/A';
+            const match = dataString.match(/\/Date\((\d+)([+-]\d+)?\)\//)
+            if (match) {
+                const timestamp = parseInt(match[1], 10);
+                return new Date(timestamp).toLocaleDateString('pt-BR');
+            }
+            return new Date(dataString).toLocaleDateString('pt-BR');
+        }
+
+        // Formatar valor monetário
+        function formatarValor(valor) {
+            if (!valor) return 'R$ 0,00';
+            return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Obter números de WhatsApp configurados
+        function getWhatsAppNumeros() {
+            const numeros = [];
+            const fixo = document.getElementById('whatsappFixo').value.trim();
+            const adicionais = document.getElementById('whatsappAdicionais').value.trim();
+            
+            if (fixo) numeros.push(fixo);
+            if (adicionais) {
+                adicionais.split(',').forEach(num => {
+                    const limpo = num.trim().replace(/\D/g, '');
+                    if (limpo) numeros.push(limpo);
+                });
+            }
+            
+            return numeros;
+        }
+
+        // Enviar mensagem via WhatsApp Web
+        function enviarWhatsApp(numero, mensagem) {
+            const enviarRelatorios = document.getElementById('enviarRelatorios').checked;
+            if (!enviarRelatorios) return;
+            
+            const mensagemEncoded = encodeURIComponent(mensagem);
+            const url = `https://wa.me/${numero}?text=${mensagemEncoded}`;
+            window.open(url, '_blank');
+        }
+
+        // Enviar para todos os números configurados
+        function enviarWhatsAppParaTodos(mensagem) {
+            const numeros = getWhatsAppNumeros();
+            numeros.forEach((numero, index) => {
+                setTimeout(() => {
+                    enviarWhatsApp(numero, mensagem);
+                }, index * 1000); // Delay de 1s entre cada envio
+            });
+        }
+
+        // Gerar relatório de notas listadas
+        function gerarRelatorioNotas(notas, dataInicial, dataFinal) {
+            const dataInicialFormatada = new Date(dataInicial).toLocaleDateString('pt-BR');
+            const dataFinalFormatada = new Date(dataFinal).toLocaleDateString('pt-BR');
+            
+            let mensagem = `🔄 RELATÓRIO DE TROCAS/DEVOLUÇÕES\n\n`;
+            mensagem += `📅 Período: ${dataInicialFormatada} a ${dataFinalFormatada}\n`;
+            mensagem += `📊 Total de notas: ${notas.length}`;
+            
+            return mensagem;
+        }
+
+        async function obterNotasPorPeriodo(startDateISO, endDateISO) {
+            const config = getConfig();
+            const body = buildPedidoVendaRequestBody({
+                dataInicial: startDateISO,
+                dataFinal: endDateISO,
+                opcaoData: 1
+            });
+
+            const url = `${config.baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data?$format=json`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': getAuthHeader(),
+                    'Content-Type': 'application/json',
+                    'x-http-method': 'GET',
+                    'x-dateformat': 'ISOTZ',
+                    'x-identifiercase': 'upper'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const pedidos = Array.isArray(data) ? data : (data.value || []);
+
+            if (pedidos.length === 0) {
+                return [];
+            }
+
+            const notasComDetalhes = [];
+            for (const pedido of pedidos.slice(0, MAX_NOTAS_PROCESSADAS)) {
+                const numeroNF = obterNumeroNota(pedido);
+                if (!numeroNF || numeroNF === '0') {
+                    const clienteInfo = (pedido.CLIENTE && pedido.CLIENTE[0]) || (pedido.cliente && pedido.cliente[0]) || null;
+                    const produtosPedido = pedido.PRODUTOS || pedido.produtos || pedido.ITENS || pedido.itens || [];
+                    notasComDetalhes.push({
+                        semNota: true,
+                        n_pedido_cliente: pedido.N_PEDIDO_CLIENTE || pedido.n_pedido_cliente,
+                        data_hora_emissao: pedido.DATA || pedido.data,
+                        saida: pedido.SAIDA || pedido.saida,
+                        valor_final: pedido.VALOR_FINAL || pedido.valor_final,
+                        nome_cliente: pedido.NOME_CLIENTE || pedido.nome_cliente || clienteInfo?.NOME || clienteInfo?.nome || 'N/A',
+                        cliente: clienteInfo,
+                        produtos: produtosPedido
+                    });
+                    continue;
+                }
+
+                try {
+                    const notaUrl = `${config.baseUrl}/api/MILLENIUM_ECO.pedido_venda/listafaturamentos?vitrine=${config.vitrine}&nota=${numeroNF}&$format=json`;
+                    const notaResponse = await fetch(notaUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': getAuthHeader(),
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (notaResponse.ok) {
+                        const notaData = await notaResponse.json();
+                        if (notaData.value && notaData.value.length > 0) {
+                            notasComDetalhes.push(notaData.value[0]);
+                        }
+                    }
+                } catch (err) {
+                    console.warn(`Erro ao buscar nota ${numeroNF}:`, err);
+                }
+            }
+
+            return notasComDetalhes;
+        }
+
+        // Listar notas por período
+        async function listarNotasPorPeriodo() {
+            const dataInicial = elements.dataInicial.value;
+            const dataFinal = elements.dataFinal.value;
+
+            if (!dataInicial || !dataFinal) {
+                showAlert('Por favor, informe as datas inicial e final', 'error');
+                return;
+            }
+
+            const config = getConfig();
+            elements.btnListarNotas.disabled = true;
+            elements.btnListarNotas.innerHTML = '<span class="loading"></span> Listando...';
+
+            try {
+                const startDateISO = new Date(dataInicial + 'T00:00:00.000Z').toISOString();
+                const endDateISO = new Date(dataFinal + 'T23:59:59.999Z').toISOString();
+
+                const notasComDetalhes = await obterNotasPorPeriodo(startDateISO, endDateISO);
+
+                state.notasEncontradas = notasComDetalhes;
+                aplicarFiltrosNotas();
+                showAlert(`${state.notasFiltradas.length} nota(s) encontrada(s) no período`, 'success');
+
+                const relatorio = gerarRelatorioNotas(state.notasFiltradas, dataInicial, dataFinal);
+                enviarWhatsAppParaTodos(relatorio);
+
+            } catch (error) {
+                console.error('Erro ao listar notas:', error);
+                showAlert(`Erro ao listar notas: ${error.message}`, 'error');
+                elements.notasListContainer.innerHTML = '';
+            } finally {
+                elements.btnListarNotas.disabled = false;
+                elements.btnListarNotas.innerHTML = '<span>📋</span><span>Listar Notas do Período</span>';
+            }
+        }
+
+        // Buscar pedido por número do cliente
+        async function buscarPedido() {
+            const numeroPedido = elements.numeroPedido.value.trim();
+            if (!numeroPedido) {
+                showAlert('Por favor, informe o número do pedido', 'error');
+                return;
+            }
+
+            const config = getConfig();
+            elements.btnBuscarPedido.disabled = true;
+            elements.btnBuscarPedido.innerHTML = '<span class="loading"></span> Buscando...';
+
+            try {
+                let pedidos = await consultarPedidosMillennium({ numeroPedidoCliente: numeroPedido });
+                let origemBusca = 'número do pedido';
+
+                if (pedidos.length === 0) {
+                    pedidos = await consultarPedidosMillennium({ codPedidoMktPlace: numeroPedido });
+                    origemBusca = 'código marketplace';
+                }
+
+                if (pedidos.length === 0) {
+                    throw new Error('Pedido não encontrado');
+                }
+
+                const pedido = pedidos[0];
+                const numeroNota = obterNumeroNota(pedido);
+
+                if (!numeroNota || numeroNota === '0') {
+                    exibirPedidoSemNota(pedido, origemBusca);
+                    throw new Error(`Pedido encontrado via ${origemBusca}, mas a nota fiscal ainda não está disponível`);
+                }
+
+                esconderPedidoSemNota();
+                await carregarNotaPorNumero(numeroNota, config.vitrine);
+                showAlert(`Pedido ${numeroPedido} (${origemBusca}) carregado com a nota ${numeroNota}`, 'success');
+
+            } catch (error) {
+                console.error('Erro ao buscar pedido:', error);
+                showAlert(`Erro ao buscar pedido: ${error.message}`, 'error');
+            } finally {
+                elements.btnBuscarPedido.disabled = false;
+                elements.btnBuscarPedido.innerHTML = '<span>📦</span><span>Buscar Pedido</span>';
+            }
+        }
+
+        function exibirPedidoSemNota(pedido, origem) {
+            if (!pedido) return;
+            const clientePadrao = pedido.cliente || pedido.CLIENTE || [];
+            const clienteInfo = Array.isArray(clientePadrao) ? (clientePadrao[0] || {}) : clientePadrao;
+            const nomeCliente = clienteInfo.NOME || clienteInfo.nome || pedido.NOME_CLIENTE || pedido.nome_cliente || 'N/A';
+            const cpfCliente = clienteInfo.CPF || clienteInfo.cpf || pedido.CPF || pedido.cpf || 'N/A';
+            const dataPedido = pedido.DATA || pedido.data || pedido.data_hora_emissao;
+            const codigoSaida = pedido.SAIDA || pedido.saida || '—';
+            const valor = pedido.VALOR_FINAL || pedido.valor_final || pedido.total || 0;
+            const produtos = pedido.produtos || pedido.PRODUTOS || pedido.ITENS || pedido.itens || [];
+
+            const produtosHtml = produtos && produtos.length
+                ? `<div style="margin-top:15px;"><strong>Produtos (${produtos.length}):</strong><ul style="margin-top:5px; padding-left:18px; color:#7c2d12;">${produtos.map((p, idx) => `<li><strong>${p.desc_produto || p.DESCRICAO || 'Item ' + (idx+1)}</strong> - Qtde: ${p.quantidade || p.QUANTIDADE || 1} | SKU: ${p.sku || p.SKU || p.PRODUTO || ''}</li>`).join('')}</ul></div>`
+                : '<p style="margin-top:10px;">Itens não disponíveis nesta consulta.</p>';
+
+            elements.pedidoSemNotaContainer.innerHTML = `
+                <div style="text-align: left; color: #7c2d12;">
+                    <p style="font-weight: 600;">Pedido ${pedido.N_PEDIDO_CLIENTE || pedido.n_pedido_cliente || 'N/A'} (${origem})</p>
+                    <p><strong>Cliente:</strong> ${nomeCliente} | CPF/CNPJ: ${cpfCliente}</p>
+                    <p><strong>Data:</strong> ${dataPedido ? formatarData(dataPedido) : 'N/A'}</p>
+                    <p><strong>Saída:</strong> ${codigoSaida}</p>
+                    <p><strong>Valor Previsto:</strong> ${formatarValor(valor)}</p>
+                    ${produtosHtml}
+                    <p style="margin-top: 10px;">Aguardando faturamento para liberar a nota fiscal.</p>
+                </div>
+            `;
+            elements.pedidoSemNotaCard.style.display = 'block';
+        }
+
+        function esconderPedidoSemNota() {
+            elements.pedidoSemNotaCard.style.display = 'none';
+            elements.pedidoSemNotaContainer.innerHTML = '';
+        }
+
+        // Buscar nota fiscal
+        async function buscarNota() {
+            const numeroNota = elements.numeroNota.value.trim();
+            const config = getConfig();
+
+            elements.btnBuscar.disabled = true;
+            elements.btnBuscar.innerHTML = '<span class="loading"></span> Buscando...';
+
+            try {
+                if (numeroNota) {
+                    const url = `${config.baseUrl}/api/MILLENIUM_ECO.pedido_venda/listafaturamentos?vitrine=${config.vitrine}&nota=${numeroNota}&$format=json`;
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': getAuthHeader(),
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (!data.value || data.value.length === 0) {
+                        throw new Error('Nota fiscal não encontrada');
+                    }
+
+                    state.notaAtual = data.value[0];
+                    renderNotaInfo();
+                    renderProdutos();
+                    showAlert('Nota fiscal carregada com sucesso!', 'success');
+                } else {
+                    const dataInicial = elements.notaDataInicial.value;
+                    const dataFinal = elements.notaDataFinal.value;
+
+                    if (!dataInicial || !dataFinal) {
+                        throw new Error('Informe as datas inicial e final para buscar notas faturadas');
+                    }
+
+                    const startDateISO = new Date(dataInicial + 'T00:00:00.000Z').toISOString();
+                    const endDateISO = new Date(dataFinal + 'T23:59:59.999Z').toISOString();
+
+                    const notasComDetalhes = await obterNotasPorPeriodo(startDateISO, endDateISO);
+
+                    if (notasComDetalhes.length === 0) {
+                        throw new Error('Nenhuma nota encontrada no período informado');
+                    }
+
+                    state.notasEncontradas = notasComDetalhes;
+                    aplicarFiltrosNotas();
+                    const notaDisponivel = notasComDetalhes.find(nota => !nota.semNota);
+
+                    if (notaDisponivel) {
+                        state.notaAtual = notaDisponivel;
+                        renderNotaInfo();
+                        renderProdutos();
+                        esconderPedidoSemNota();
+                        showAlert(`Nota ${notaDisponivel.nf || notaDisponivel.nota} carregada automaticamente!`, 'success');
+                    } else {
+                        state.notaAtual = null;
+                        const pedidoSemNota = notasComDetalhes.find(nota => nota.semNota);
+                        if (pedidoSemNota) {
+                            exibirPedidoSemNota(pedidoSemNota, 'busca por período');
+                        }
+                        elements.notaInfoContainer.innerHTML = '<div class="empty-state"><p>Pedidos encontrados, mas nenhuma nota fiscal foi emitida ainda.</p></div>';
+                        elements.produtosContainer.innerHTML = '<div class="empty-state"><p>Nenhum produto disponível</p></div>';
+                        showAlert('Pedidos encontrados ainda sem nota fiscal emitida. Aguarde o faturamento.', 'info');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao buscar nota:', error);
+                showAlert(`Erro ao buscar nota: ${error.message}`, 'error');
+                state.notaAtual = null;
+                elements.notaInfoContainer.innerHTML = '<div class="empty-state"><p>Erro ao carregar nota fiscal</p></div>';
+                elements.produtosContainer.innerHTML = '<div class="empty-state"><p>Nenhum produto disponível</p></div>';
+            } finally {
+                elements.btnBuscar.disabled = false;
+                elements.btnBuscar.innerHTML = '<span>🔍</span><span>Buscar Nota</span>';
+            }
+        }
+        // Renderizar lista de notas
+        function renderListaNotas(notas) {
+            if (!notas || notas.length === 0) {
+                elements.notasListContainer.innerHTML = '<div class="empty-state" style="padding: 20px;"><p>Nenhuma nota encontrada no período</p></div>';
+                elements.notasActionsContainer.style.display = 'none';
+                elements.notasSummary.style.display = 'none';
+                return;
+            }
+
+            console.log('Renderizando notas:', notas);
+
+            elements.notasListContainer.innerHTML = notas.map((nota, index) => {
+                const semNota = Boolean(nota.semNota);
+                const numeroNotaRaw = nota.nota || nota.nf || nota.NF || nota.NumeroNota;
+                const numeroNota = semNota ? '' : (numeroNotaRaw || 'N/A');
+                const vitrine = nota.vitrine || 101;
+                const clienteNome = nota.nome_cliente || nota.nomeCliente || 'N/A';
+                const badgeTexto = semNota ? 'Pedido sem nota' : formatarValor(nota.valor_final);
+
+                return `
+                    <div class="nota-list-item ${semNota ? 'sem-nota' : ''}" data-nota="${numeroNota}" data-vitrine="${vitrine}" data-index="${index}" data-sem-nota="${semNota}">
+                        <input type="checkbox" class="nota-checkbox" data-nota-index="${index}" ${semNota ? 'disabled' : ''}>
+                        <div class="nota-content">
+                            <div class="nota-list-header">
+                                <div class="nota-list-title">${semNota ? `Pedido ${nota.n_pedido_cliente || 'N/A'}` : `Nota #${numeroNota}`}</div>
+                                <div class="nota-list-badge">${badgeTexto}</div>
+                            </div>
+                            <div class="nota-list-details">
+                                <strong>Cliente:</strong> ${clienteNome}<br>
+                                <strong>Data:</strong> ${formatarData(nota.data_hora_emissao)}<br>
+                                <strong>Saída:</strong> ${nota.saida || 'N/A'}${semNota ? ' | <span style="color:#b45309;">Nota ainda não emitida</span>' : ` | <strong>Produtos:</strong> ${nota.produtos?.length || 0}`}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Mostrar botões de ação
+            document.getElementById('notasActionsContainer').style.display = 'flex';
+            elements.notasSummary.style.display = 'grid';
+
+            // Event listeners para selecionar nota (clique no conteúdo, não no checkbox)
+            document.querySelectorAll('.nota-content').forEach((content, index) => {
+                content.addEventListener('click', async () => {
+                    const item = content.closest('.nota-list-item');
+                    const semNota = item.dataset.semNota === 'true';
+                    if (semNota) {
+                        showAlert('Este pedido ainda não possui nota fiscal liberada.', 'info');
+                        return;
+                    }
+                    const numeroNota = item.dataset.nota;
+                    const vitrine = item.dataset.vitrine;
+                    
+                    // Remover seleção anterior
+                    document.querySelectorAll('.nota-list-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    
+                    // Carregar nota
+                    await carregarNotaPorNumero(numeroNota, vitrine);
+                });
+            });
+            
+            // Prevenir que clique no checkbox dispare o carregamento
+            document.querySelectorAll('.nota-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                if (checkbox.closest('.nota-list-item')?.dataset.semNota === 'true') {
+                    checkbox.disabled = true;
+                    checkbox.checked = false;
+                    return;
+                }
+                checkbox.addEventListener('change', atualizarResumoNotas);
+            });
+
+            atualizarResumoNotas();
+        }
+
+        // Selecionar todas as notas
+        function selecionarTodasNotas() {
+            document.querySelectorAll('.nota-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            atualizarResumoNotas();
+        }
+
+        // Desselecionar todas as notas
+        function deselecionarTodasNotas() {
+            document.querySelectorAll('.nota-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            atualizarResumoNotas();
+        }
+
+        // Carregar notas selecionadas
+        async function carregarNotasSelecionadas() {
+            const checkboxes = document.querySelectorAll('.nota-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                showAlert('Selecione pelo menos uma nota', 'error');
+                return;
+            }
+            
+            showAlert(`Carregando ${checkboxes.length} nota(s) selecionada(s)...`, 'info');
+            
+            let sucessos = 0;
+            let erros = 0;
+            
+            for (const checkbox of checkboxes) {
+                const item = checkbox.closest('.nota-list-item');
+                const numeroNota = item.dataset.nota;
+                const vitrine = item.dataset.vitrine;
+                
+                try {
+                    await carregarNotaPorNumero(numeroNota, vitrine);
+                    sucessos++;
+                } catch (error) {
+                    console.error(`Erro ao carregar nota ${numeroNota}:`, error);
+                    erros++;
+                }
+            }
+            
+            showAlert(`${sucessos} nota(s) carregada(s) com sucesso! ${erros > 0 ? `${erros} erro(s).` : ''}`, sucessos > 0 ? 'success' : 'error');
+        }
+
+        // Carregar nota por número
+        async function carregarNotaPorNumero(numeroNota, vitrine) {
+            console.log('Carregando nota:', numeroNota, 'vitrine:', vitrine);
+            
+            if (!numeroNota || numeroNota === 'undefined' || numeroNota === 'N/A') {
+                showAlert('Número da nota inválido', 'error');
+                return;
+            }
+            
+            const config = getConfig();
+            
+            try {
+                const url = `${config.baseUrl}/api/MILLENIUM_ECO.pedido_venda/listafaturamentos?vitrine=${vitrine || config.vitrine}&nota=${numeroNota}&$format=json`;
+                console.log('URL da requisição:', url);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': getAuthHeader(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.value || data.value.length === 0) {
+                    throw new Error('Nota fiscal não encontrada');
+                }
+
+                state.notaAtual = data.value[0];
+                renderNotaInfo();
+                renderProdutos();
+                showAlert('Nota fiscal carregada com sucesso!', 'success');
+
+            } catch (error) {
+                console.error('Erro ao carregar nota:', error);
+                showAlert(`Erro ao carregar nota: ${error.message}`, 'error');
+            }
+        }
+
+        // Renderizar informações da nota
+        function renderNotaInfo() {
+            if (!state.notaAtual) return;
+
+            const nota = state.notaAtual;
+            
+            // Extrair dados do cliente (primeiro item do array)
+            const cliente = nota.cliente && nota.cliente.length > 0 ? nota.cliente[0] : null;
+            const nomeCliente = cliente?.nome || 'N/A';
+            const cpfCliente = cliente?.cpf || cliente?.cnpj || 'N/A';
+            
+            elements.notaInfoContainer.innerHTML = `
+                <div class="nota-info">
+                    <h3 style="margin-bottom: 15px; color: #111827;">Informações da Nota</h3>
+                    <div class="nota-info-grid">
+                        <div class="nota-info-item">
+                            <label>Nota Fiscal</label>
+                            <span>${nota.nf || nota.nota || 'N/A'}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>Saída (PEDIDOV)</label>
+                            <span>${nota.saida}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>Cliente</label>
+                            <span>${nomeCliente}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>CPF/CNPJ</label>
+                            <span>${cpfCliente}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>Código Endereço</label>
+                            <span>${nota.cod_endereco || 'N/A'}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>Valor Total</label>
+                            <span>R$ ${nota.valor_final?.toFixed(2) || '0.00'}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>Status NF-e</label>
+                            <span>${nota.mensagem_nfe || 'N/A'}</span>
+                        </div>
+                        <div class="nota-info-item">
+                            <label>Pedido Cliente</label>
+                            <span>${nota.n_pedido_cliente || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Renderizar produtos
+        function renderProdutos() {
+            if (!state.notaAtual || !state.notaAtual.produtos) {
+                elements.produtosContainer.innerHTML = '<div class="empty-state"><p>Nenhum produto disponível</p></div>';
+                return;
+            }
+
+            const produtos = state.notaAtual.produtos;
+            elements.produtosContainer.innerHTML = `
+                <div class="produtos-list scrollbar">
+                    ${produtos.map((produto, index) => `
+                        <div class="produto-item" data-index="${index}">
+                            <div class="produto-header">
+                                <input type="checkbox" class="produto-checkbox" data-index="${index}">
+                                <div class="produto-info">
+                                    <div class="produto-nome">${produto.desc_produto || 'Produto'}</div>
+                                    <div class="produto-detalhes">
+                                        Código de Barras: ${produto.barra} | 
+                                        Tamanho: ${produto.tamanho || 'N/A'} | 
+                                        Cor: ${produto.cor || 'N/A'}
+                                    </div>
+                                </div>
+                                <div class="produto-preco">R$ ${produto.preco?.toFixed(2) || '0.00'}</div>
+                            </div>
+                            <div class="produto-quantidade">
+                                <label style="font-size: 12px; color: #6b7280;">Quantidade a trocar/devolver:</label>
+                                <input type="number" 
+                                       class="produto-qtd-input" 
+                                       data-index="${index}" 
+                                       min="1" 
+                                       max="${produto.quantidade}" 
+                                       value="1"
+                                       disabled>
+                                <span style="font-size: 12px; color: #6b7280;">de ${produto.quantidade}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Event listeners para checkboxes
+            document.querySelectorAll('.produto-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const item = document.querySelector(`.produto-item[data-index="${index}"]`);
+                    const qtdInput = document.querySelector(`.produto-qtd-input[data-index="${index}"]`);
+                    
+                    if (e.target.checked) {
+                        item.classList.add('selected');
+                        qtdInput.disabled = false;
+                    } else {
+                        item.classList.remove('selected');
+                        qtdInput.disabled = true;
+                    }
+                    
+                    updateBtnAdicionarFila();
+                });
+            });
+
+            updateBtnAdicionarFila();
+        }
+
+        // Atualizar botão de adicionar à fila
+        function updateBtnAdicionarFila() {
+            const checkboxes = document.querySelectorAll('.produto-checkbox:checked');
+            elements.btnAdicionarFila.disabled = checkboxes.length === 0;
+        }
+
+        // Adicionar à fila
+        function adicionarFila() {
+            const checkboxes = document.querySelectorAll('.produto-checkbox:checked');
+            if (checkboxes.length === 0) return;
+
+            const config = getConfig();
+            
+            // Validar campo obrigatório
+            if (!config.tipoPgtoCredito || config.tipoPgtoCredito === '') {
+                showAlert('Por favor, preencha o campo "Tipo Pgto Crédito" antes de adicionar à fila', 'error');
+                document.getElementById('tipoPgtoCredito').focus();
+                return;
+            }
+            
+            const produtosSelecionados = [];
+
+            checkboxes.forEach(checkbox => {
+                const index = parseInt(checkbox.dataset.index);
+                const produto = state.notaAtual.produtos[index];
+                const qtdInput = document.querySelector(`.produto-qtd-input[data-index="${index}"]`);
+                const quantidade = parseFloat(qtdInput.value);
+
+                produtosSelecionados.push({
+                    quantidade: quantidade,
+                    preco: produto.preco,
+                    barra: produto.barra
+                });
+            });
+
+            const numeroNota = obterNumeroNota(state.notaAtual);
+
+            const body = {
+                vitrine: config.vitrine,
+                faturar: 'T',
+                autorizar_nfe: config.autorizarNfe,
+                tipo_autorizacao_troca: config.tipoAutorizacaoTroca,
+                produtos: produtosSelecionados,
+                nota: numeroNota,
+                saida: state.notaAtual.saida,
+                cod_endereco: state.notaAtual.cod_endereco,
+                tipo_pgto_credito: config.tipoPgtoCredito,
+                troca_pelo_valor_bruto: config.trocaValorBruto
+            };
+
+            const filaItem = {
+                id: Date.now(),
+                nota: numeroNota,
+                saida: state.notaAtual.saida,
+                produtos: produtosSelecionados.length,
+                body: body,
+                status: 'pending',
+                timestamp: new Date().toISOString(),
+                response: null,
+                error: null
+            };
+
+            state.fila.push(filaItem);
+            renderFila();
+            updateStats();
+            showAlert(`Troca/devolução adicionada à fila! (${produtosSelecionados.length} produto(s))`, 'success');
+
+            // Limpar seleção
+            document.querySelectorAll('.produto-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.produto-item').forEach(item => item.classList.remove('selected'));
+            document.querySelectorAll('.produto-qtd-input').forEach(input => input.disabled = true);
+            updateBtnAdicionarFila();
+        }
+
+        // Renderizar fila
+        function renderFila() {
+            if (state.fila.length === 0) {
+                elements.filaList.innerHTML = '<div class="empty-state"><p>Nenhuma troca/devolução na fila</p></div>';
+                elements.btnProcessarFila.disabled = true;
+                return;
+            }
+
+            elements.filaList.innerHTML = state.fila.map(item => `
+                <div class="fila-item">
+                    <div class="fila-item-header">
+                        <div class="fila-item-title">
+                            Nota ${item.nota} | Saída ${item.saida} | ${item.produtos} produto(s)
+                        </div>
+                        <span class="status-badge status-${item.status}">
+                            ${item.status === 'pending' ? '⏳ Pendente' : 
+                              item.status === 'processing' ? '⚙️ Processando' :
+                              item.status === 'success' ? '✅ Sucesso' :
+                              '❌ Erro'}
+                        </span>
+                    </div>
+                    <div class="fila-item-body">
+                        <div style="margin-bottom: 10px;">
+                            <strong>Timestamp:</strong> ${new Date(item.timestamp).toLocaleString('pt-BR')}
+                        </div>
+                        ${item.error ? `
+                            <div style="color: #991b1b; margin-bottom: 10px;">
+                                <strong>Erro:</strong> ${item.error}
+                            </div>
+                        ` : ''}
+                        ${item.response ? `
+                            <div style="margin-bottom: 10px;">
+                                <strong>Response:</strong>
+                                <pre>${JSON.stringify(item.response, null, 2)}</pre>
+                            </div>
+                        ` : ''}
+                        <details>
+                            <summary style="cursor: pointer; color: #667eea; font-weight: 600;">Ver Body da Requisição</summary>
+                            <pre>${JSON.stringify(item.body, null, 2)}</pre>
+                        </details>
+                    </div>
+                </div>
+            `).join('');
+
+            const hasPending = state.fila.some(item => item.status === 'pending');
+            elements.btnProcessarFila.disabled = !hasPending || state.processando;
+        }
+
+        // Atualizar estatísticas
+        function updateStats() {
+            const total = state.fila.length;
+            const pending = state.fila.filter(item => item.status === 'pending').length;
+            const success = state.fila.filter(item => item.status === 'success').length;
+            const error = state.fila.filter(item => item.status === 'error').length;
+
+            elements.statTotal.textContent = total;
+            elements.statPending.textContent = pending;
+            elements.statSuccess.textContent = success;
+            elements.statError.textContent = error;
+        }
+
+        // Processar fila
+        async function processarFila() {
+            if (state.processando) return;
+
+            state.processando = true;
+            elements.btnProcessarFila.disabled = true;
+            elements.btnProcessarFila.innerHTML = '<span class="loading"></span> Processando...';
+
+            // Contar itens pendentes
+            const itensPendentes = state.fila.filter(item => item.status === 'pending').length;
+            
+            // Enviar mensagem de início via WhatsApp
+            let mensagemInicio = `▶️ PROCESSAMENTO INICIADO\n\n`;
+            mensagemInicio += `📋 Total de notas na fila: ${itensPendentes}\n`;
+            mensagemInicio += `⏳ Aguarde o processamento...`;
+            enviarWhatsAppParaTodos(mensagemInicio);
+
+            const config = getConfig();
+            const url = `${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`;
+
+            for (const item of state.fila) {
+                if (item.status !== 'pending') continue;
+
+                item.status = 'processing';
+                renderFila();
+                updateStats();
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': getAuthHeader(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(item.body)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                    }
+
+                    item.status = 'success';
+                    item.response = data;
+                    showAlert(`Troca/devolução processada com sucesso! (Nota ${item.nota})`, 'success');
+
+                } catch (error) {
+                    console.error('Erro ao processar item:', error);
+                    item.status = 'error';
+                    item.error = error.message;
+                    showAlert(`Erro ao processar nota ${item.nota}: ${error.message}`, 'error');
+                }
+
+                renderFila();
+                updateStats();
+            }
+
+            state.processando = false;
+            elements.btnProcessarFila.innerHTML = '<span>▶️</span><span>Processar Fila</span>';
+            showAlert('Processamento da fila concluído!', 'info');
+            
+            // Enviar mensagem de finalização via WhatsApp
+            const stats = {
+                total: state.fila.length,
+                pending: state.fila.filter(item => item.status === 'pending').length,
+                success: state.fila.filter(item => item.status === 'success').length,
+                error: state.fila.filter(item => item.status === 'error').length
+            };
+            
+            let mensagemFim = `✅ PROCESSAMENTO CONCLUÍDO\n\n`;
+            mensagemFim += `📊 Estatísticas:\n`;
+            mensagemFim += `- Total: ${stats.total}\n`;
+            mensagemFim += `- Pendentes: ${stats.pending}\n`;
+            mensagemFim += `- Sucesso: ${stats.success} ✅\n`;
+            mensagemFim += `- Erros: ${stats.error} ❌\n\n`;
+            
+            if (stats.success > 0) {
+                mensagemFim += `🎉 ${stats.success} troca(s)/devolução(ões) processada(s) com sucesso!`;
+            }
+            if (stats.error > 0) {
+                if (stats.success > 0) mensagemFim += `\n`;
+                mensagemFim += `⚠️ ${stats.error} troca(s)/devolução(ões) com erro.`;
+            }
+            
+            enviarWhatsAppParaTodos(mensagemFim);
+        }
+
+        // Event listeners
+        elements.btnBuscar.addEventListener('click', buscarNota);
+        elements.btnAdicionarFila.addEventListener('click', adicionarFila);
+        elements.btnProcessarFila.addEventListener('click', processarFila);
+        elements.btnModoNota.addEventListener('click', () => alternarModo('nota'));
+        elements.btnModoPeriodo.addEventListener('click', () => alternarModo('periodo'));
+        elements.btnModoPedido.addEventListener('click', () => alternarModo('pedido'));
+        elements.btnListarNotas.addEventListener('click', listarNotasPorPeriodo);
+        elements.btnSelecionarTodas.addEventListener('click', selecionarTodasNotas);
+        elements.btnDeselecionarTodas.addEventListener('click', deselecionarTodasNotas);
+        elements.btnCarregarSelecionadas.addEventListener('click', carregarNotasSelecionadas);
+        elements.btnExportarNotas.addEventListener('click', exportarNotasCsv);
+        elements.btnBuscarPedido.addEventListener('click', buscarPedido);
+        elements.btnBuscarReversas.addEventListener('click', buscarReversasTroque);
+        elements.valorMin.addEventListener('input', () => {
+            if (state.notasEncontradas.length === 0) return;
+            aplicarFiltrosNotas();
+        });
+        elements.valorMax.addEventListener('input', () => {
+            if (state.notasEncontradas.length === 0) return;
+            aplicarFiltrosNotas();
+        });
+
+        elements.numeroNota.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscarNota();
+        });
+
+        elements.numeroPedido.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') buscarPedido();
+        });
+
+        // Persistência de configurações
+        loadConfigFromStorage();
+        setupConfigPersistence();
+        startScheduleWatcher();
+
+        // Inicialização
+        // Definir datas padrão (mesmo dia - hoje)
+        const hoje = new Date();
+        const formatoISO = (date) => date.toISOString().split('T')[0];
+        const seteDiasAtras = new Date(hoje);
+        seteDiasAtras.setDate(hoje.getDate() - 7);
+        
+        elements.dataInicial.value = formatoISO(hoje);
+        elements.dataFinal.value = formatoISO(hoje);
+        elements.notaDataInicial.value = formatoISO(seteDiasAtras);
+        elements.notaDataFinal.value = formatoISO(hoje);
+
+        console.log('✅ Sistema de Troca/Devolução carregado!');
+    </script>
+</body>
+</html>
