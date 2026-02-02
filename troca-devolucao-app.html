@@ -3477,24 +3477,24 @@
                     }
                 }
 
-                // Aplicar filtros do dashboard
-                let filteredReversas = applyDashboardFiltersToEvents(reversasCompletas);
+                // Mostrar TODOS os pedidos (sem filtro automático)
+                let allReversas = reversasCompletas;
 
-                // Atualizar métricas
-                updateDashboardMetrics(filteredReversas);
+                // Atualizar métricas com todos os pedidos
+                updateDashboardMetrics(allReversas);
                 
-                // Renderizar gráficos
-                renderDashboardCharts(filteredReversas);
+                // Renderizar gráficos com todos os pedidos
+                renderDashboardCharts(allReversas);
                 
-                // Renderizar tabela de eventos recentes com formato específico
-                renderDashboardPedidosTable(filteredReversas);
+                // Renderizar tabela com todos os pedidos
+                renderDashboardPedidosTable(allReversas);
 
                 // Atualizar timestamp
                 state.lastDashboardUpdate = new Date();
                 
                 if (showNotification) {
                     const totalEncontradas = reversasCompletas.length;
-                    const operadoresEmail = filteredReversas.filter(r => r.dashboardInfo?.operador_email).length;
+                    const operadoresEmail = allReversas.filter(r => r.dashboardInfo?.operador_email).length;
                     showAlert(`Dashboard atualizado! ${totalEncontradas} pedidos encontrados, ${operadoresEmail} com operador email.`, 'success');
                 }
             } catch (error) {
