@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>H&M - Sistema de Troca/Devolução Automatizado</title>
+    <title>H&M - Sistema de Troca/Devolução Automatizado v2.1</title>
     <style>
         * {
             margin: 0;
@@ -1112,64 +1112,30 @@
             <div class="config-section">
                 <h3>📊 Dashboard de Relatórios</h3>
                 
-                <!-- Cards de Estatísticas -->
-                <div class="dashboard-metrics-grid">
-                    <div class="dashboard-card">
-                        <h4>📈 Total de Eventos</h4>
-                        <div class="metric-value" id="totalEvents">0</div>
-                        <div class="metric-label">Últimos 7 dias</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <h4>🔄 Reversas Ativas</h4>
-                        <div class="metric-value" id="activeReversals">0</div>
-                        <div class="metric-label">Em andamento</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <h4>✅ Concluídas</h4>
-                        <div class="metric-value" id="completedReversals">0</div>
-                        <div class="metric-label">Este mês</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <h4>💰 Valor Total</h4>
-                        <div class="metric-value" id="totalValue">R$ 0</div>
-                        <div class="metric-label">Em processamento</div>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary" onclick="refreshDashboard()" style="margin-top: 20px;">
-                    <span>🔄</span>
-                    <span>Atualizar Dashboard</span>
-                </button>
-            </div>
-
-            <!-- Card de Histórico de Pedidos -->
-            <div class="config-section" style="margin-top: 30px;">
-                <h3>📋 Histórico de Pedidos</h3>
-                
-                <!-- Filtros do Histórico -->
+                <!-- Filtros do Dashboard -->
                 <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 15px 0; color: #374151;">🔍 Filtros do Histórico</h4>
+                    <h4 style="margin: 0 0 15px 0; color: #374151;">🔍 Filtros do Dashboard</h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div class="form-group">
                             <label>Período</label>
-                            <select id="historyPeriod">
+                            <select id="dashboardPeriod">
                                 <option value="7">Últimos 7 dias</option>
                                 <option value="30">Últimos 30 dias</option>
                                 <option value="90">Últimos 90 dias</option>
                                 <option value="custom">Personalizado</option>
                             </select>
                         </div>
-                        <div class="form-group" id="historyDateRange" style="display: none;">
+                        <div class="form-group" id="dashboardDateRange" style="display: none;">
                             <label>Data Inicial</label>
-                            <input type="date" id="historyDateStart">
+                            <input type="date" id="dashboardDateStart">
                         </div>
-                        <div class="form-group" id="historyDateRangeEnd" style="display: none;">
+                        <div class="form-group" id="dashboardDateRangeEnd" style="display: none;">
                             <label>Data Final</label>
-                            <input type="date" id="historyDateEnd">
+                            <input type="date" id="dashboardDateEnd">
                         </div>
                         <div class="form-group">
                             <label>Tipo de Evento</label>
-                            <select id="historyEventType">
+                            <select id="dashboardEventType">
                                 <option value="">Todos os eventos</option>
                                 <option value="1">1 - Reversa criada</option>
                                 <option value="2">2 - Reversa aprovada</option>
@@ -1201,7 +1167,7 @@
                         </div>
                         <div class="form-group">
                             <label>Status da Reversa</label>
-                            <select id="historyStatus">
+                            <select id="dashboardStatus">
                                 <option value="">Todos os status</option>
                                 <option value="pending">Pendente</option>
                                 <option value="in_transit">Em transporte</option>
@@ -1213,34 +1179,70 @@
                         </div>
                         <div class="form-group">
                             <label>Número do Pedido</label>
-                            <input type="text" id="historyOrderNumber" placeholder="Ex: 1603481046567-01">
+                            <input type="text" id="dashboardOrderNumber" placeholder="Ex: 1603481046567-01">
                         </div>
                     </div>
                     <div style="margin-top: 15px; display: flex; gap: 10px;">
-                        <button class="btn btn-primary" onclick="applyHistoryFilters()">
+                        <button class="btn btn-primary" onclick="applyDashboardFilters()">
                             <span>🔍</span>
                             <span>Aplicar Filtros</span>
                         </button>
-                        <button class="btn btn-secondary" onclick="clearHistoryFilters()">
+                        <button class="btn btn-secondary" onclick="clearDashboardFilters()">
                             <span>🔄</span>
                             <span>Limpar Filtros</span>
                         </button>
                     </div>
                 </div>
+                
+                <!-- Cards de Estatísticas -->
+                <div class="dashboard-metrics-grid">
+                    <div class="dashboard-card">
+                        <h4>📈 Total de Eventos</h4>
+                        <div class="metric-value" id="totalEvents">0</div>
+                        <div class="metric-label">Últimos 7 dias</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>🔄 Reversas Ativas</h4>
+                        <div class="metric-value" id="activeReversals">0</div>
+                        <div class="metric-label">Em andamento</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>✅ Concluídas</h4>
+                        <div class="metric-value" id="completedReversals">0</div>
+                        <div class="metric-label">Este mês</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>💰 Valor Total</h4>
+                        <div class="metric-value" id="totalValue">R$ 0</div>
+                        <div class="metric-label">Em processamento</div>
+                    </div>
+                </div>
 
-                <!-- Tabela de Histórico Completo -->
+                <!-- Gráficos -->
+                <div class="dashboard-charts-grid">
+                    <div class="chart-container">
+                        <h4>📊 Eventos por Tipo</h4>
+                        <canvas id="eventsByTypeChart" width="400" height="200"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4>📈 Eventos por Dia</h4>
+                        <canvas id="eventsByDayChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Tabela de Eventos Recentes -->
                 <div class="recent-events">
-                    <h4>📚 Histórico Completo de Pedidos</h4>
-                    <div id="historyTable">
+                    <h4>🕐 Eventos Recentes</h4>
+                    <div id="recentEventsTable">
                         <div class="empty-state">
-                            <p>Carregando histórico de pedidos...</p>
+                            <p>Carregando eventos...</p>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary" onclick="refreshHistory()" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="refreshDashboard()" style="margin-top: 20px;">
                     <span>🔄</span>
-                    <span>Atualizar Histórico</span>
+                    <span>Atualizar Dashboard</span>
                 </button>
             </div>
         </div>
@@ -1981,16 +1983,7 @@
             // Atualização automática do dashboard
             dashboardUpdateTimer: null,
             dashboardUpdateInterval: 30000, // 30 segundos
-            lastDashboardUpdate: null,
-            // Filtros do Histórico
-            historyFilters: {
-                period: '30',
-                dateStart: null,
-                dateEnd: null,
-                eventType: '',
-                status: '',
-                orderNumber: ''
-            }
+            lastDashboardUpdate: null
         };
 
         const CONFIG_STORAGE_KEY = 'trocaDev_config';
@@ -2100,14 +2093,7 @@
             dashboardDateEnd: document.getElementById('dashboardDateEnd'),
             dashboardEventType: document.getElementById('dashboardEventType'),
             dashboardStatus: document.getElementById('dashboardStatus'),
-            dashboardOrderNumber: document.getElementById('dashboardOrderNumber'),
-            // Filtros do Histórico
-            historyPeriod: document.getElementById('historyPeriod'),
-            historyDateStart: document.getElementById('historyDateStart'),
-            historyDateEnd: document.getElementById('historyDateEnd'),
-            historyEventType: document.getElementById('historyEventType'),
-            historyStatus: document.getElementById('historyStatus'),
-            historyOrderNumber: document.getElementById('historyOrderNumber')
+            dashboardOrderNumber: document.getElementById('dashboardOrderNumber')
         };
 
         // Funções de utilidade
@@ -4770,25 +4756,11 @@
             }
         });
 
-        // Event listeners para filtros do Histórico
-        elements.historyPeriod.addEventListener('change', (e) => {
-            if (e.target.value === 'custom') {
-                document.getElementById('historyDateRange').style.display = 'block';
-                document.getElementById('historyDateRangeEnd').style.display = 'block';
-            } else {
-                document.getElementById('historyDateRange').style.display = 'none';
-                document.getElementById('historyDateRangeEnd').style.display = 'none';
-            }
-        });
-
         // Carregar configurações salvas
         loadConfig();
 
         // Inicializar dashboard (página principal)
         setTimeout(refreshDashboard, 1000);
-        
-        // Inicializar histórico de pedidos
-        setTimeout(refreshHistory, 1200);
         
         // Iniciar atualização automática do dashboard (página principal)
         setTimeout(startDashboardAutoUpdate, 1500);
