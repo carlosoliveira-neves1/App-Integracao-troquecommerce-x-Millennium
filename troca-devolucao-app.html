@@ -1112,30 +1112,64 @@
             <div class="config-section">
                 <h3>📊 Dashboard de Relatórios</h3>
                 
-                <!-- Filtros do Dashboard -->
+                <!-- Cards de Estatísticas -->
+                <div class="dashboard-metrics-grid">
+                    <div class="dashboard-card">
+                        <h4>📈 Total de Eventos</h4>
+                        <div class="metric-value" id="totalEvents">0</div>
+                        <div class="metric-label">Últimos 7 dias</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>🔄 Reversas Ativas</h4>
+                        <div class="metric-value" id="activeReversals">0</div>
+                        <div class="metric-label">Em andamento</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>✅ Concluídas</h4>
+                        <div class="metric-value" id="completedReversals">0</div>
+                        <div class="metric-label">Este mês</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>💰 Valor Total</h4>
+                        <div class="metric-value" id="totalValue">R$ 0</div>
+                        <div class="metric-label">Em processamento</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="refreshDashboard()" style="margin-top: 20px;">
+                    <span>🔄</span>
+                    <span>Atualizar Dashboard</span>
+                </button>
+            </div>
+
+            <!-- Card de Histórico de Pedidos -->
+            <div class="config-section" style="margin-top: 30px;">
+                <h3>📋 Histórico de Pedidos</h3>
+                
+                <!-- Filtros do Histórico -->
                 <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 15px 0; color: #374151;">🔍 Filtros do Dashboard</h4>
+                    <h4 style="margin: 0 0 15px 0; color: #374151;">🔍 Filtros do Histórico</h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div class="form-group">
                             <label>Período</label>
-                            <select id="dashboardPeriod">
+                            <select id="historyPeriod">
                                 <option value="7">Últimos 7 dias</option>
                                 <option value="30">Últimos 30 dias</option>
                                 <option value="90">Últimos 90 dias</option>
                                 <option value="custom">Personalizado</option>
                             </select>
                         </div>
-                        <div class="form-group" id="dashboardDateRange" style="display: none;">
+                        <div class="form-group" id="historyDateRange" style="display: none;">
                             <label>Data Inicial</label>
-                            <input type="date" id="dashboardDateStart">
+                            <input type="date" id="historyDateStart">
                         </div>
-                        <div class="form-group" id="dashboardDateRangeEnd" style="display: none;">
+                        <div class="form-group" id="historyDateRangeEnd" style="display: none;">
                             <label>Data Final</label>
-                            <input type="date" id="dashboardDateEnd">
+                            <input type="date" id="historyDateEnd">
                         </div>
                         <div class="form-group">
                             <label>Tipo de Evento</label>
-                            <select id="dashboardEventType">
+                            <select id="historyEventType">
                                 <option value="">Todos os eventos</option>
                                 <option value="1">1 - Reversa criada</option>
                                 <option value="2">2 - Reversa aprovada</option>
@@ -1167,7 +1201,7 @@
                         </div>
                         <div class="form-group">
                             <label>Status da Reversa</label>
-                            <select id="dashboardStatus">
+                            <select id="historyStatus">
                                 <option value="">Todos os status</option>
                                 <option value="pending">Pendente</option>
                                 <option value="in_transit">Em transporte</option>
@@ -1179,70 +1213,34 @@
                         </div>
                         <div class="form-group">
                             <label>Número do Pedido</label>
-                            <input type="text" id="dashboardOrderNumber" placeholder="Ex: 1603481046567-01">
+                            <input type="text" id="historyOrderNumber" placeholder="Ex: 1603481046567-01">
                         </div>
                     </div>
                     <div style="margin-top: 15px; display: flex; gap: 10px;">
-                        <button class="btn btn-primary" onclick="applyDashboardFilters()">
+                        <button class="btn btn-primary" onclick="applyHistoryFilters()">
                             <span>🔍</span>
                             <span>Aplicar Filtros</span>
                         </button>
-                        <button class="btn btn-secondary" onclick="clearDashboardFilters()">
+                        <button class="btn btn-secondary" onclick="clearHistoryFilters()">
                             <span>🔄</span>
                             <span>Limpar Filtros</span>
                         </button>
                     </div>
                 </div>
-                
-                <!-- Cards de Estatísticas -->
-                <div class="dashboard-metrics-grid">
-                    <div class="dashboard-card">
-                        <h4>📈 Total de Eventos</h4>
-                        <div class="metric-value" id="totalEvents">0</div>
-                        <div class="metric-label">Últimos 7 dias</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <h4>🔄 Reversas Ativas</h4>
-                        <div class="metric-value" id="activeReversals">0</div>
-                        <div class="metric-label">Em andamento</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <h4>✅ Concluídas</h4>
-                        <div class="metric-value" id="completedReversals">0</div>
-                        <div class="metric-label">Este mês</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <h4>💰 Valor Total</h4>
-                        <div class="metric-value" id="totalValue">R$ 0</div>
-                        <div class="metric-label">Em processamento</div>
-                    </div>
-                </div>
 
-                <!-- Gráficos -->
-                <div class="dashboard-charts-grid">
-                    <div class="chart-container">
-                        <h4>📊 Eventos por Tipo</h4>
-                        <canvas id="eventsByTypeChart" width="400" height="200"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h4>📈 Eventos por Dia</h4>
-                        <canvas id="eventsByDayChart" width="400" height="200"></canvas>
-                    </div>
-                </div>
-
-                <!-- Tabela de Eventos Recentes -->
+                <!-- Tabela de Histórico Completo -->
                 <div class="recent-events">
-                    <h4>🕐 Eventos Recentes</h4>
-                    <div id="recentEventsTable">
+                    <h4>📚 Histórico Completo de Pedidos</h4>
+                    <div id="historyTable">
                         <div class="empty-state">
-                            <p>Carregando eventos...</p>
+                            <p>Carregando histórico de pedidos...</p>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary" onclick="refreshDashboard()" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="refreshHistory()" style="margin-top: 20px;">
                     <span>🔄</span>
-                    <span>Atualizar Dashboard</span>
+                    <span>Atualizar Histórico</span>
                 </button>
             </div>
         </div>
@@ -1919,61 +1917,6 @@
                     </div>
                 </div>
 
-                <!-- Configuração de Processamento Automático -->
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 15px 0; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">⚡ Processamento Automático</h4>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="autoProcessEnabled">
-                            Adicionar notas encontradas automaticamente à fila
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="autoProcessOnlyWithInvoice">
-                            Apenas com nota fiscal disponível
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Configuração de Notificações -->
-                <div style="margin-bottom: 20px;">
-                    <h4 style="margin: 0 0 15px 0; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">🔔 Notificações</h4>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="notificationNewEvents">
-                            Notificar novos eventos recebidos
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="notificationErrors">
-                            Notificar erros de processamento
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Status da Automação -->
-                <div class="automation-status">
-                    <h4>📊 Status da Automação</h4>
-                    <div class="status-item">
-                        <span>Busca Automática:</span>
-                        <span id="autoSearchStatus" class="status-indicator inactive">Inativa</span>
-                    </div>
-                    <div class="status-item">
-                        <span>Última Busca:</span>
-                        <span id="lastSearchTime">Nunca</span>
-                    </div>
-                    <div class="status-item">
-                        <span>Próxima Busca:</span>
-                        <span id="nextSearchTime">—</span>
-                    </div>
-                    <div class="status-item">
-                        <span>Total de Buscas:</span>
-                        <span id="totalSearches">0</span>
-                    </div>
-                </div>
-
                 <!-- Botões de Controle -->
                 <div class="config-actions">
                     <button class="btn btn-success" id="btnStartAutomation">
@@ -2038,7 +1981,16 @@
             // Atualização automática do dashboard
             dashboardUpdateTimer: null,
             dashboardUpdateInterval: 30000, // 30 segundos
-            lastDashboardUpdate: null
+            lastDashboardUpdate: null,
+            // Filtros do Histórico
+            historyFilters: {
+                period: '30',
+                dateStart: null,
+                dateEnd: null,
+                eventType: '',
+                status: '',
+                orderNumber: ''
+            }
         };
 
         const CONFIG_STORAGE_KEY = 'trocaDev_config';
@@ -2148,7 +2100,14 @@
             dashboardDateEnd: document.getElementById('dashboardDateEnd'),
             dashboardEventType: document.getElementById('dashboardEventType'),
             dashboardStatus: document.getElementById('dashboardStatus'),
-            dashboardOrderNumber: document.getElementById('dashboardOrderNumber')
+            dashboardOrderNumber: document.getElementById('dashboardOrderNumber'),
+            // Filtros do Histórico
+            historyPeriod: document.getElementById('historyPeriod'),
+            historyDateStart: document.getElementById('historyDateStart'),
+            historyDateEnd: document.getElementById('historyDateEnd'),
+            historyEventType: document.getElementById('historyEventType'),
+            historyStatus: document.getElementById('historyStatus'),
+            historyOrderNumber: document.getElementById('historyOrderNumber')
         };
 
         // Funções de utilidade
@@ -3034,6 +2993,201 @@
             // Atualizar dashboard
             refreshDashboard();
             showAlert('Filtros limpos com sucesso!', 'info');
+        }
+
+        // Funções do Histórico de Pedidos
+        async function refreshHistory() {
+            try {
+                // Buscar eventos recentes
+                const backendUrl = getBackendBaseUrl();
+                const response = await fetch(`${backendUrl}/api/troquecommerce/webhook-events`);
+                const data = await response.json();
+                let events = data.events || [];
+
+                // Aplicar filtros do histórico
+                events = applyHistoryFiltersToEvents(events);
+
+                // Renderizar tabela de histórico completo
+                renderHistoryTable(events);
+                
+                showAlert('Histórico atualizado com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao atualizar histórico:', error);
+                showAlert('Erro ao atualizar histórico: ' + error.message, 'error');
+            }
+        }
+
+        function applyHistoryFiltersToEvents(events) {
+            const filters = state.historyFilters;
+            let filteredEvents = [...events];
+
+            // Filtro de período
+            if (filters.period !== 'custom') {
+                const days = parseInt(filters.period);
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - days);
+                filteredEvents = filteredEvents.filter(e => new Date(e.timestamp) >= startDate);
+            } else if (filters.dateStart && filters.dateEnd) {
+                const startDate = new Date(filters.dateStart);
+                const endDate = new Date(filters.dateEnd);
+                endDate.setHours(23, 59, 59, 999);
+                filteredEvents = filteredEvents.filter(e => {
+                    const eventDate = new Date(e.timestamp);
+                    return eventDate >= startDate && eventDate <= endDate;
+                });
+            }
+
+            // Filtro de tipo de evento
+            if (filters.eventType) {
+                filteredEvents = filteredEvents.filter(e => e.eventId === filters.eventType);
+            }
+
+            // Filtro de status
+            if (filters.status) {
+                filteredEvents = filteredEvents.filter(e => {
+                    const payload = e.payload || {};
+                    return payload.status === filters.status;
+                });
+            }
+
+            // Filtro de número do pedido
+            if (filters.orderNumber) {
+                filteredEvents = filteredEvents.filter(e => {
+                    const payload = e.payload || {};
+                    return payload.ecommerce_number && 
+                           payload.ecommerce_number.toLowerCase().includes(filters.orderNumber.toLowerCase());
+                });
+            }
+
+            return filteredEvents;
+        }
+
+        function applyHistoryFilters() {
+            // Atualizar estado dos filtros
+            state.historyFilters = {
+                period: elements.historyPeriod.value,
+                dateStart: elements.historyDateStart.value,
+                dateEnd: elements.historyDateEnd.value,
+                eventType: elements.historyEventType.value,
+                status: elements.historyStatus.value,
+                orderNumber: elements.historyOrderNumber.value
+            };
+
+            // Mostrar/ocultar campos de data personalizados
+            const dateRange = document.getElementById('historyDateRange');
+            const dateRangeEnd = document.getElementById('historyDateRangeEnd');
+            if (state.historyFilters.period === 'custom') {
+                dateRange.style.display = 'block';
+                dateRangeEnd.style.display = 'block';
+            } else {
+                dateRange.style.display = 'none';
+                dateRangeEnd.style.display = 'none';
+            }
+
+            // Atualizar histórico com filtros
+            refreshHistory();
+        }
+
+        function clearHistoryFilters() {
+            // Limpar campos
+            elements.historyPeriod.value = '30';
+            elements.historyDateStart.value = '';
+            elements.historyDateEnd.value = '';
+            elements.historyEventType.value = '';
+            elements.historyStatus.value = '';
+            elements.historyOrderNumber.value = '';
+
+            // Ocultar campos de data personalizados
+            document.getElementById('historyDateRange').style.display = 'none';
+            document.getElementById('historyDateRangeEnd').style.display = 'none';
+
+            // Limpar estado
+            state.historyFilters = {
+                period: '30',
+                dateStart: null,
+                dateEnd: null,
+                eventType: '',
+                status: '',
+                orderNumber: ''
+            };
+
+            // Atualizar histórico
+            refreshHistory();
+            showAlert('Filtros do histórico limpos com sucesso!', 'info');
+        }
+
+        function renderHistoryTable(events) {
+            const container = document.getElementById('historyTable');
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Nenhum evento encontrado para os filtros informados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Ordenar eventos por data (mais recentes primeiro)
+            const sortedEvents = events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            // Criar tabela
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb;">Data/Hora</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb;">Evento</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb;">Pedido</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb;">Status</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb;">Cliente</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb;">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sortedEvents.forEach(event => {
+                const payload = event.payload || {};
+                const date = new Date(event.timestamp);
+                const formattedDate = date.toLocaleDateString('pt-BR');
+                const formattedTime = date.toLocaleTimeString('pt-BR');
+                
+                const eventName = getEventName(event.eventId);
+                const orderNumber = payload.ecommerce_number || 'N/A';
+                const status = payload.status || 'N/A';
+                const customerName = payload.customer_name || payload.customer?.name || 'N/A';
+                const value = payload.total_amount || payload.value || 'N/A';
+
+                tableHTML += `
+                    <tr style="border-bottom: 1px solid #f3f4f6; hover:background-color #f9fafb;">
+                        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${formattedDate} ${formattedTime}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">
+                            <span style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                                ${eventName}
+                            </span>
+                        </td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-family: monospace;">${orderNumber}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">
+                            <span style="background: #f0fdf4; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                                ${status}
+                            </span>
+                        </td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${customerName}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">${value}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 11px; color: #6b7280;">
+                    <strong>Total:</strong> ${sortedEvents.length} eventos encontrados
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
         }
 
         function updateDashboardMetrics(events) {
@@ -4616,11 +4770,25 @@
             }
         });
 
+        // Event listeners para filtros do Histórico
+        elements.historyPeriod.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') {
+                document.getElementById('historyDateRange').style.display = 'block';
+                document.getElementById('historyDateRangeEnd').style.display = 'block';
+            } else {
+                document.getElementById('historyDateRange').style.display = 'none';
+                document.getElementById('historyDateRangeEnd').style.display = 'none';
+            }
+        });
+
         // Carregar configurações salvas
         loadConfig();
 
         // Inicializar dashboard (página principal)
         setTimeout(refreshDashboard, 1000);
+        
+        // Inicializar histórico de pedidos
+        setTimeout(refreshHistory, 1200);
         
         // Iniciar atualização automática do dashboard (página principal)
         setTimeout(startDashboardAutoUpdate, 1500);
