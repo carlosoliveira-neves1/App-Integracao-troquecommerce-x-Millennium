@@ -2687,8 +2687,8 @@
                 
                 for (const reversa of reversasList) {
                     try {
-                        // Segunda chamada: GET /order com ID específico para buscar produtos
-                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                        // Segunda chamada: GET /order-detail com ID específico para buscar produtos
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -3071,8 +3071,8 @@
                         
                         for (const reversa of reversasFiltradas) {
                             try {
-                                // Segunda chamada: GET /order com ID específico para buscar produtos
-                                const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                                // Segunda chamada: GET /order-detail com ID específico para buscar produtos
+                                const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json'
@@ -3365,8 +3365,8 @@
                 // Para cada reversa encontrada, buscar detalhes completos
                 for (const reversa of reversasList) {
                     try {
-                        // Segunda chamada: GET /order com ID específico para buscar produtos
-                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                        // Segunda chamada: GET /order-detail com ID específico para buscar produtos
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -5599,7 +5599,7 @@
                 const backendUrl = getBackendBaseUrl();
                 
                 // Buscar detalhes do pedido específico
-                const response = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
