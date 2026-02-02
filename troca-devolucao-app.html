@@ -59,9 +59,128 @@
             color: #333;
             margin-bottom: 20px;
             font-size: 20px;
+        }
+
+        /* Estilos para Devolução */
+        .devolucao-card {
+            border-left: 4px solid #10b981 !important;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%) !important;
+        }
+
+        .devolucao-badge {
+            background: #10b981 !important;
+            color: white !important;
+            padding: 2px 8px !important;
+            border-radius: 12px !important;
+            font-weight: bold !important;
+        }
+
+        .devolucao-info {
+            background: #f8fafc;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .devolucao-info h4 {
+            margin: 0 0 10px 0;
+            color: #059669;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .devolucao-item {
+            margin-bottom: 8px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .devolucao-item strong {
+            color: #374151;
+            margin-right: 5px;
+        }
+
+        .devolucao-items {
+            margin: 5px 0 0 15px;
+            padding: 0;
+        }
+
+        .devolucao-items li {
+            margin-bottom: 5px;
+            color: #4b5563;
+            font-size: 12px;
+        }
+
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-in_transit { background: #dbeafe; color: #1e40af; }
+        .status-delivered { background: #d1fae5; color: #065f46; }
+        .status-approved { background: #dcfce7; color: #166534; }
+        .status-ready_to_return { background: #fef3c7; color: #92400e; }
+        .status-finished { background: #e0e7ff; color: #3730a3; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+
+        .source-badge {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .source-badge.webhook_troquecommerce {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .source-badge.webhook_only {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .source-badge.webhook_fallback {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 12px;
+        }
+
+        .info-item span {
+            font-size: 12px;
+            color: #6b7280;
         }
 
         .form-group {
@@ -2713,38 +2832,98 @@
                                 <span class="webhook-event-id">${evento.id}</span>
                                 <small style="margin-left: 10px;">Recebido: ${receivedAt}</small>
                             </div>
-                            <span class="webhook-event-type">${evento.eventId} - ${evento.eventName}</span>
-                        </div>
-                        <div class="webhook-event-meta">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                                <div>
-                                    <p><strong>ID Reversa:</strong> ${payload.id || 'N/A'}</p>
-                                    <p><strong>Pedido:</strong> ${payload.ecommerce_number || 'N/A'}</p>
-                                    <p><strong>Status:</strong> ${payload.status || 'N/A'}</p>
-                                </div>
-                                <div>
-                                    <p><strong>Cliente:</strong> ${client.name || 'N/A'}</p>
-                                    <p><strong>Valor:</strong> ${price}</p>
-                                    <p><strong>Reembolso:</strong> ${refundValue}</p>
-                                </div>
+                            <div class="webhook-event-actions">
+                                <button class="btn btn-primary btn-sm" onclick="buscarNotaDoEvento(${actualIndex})">
+                                    <span>🔍</span>
+                                    <span>Buscar Dados do Webhook</span>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="verDetalhesEvento(${actualIndex})" style="margin-left: 5px;">
+                                    <span>📋</span>
+                                    <span>Detalhes</span>
+                                </button>
                             </div>
-                            <p><strong>Tipo:</strong> ${payload.reverse_type || 'N/A'}</p>
-                            <p><strong>Criado em:</strong> ${payload.created_at ? formatarDataHora(payload.created_at) : 'N/A'}</p>
-                            ${payload.items ? `<p><strong>Itens:</strong> ${payload.items.length} item(s)</p>` : ''}
                         </div>
-                        <div class="webhook-event-actions">
-                            <button class="btn btn-primary btn-sm" onclick="buscarNotaDoEvento(${index})">
-                                <span>🔍</span>
-                                <span>Buscar Nota Millennium</span>
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="verDetalhesEvento(${index})" style="margin-left: 5px;">
-                                <span>📋</span>
-                                <span>Ver Detalhes</span>
-                            </button>
+                        
+                        ${isDevolucaoEvent ? devolucaoInfo : ''}
+                        
+                        <div class="webhook-event-content">
+                            <div class="webhook-event-payload">
+                                <strong>Payload:</strong>
+                                <pre>${JSON.stringify(payload, null, 2)}</pre>
+                            </div>
                         </div>
                     </div>
                 `;
-            }).join('');
+            });
+
+            container.innerHTML = html;
+            renderPagination();
+        }
+
+        function getDevolucaoInfo(event) {
+            const payload = event.payload || {};
+            let info = '<div class="devolucao-info"><h4>🔄 Informações de Devolução</h4>';
+            
+            // Informações básicas da devolução
+            if (payload.ecommerce_number) {
+                info += `<div class="devolucao-item"><strong>Número do Pedido:</strong> ${payload.ecommerce_number}</div>`;
+            }
+            
+            if (payload.status) {
+                const statusMap = {
+                    'pending': 'Pendente',
+                    'in_transit': 'Em transporte',
+                    'delivered': 'Entregue',
+                    'approved': 'Aprovado',
+                    'ready_to_return': 'Pronta para devolução',
+                    'finished': 'Finalizada',
+                    'cancelled': 'Cancelada'
+                };
+                info += `<div class="devolucao-item"><strong>Status:</strong> <span class="status-badge status-${payload.status}">${statusMap[payload.status] || payload.status}</span></div>`;
+            }
+            
+            // Valor da devolução
+            if (payload.total_amount || payload.refund_amount) {
+                const amount = payload.total_amount || payload.refund_amount;
+                info += `<div class="devolucao-item"><strong>Valor:</strong> R$ ${parseFloat(amount).toFixed(2)}</div>`;
+            }
+            
+            // Informações do cliente
+            if (payload.customer_name || payload.customer?.name) {
+                const customerName = payload.customer_name || payload.customer?.name;
+                info += `<div class="devolucao-item"><strong>Cliente:</strong> ${customerName}</div>`;
+            }
+            
+            // Itens da devolução
+            if (payload.items && payload.items.length > 0) {
+                info += '<div class="devolucao-item"><strong>Itens da Devolução:</strong><ul class="devolucao-items">';
+                payload.items.forEach((item, idx) => {
+                    info += `<li>
+                        <strong>${item.product_name || item.name || 'Produto ' + (idx + 1)}</strong>
+                        ${item.quantity ? ` - Qtd: ${item.quantity}` : ''}
+                        ${item.price ? ` - R$ ${parseFloat(item.price).toFixed(2)}` : ''}
+                    </li>`;
+                });
+                info += '</ul></div>';
+            }
+            
+            // Informações de logística
+            if (payload.tracking_code) {
+                info += `<div class="devolucao-item"><strong>Código de Rastreio:</strong> ${payload.tracking_code}</div>`;
+            }
+            
+            if (payload.invoice_number || payload.nota) {
+                info += `<div class="devolucao-item"><strong>Nota Fiscal:</strong> ${payload.invoice_number || payload.nota}</div>`;
+            }
+            
+            // Data da devolução
+            if (payload.return_date || payload.created_at) {
+                const returnDate = new Date(payload.return_date || payload.created_at);
+                info += `<div class="devolucao-item"><strong>Data da Devolução:</strong> ${returnDate.toLocaleDateString('pt-BR')}</div>`;
+            }
+            
+            info += '</div>';
+            return info;
         }
 
         async function buscarNotaDoEvento(eventIndex) {
@@ -2755,15 +2934,186 @@
             }
 
             const payload = evento.payload || {};
-            const reversaSimulada = {
-                id: payload.id,
-                ecommerce_number: payload.ecommerce_number,
-                status: payload.status,
-                client: payload.client || { name: 'Cliente do evento' },
-                created_at: payload.created_at || evento.timestamp
-            };
+            
+            try {
+                // Buscar dados completos da reversa do Troquecommerce via webhook
+                const config = getConfig();
+                const backendUrl = getBackendBaseUrl();
+                
+                // Se tiver número do pedido, buscar dados atualizados do Troquecommerce
+                if (payload.ecommerce_number) {
+                    const response = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            baseUrl: config.troqueBaseUrl,
+                            token: config.troqueToken,
+                            status: payload.status || ''
+                        })
+                    });
 
-            await carregarReversaNoMillennium(eventIndex, reversaSimulada);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const reversas = data.data || data.orders || data.items || [];
+                        
+                        // Encontrar a reversa específica pelo número do pedido
+                        const reversaEncontrada = reversas.find(r => 
+                            r.ecommerce_number === payload.ecommerce_number || 
+                            r.order_number === payload.ecommerce_number
+                        );
+
+                        if (reversaEncontrada) {
+                            // Combinar dados do webhook com dados atualizados do Troquecommerce
+                            const reversaCompleta = {
+                                ...payload,
+                                ...reversaEncontrada,
+                                webhookEventId: evento.eventId,
+                                webhookTimestamp: evento.timestamp,
+                                source: 'webhook_troquecommerce'
+                            };
+                            
+                            await carregarReversaDoWebhook(eventIndex, reversaCompleta);
+                            return;
+                        }
+                    }
+                }
+
+                // Se não encontrar na API, usar dados do webhook
+                const reversaDoWebhook = {
+                    ...payload,
+                    webhookEventId: evento.eventId,
+                    webhookTimestamp: evento.timestamp,
+                    source: 'webhook_only',
+                    id: payload.id || evento.id,
+                    ecommerce_number: payload.ecommerce_number,
+                    status: payload.status,
+                    client: payload.client || payload.customer || { name: 'Cliente do evento' },
+                    created_at: payload.created_at || evento.timestamp,
+                    items: payload.items || [],
+                    total_amount: payload.total_amount || payload.refund_amount,
+                    invoice: payload.invoice || { number: payload.invoice_number || payload.nota }
+                };
+
+                await carregarReversaDoWebhook(eventIndex, reversaDoWebhook);
+
+            } catch (error) {
+                console.error('Erro ao buscar dados do Troquecommerce:', error);
+                showAlert('Erro ao buscar dados do Troquecommerce: ' + error.message, 'error');
+                
+                // Em caso de erro, usar apenas dados do webhook
+                const reversaFallback = {
+                    ...payload,
+                    webhookEventId: evento.eventId,
+                    webhookTimestamp: evento.timestamp,
+                    source: 'webhook_fallback',
+                    id: payload.id || evento.id,
+                    ecommerce_number: payload.ecommerce_number,
+                    status: payload.status,
+                    client: payload.client || payload.customer || { name: 'Cliente do evento' },
+                    created_at: payload.created_at || evento.timestamp
+                };
+
+                await carregarReversaDoWebhook(eventIndex, reversaFallback);
+            }
+        }
+
+        async function carregarReversaDoWebhook(eventIndex, reversa) {
+            try {
+                // Exibir informações da nota fiscal baseadas nos dados do webhook
+                elements.notaInfoContainer.innerHTML = `
+                    <div class="nota-info">
+                        <h4>📄 Dados da Nota (Webhook Troquecommerce)</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Fonte:</label>
+                                <span class="source-badge">${reversa.source}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>ID do Evento:</label>
+                                <span>${reversa.webhookEventId}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Número do Pedido:</label>
+                                <span>${reversa.ecommerce_number || 'N/A'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Status:</label>
+                                <span class="status-badge status-${reversa.status}">${reversa.status}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Data do Evento:</label>
+                                <span>${new Date(reversa.webhookTimestamp).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Valor:</label>
+                                <span>R$ ${reversa.total_amount ? parseFloat(reversa.total_amount).toFixed(2) : 'N/A'}</span>
+                            </div>
+                            ${reversa.invoice ? `
+                            <div class="info-item">
+                                <label>Nota Fiscal:</label>
+                                <span>${reversa.invoice.number || 'N/A'}</span>
+                            </div>
+                            ` : ''}
+                            ${reversa.client?.name ? `
+                            <div class="info-item">
+                                <label>Cliente:</label>
+                                <span>${reversa.client.name}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Exibir produtos da devolução
+                if (reversa.items && reversa.items.length > 0) {
+                    let produtosHTML = '<div class="produtos-list">';
+                    
+                    reversa.items.forEach((item, index) => {
+                        const isSelected = state.produtosSelecionados.some(p => p.index === index);
+                        produtosHTML += `
+                            <div class="produto-item">
+                                <div class="produto-checkbox">
+                                    <input type="checkbox" id="produto-${index}" 
+                                           ${isSelected ? 'checked' : ''} 
+                                           onchange="toggleProdutoSelecionado(${index}, ${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                                </div>
+                                <div class="produto-info">
+                                    <h5>${item.product_name || item.name || `Produto ${index + 1}`}</h5>
+                                    <p><strong>Código:</strong> ${item.product_code || item.sku || 'N/A'}</p>
+                                    <p><strong>Quantidade:</strong> ${item.quantity || 1}</p>
+                                    <p><strong>Valor:</strong> R$ ${item.price ? parseFloat(item.price).toFixed(2) : 'N/A'}</p>
+                                    ${item.reason ? `<p><strong>Motivo:</strong> ${item.reason}</p>` : ''}
+                                    ${item.condition ? `<p><strong>Condição:</strong> ${item.condition}</p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    produtosHTML += '</div>';
+                    elements.produtosContainer.innerHTML = produtosHTML;
+                } else {
+                    elements.produtosContainer.innerHTML = `
+                        <div class="empty-state">
+                            <p>Nenhum produto encontrado nos dados do webhook.</p>
+                        </div>
+                    `;
+                }
+
+                // Atualizar estado
+                state.notaAtual = {
+                    ...reversa,
+                    source: 'webhook',
+                    eventIndex: eventIndex
+                };
+
+                showAlert('Dados do webhook carregados com sucesso!', 'success');
+
+            } catch (error) {
+                console.error('Erro ao carregar dados do webhook:', error);
+                showAlert('Erro ao carregar dados do webhook: ' + error.message, 'error');
+            }
         }
 
         function verDetalhesEvento(eventIndex) {
@@ -3171,6 +3521,97 @@
                 <div style="margin-top: 15px; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 11px; color: #6b7280;">
                     <strong>Total:</strong> ${sortedEvents.length} eventos encontrados
                 </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function renderRecentEventsTable(events) {
+            const container = document.getElementById('recentEventsTable');
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Nenhum evento encontrado.</p></div>';
+                return;
+            }
+
+            // Limitar aos 10 eventos mais recentes
+            const recentEvents = events.slice(0, 10);
+
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 10px; text-align: left;">Data/Hora</th>
+                            <th style="padding: 10px; text-align: left;">Evento</th>
+                            <th style="padding: 10px; text-align: left;">Pedido</th>
+                            <th style="padding: 10px; text-align: left;">Status</th>
+                            <th style="padding: 10px; text-align: left;">Devolução</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            recentEvents.forEach(event => {
+                const payload = event.payload || {};
+                const date = new Date(event.timestamp);
+                const formattedDate = date.toLocaleDateString('pt-BR');
+                const formattedTime = date.toLocaleTimeString('pt-BR');
+                
+                const eventName = getEventName(event.eventId);
+                const orderNumber = payload.ecommerce_number || 'N/A';
+                const status = payload.status || 'N/A';
+
+                // Verificar se é evento de devolução
+                const isDevolucaoEvent = ['1', '6', '13', '14', '16', '17', '18', '20'].includes(event.eventId);
+                let devolucaoInfo = '';
+
+                if (isDevolucaoEvent) {
+                    const amount = payload.total_amount || payload.refund_amount || 'N/A';
+                    const customerName = payload.customer_name || payload.customer?.name || 'N/A';
+                    
+                    if (amount !== 'N/A') {
+                        devolucaoInfo = `<div style="font-size: 10px; color: #059669;">
+                            💰 R$ ${parseFloat(amount).toFixed(2)}
+                        </div>`;
+                    }
+                    
+                    if (customerName !== 'N/A') {
+                        devolucaoInfo += `<div style="font-size: 10px; color: #6b7280;">
+                            👤 ${customerName}
+                        </div>`;
+                    }
+
+                    if (!devolucaoInfo) {
+                        devolucaoInfo = '<div style="font-size: 10px; color: #059669;">🔄 Devolução</div>';
+                    }
+                }
+
+                const eventBadge = isDevolucaoEvent ? 
+                    `<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                        🔄 ${eventName}
+                    </span>` :
+                    `<span style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                        ${eventName}
+                    </span>`;
+
+                tableHTML += `
+                    <tr style="border-bottom: 1px solid #f3f4f6; ${isDevolucaoEvent ? 'background: #f0fdf4;' : ''}">
+                        <td style="padding: 8px;">${formattedDate} ${formattedTime}</td>
+                        <td style="padding: 8px;">${eventBadge}</td>
+                        <td style="padding: 8px; font-family: monospace;">${orderNumber}</td>
+                        <td style="padding: 8px;">
+                            <span style="background: #f0fdf4; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 10px;">
+                                ${status}
+                            </span>
+                        </td>
+                        <td style="padding: 8px;">${devolucaoInfo}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
             `;
 
             container.innerHTML = tableHTML;
