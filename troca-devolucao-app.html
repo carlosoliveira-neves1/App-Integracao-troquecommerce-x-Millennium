@@ -3362,19 +3362,14 @@
                 const listData = await listResponse.json();
                 const reversasList = listData.list || listData.data || listData.orders || [];
                 
-                // PRIMEIRO: Filtrar pedidos que já têm operador email visível na lista
-                const pedidosComPossivelOperador = reversasList.filter(reversa => {
-                    // Verificar se já tem algum dado que indica operador
-                    return reversa.created_by && reversa.created_by !== 'Sistema' && reversa.created_by.includes('@');
-                });
+                // PRIMEIRO: Pegar TODOS os pedidos sem filtro
+                console.log(`📊 Encontrados ${reversasList.length} pedidos totais`);
                 
-                console.log(`📊 Encontrados ${reversasList.length} pedidos totais, ${pedidosComPossivelOperador.length} com possível operador email`);
-                
-                // SEGUNDO: Buscar detalhes apenas dos pedidos filtrados
-                for (const reversa of pedidosComPossivelOperador) {
+                // SEGUNDO: Buscar detalhes de TODOS os pedidos no endpoint /order
+                for (const reversa of reversasList) {
                     try {
-                        // Segunda chamada: GET /order-detail com ID específico para buscar produtos e histórico completo
-                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
+                        // Segunda chamada: GET /order com ID específico para buscar produtos e histórico completo
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
