@@ -2647,7 +2647,7 @@
             try {
                 const backendUrl = getBackendBaseUrl();
                 
-                // Primeira chamada: GET /order/list com status "Aguardando Pagamento"
+                // Primeira chamada: GET /order/list (todos os status, filtrado por unchecked_by_integration)
                 const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
                     method: 'POST',
                     headers: {
@@ -2672,7 +2672,6 @@
                         requestPayload: {
                             baseUrl: config.baseUrl,
                             token: config.token ? '[HIDDEN]' : 'MISSING',
-                            status: 'Aguardando Pagamento',
                             unchecked_by_integration: true
                         }
                     });
@@ -3035,11 +3034,11 @@
             const payload = evento.payload || {};
             
             try {
-                // Buscar lista de pedidos com status "Aguardando Pagamento" do Troquecommerce
+                // Buscar lista de pedidos do Troquecommerce (todos os status, filtrado por unchecked_by_integration)
                 const config = getConfig();
                 const backendUrl = getBackendBaseUrl();
                 
-                // Primeira chamada: GET /order/list com status "Aguardando Pagamento"
+                // Primeira chamada: GET /order/list (todos os status, filtrado por unchecked_by_integration)
                 const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
                     method: 'POST',
                     headers: {
@@ -3048,7 +3047,6 @@
                     body: JSON.stringify({
                         baseUrl: config.baseUrl,
                         token: config.token,
-                        status: 'Aguardando Pagamento',
                         unchecked_by_integration: true // Buscar apenas não processadas
                     })
                 });
@@ -3326,11 +3324,11 @@
         // Dashboard Functions
         async function refreshDashboard(showNotification = true) {
             try {
-                // Buscar pedidos com status "Aguardando Pagamento" do Troquecommerce
+                // Buscar pedidos do Troquecommerce (todos os status, filtrado por unchecked_by_integration)
                 const config = getTroqueConfig();
                 const backendUrl = getBackendBaseUrl();
                 
-                // Primeira chamada: GET /order/list com status "Aguardando Pagamento"
+                // Primeira chamada: GET /order/list (todos os status, filtrado por unchecked_by_integration)
                 const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
                     method: 'POST',
                     headers: {
@@ -3339,7 +3337,6 @@
                     body: JSON.stringify({
                         baseUrl: config.baseUrl,
                         token: config.token,
-                        status: 'Aguardando Pagamento',
                         unchecked_by_integration: true // Buscar apenas não processadas
                     })
                 });
@@ -3355,7 +3352,6 @@
                         requestPayload: {
                             baseUrl: config.baseUrl,
                             token: config.token ? '[HIDDEN]' : 'MISSING',
-                            status: 'Aguardando Pagamento',
                             unchecked_by_integration: true
                         }
                     });
