@@ -2598,58 +2598,93 @@
                 return;
             }
 
-            const status = elements.troqueStatusFiltro?.value;
+            const status = elements.troqueStatusFiltro?.value || 'aguardando pagamento';
             const dataInicial = elements.troqueDataInicial?.value;
             const dataFinal = elements.troqueDataFinal?.value;
-            const params = new URLSearchParams();
-            if (status) params.append('status', status);
-            if (dataInicial) params.append('start_date', `${dataInicial}T00:00:00.000Z`);
-            if (dataFinal) params.append('end_date', `${dataFinal}T23:59:59.999Z`);
-
-            const backendUrl = getBackendBaseUrl();
-            const payload = {
-                baseUrl: normalizarTroqueUrl(baseUrl),
-                token,
-                status: status || undefined,
-                start_date: dataInicial ? `${dataInicial}T00:00:00.000Z` : undefined,
-                end_date: dataFinal ? `${dataFinal}T23:59:59.999Z` : undefined
-            };
 
             elements.btnBuscarReversas.disabled = true;
             const btnOriginalText = elements.btnBuscarReversas.innerHTML;
             elements.btnBuscarReversas.innerHTML = '<span class="loading"></span> Buscando...';
 
             try {
-                const response = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                const backendUrl = getBackendBaseUrl();
+                
+                // Primeira chamada: GET /order/list com status "aguardando pagamento"
+                const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        baseUrl: normalizarTroqueUrl(baseUrl),
+                        token,
+                        status: status,
+                        unchecked_by_integration: true, // Buscar apenas não processadas
+                        start_date: dataInicial ? `${dataInicial}T00:00:00.000Z` : undefined,
+                        end_date: dataFinal ? `${dataFinal}T23:59:59.999Z` : undefined
+                    })
                 });
 
-                if (!response.ok) {
-                    const text = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${text || response.statusText}`);
+                if (!listResponse.ok) {
+                    const text = await listResponse.text();
+                    throw new Error(`HTTP ${listResponse.status}: ${text || listResponse.statusText}`);
                 }
 
-                const data = await response.json();
-                let reversas = [];
-                if (Array.isArray(data)) {
-                    reversas = data;
-                } else if (Array.isArray(data?.list)) {
-                    reversas = data.list;
-                } else if (Array.isArray(data?.data)) {
-                    reversas = data.data;
-                } else if (Array.isArray(data?.orders)) {
-                    reversas = data.orders;
-                } else if (Array.isArray(data?.items)) {
-                    reversas = data.items;
+                const listData = await listResponse.json();
+                const reversasList = listData.list || listData.data || listData.orders || [];
+                
+                // Para cada reversa encontrada, buscar detalhes completos
+                const reversasCompletas = [];
+                
+                for (const reversa of reversasList) {
+                    try {
+                        // Segunda chamada: GET /order com ID específico para buscar produtos
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                baseUrl: normalizarTroqueUrl(baseUrl),
+                                token,
+                                id: reversa.id
+                            })
+                        });
+
+                        if (detailResponse.ok) {
+                            const detalhesReversa = await detailResponse.json();
+                            
+                            // Combinar dados da lista com detalhes completos
+                            const reversaCompleta = {
+                                ...reversa,
+                                ...detalhesReversa,
+                                source: 'troquecommerce_api'
+                            };
+                            
+                            reversasCompletas.push(reversaCompleta);
+                        } else {
+                            // Se falhar detalhes, usar dados básicos da lista
+                            reversasCompletas.push({
+                                ...reversa,
+                                source: 'troquecommerce_list_only'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Erro ao buscar detalhes da reversa:', reversa.id, error);
+                        // Adicionar mesmo assim com dados básicos
+                        reversasCompletas.push({
+                            ...reversa,
+                            source: 'troquecommerce_fallback'
+                        });
+                    }
                 }
 
-                state.troqueReversas = reversas;
+                state.troqueReversas = reversasCompletas;
                 renderTroqueReversas();
-                showAlert(`${reversas.length} reversa(s) encontrada(s) na Troquecommerce.`, 'success');
+                
+                const totalEncontradas = reversasCompletas.length;
+                const comDetalhes = reversasCompletas.filter(r => r.source === 'troquecommerce_api').length;
+                showAlert(`${totalEncontradas} reversa(s) encontrada(s) (${comDetalhes} com detalhes completos).`, 'success');
                 
                 // Atualizar dashboard em background se estiver ativo
                 if (document.getElementById('dashboardPage').classList.contains('active')) {
@@ -3242,35 +3277,170 @@
         // Dashboard Functions
         async function refreshDashboard(showNotification = true) {
             try {
-                // Buscar eventos recentes
+                // Buscar reversas do Troquecommerce com status "aguardando pagamento"
+                const config = getConfig();
                 const backendUrl = getBackendBaseUrl();
-                const response = await fetch(`${backendUrl}/api/troquecommerce/webhook-events`);
-                const data = await response.json();
-                let events = data.events || [];
+                
+                // Primeira chamada: GET /order/list com status "aguardando pagamento"
+                const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.troqueBaseUrl,
+                        token: config.troqueToken,
+                        status: 'aguardando pagamento',
+                        unchecked_by_integration: true // Buscar apenas não processadas
+                    })
+                });
+
+                let reversasCompletas = [];
+                
+                if (listResponse.ok) {
+                    const listData = await listResponse.json();
+                    const reversasList = listData.list || listData.data || listData.orders || [];
+                    
+                    // Para cada reversa encontrada, buscar detalhes completos
+                    for (const reversa of reversasList) {
+                        try {
+                            // Segunda chamada: GET /order com ID específico para buscar produtos
+                            const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    baseUrl: config.troqueBaseUrl,
+                                    token: config.troqueToken,
+                                    id: reversa.id
+                                })
+                            });
+
+                            if (detailResponse.ok) {
+                                const detalhesReversa = await detailResponse.json();
+                                
+                                // Identificar se o último operador é um email (diferente de Sistema)
+                                let ultimoOperadorEmail = false;
+                                let ultimoOperador = 'Sistema';
+                                let ultimaAcao = '';
+                                
+                                if (detalhesReversa.history && detalhesReversa.history.length > 0) {
+                                    const ultimoHistorico = detalhesReversa.history[detalhesReversa.history.length - 1];
+                                    ultimoOperador = ultimoHistorico.created_by || 'Sistema';
+                                    ultimaAcao = ultimoHistorico.description || '';
+                                    
+                                    // Verificar se o operador é um email (contém @ e não é "Sistema")
+                                    if (ultimoOperador && ultimoOperador !== 'Sistema' && ultimoOperador.includes('@')) {
+                                        ultimoOperadorEmail = true;
+                                    }
+                                }
+                                
+                                // Combinar dados da lista com detalhes completos
+                                const reversaCompleta = {
+                                    ...reversa,
+                                    ...detalhesReversa,
+                                    source: 'troquecommerce_api',
+                                    timestamp: reversa.created_at || reversa.updated_at,
+                                    eventId: 'dashboard_reversa',
+                                    eventName: 'Reversa Aguardando Pagamento',
+                                    // Adicionar informações específicas do dashboard
+                                    dashboardInfo: {
+                                        id: reversa.id,
+                                        ecommerce_number: reversa.ecommerce_number,
+                                        nome_cliente: reversa.client?.name || detalhesReversa.client?.name || 'N/A',
+                                        email_cliente: reversa.client?.email || detalhesReversa.client?.email || 'N/A',
+                                        solicitacao: 'Devolução', // Padrão baseado nos exemplos
+                                        reversa: 'Postagem', // Padrão baseado nos exemplos
+                                        data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
+                                        data_entrega: reversa.tracking?.delivery_date ? 
+                                            new Date(reversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 
+                                            (detalhesReversa.tracking?.delivery_date ? 
+                                                new Date(detalhesReversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 'N/A'),
+                                        total: reversa.price || reversa.refund_value || detalhesReversa.price || detalhesReversa.refund_value || 0,
+                                        ultimo_operador: ultimoOperador,
+                                        ultima_acao: ultimaAcao,
+                                        operador_email: ultimoOperadorEmail
+                                    }
+                                };
+                                
+                                reversasCompletas.push(reversaCompleta);
+                            } else {
+                                // Se falhar detalhes, usar dados básicos da lista
+                                reversasCompletas.push({
+                                    ...reversa,
+                                    source: 'troquecommerce_list_only',
+                                    timestamp: reversa.created_at || reversa.updated_at,
+                                    eventId: 'dashboard_reversa',
+                                    eventName: 'Reversa Aguardando Pagamento',
+                                    dashboardInfo: {
+                                        id: reversa.id,
+                                        ecommerce_number: reversa.ecommerce_number,
+                                        nome_cliente: reversa.client?.name || 'N/A',
+                                        email_cliente: reversa.client?.email || 'N/A',
+                                        solicitacao: 'Devolução',
+                                        reversa: 'Postagem',
+                                        data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
+                                        data_entrega: 'N/A',
+                                        total: reversa.price || 0,
+                                        ultimo_operador: 'Sistema',
+                                        ultima_acao: '',
+                                        operador_email: false
+                                    }
+                                });
+                            }
+                        } catch (error) {
+                            console.error('Erro ao buscar detalhes da reversa:', reversa.id, error);
+                            // Adicionar mesmo assim com dados básicos
+                            reversasCompletas.push({
+                                ...reversa,
+                                source: 'troquecommerce_fallback',
+                                timestamp: reversa.created_at || reversa.updated_at,
+                                eventId: 'dashboard_reversa',
+                                eventName: 'Reversa Aguardando Pagamento',
+                                dashboardInfo: {
+                                    id: reversa.id,
+                                    ecommerce_number: reversa.ecommerce_number,
+                                    nome_cliente: reversa.client?.name || 'N/A',
+                                    email_cliente: reversa.client?.email || 'N/A',
+                                    solicitacao: 'Devolução',
+                                    reversa: 'Postagem',
+                                    data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
+                                    data_entrega: 'N/A',
+                                    total: reversa.price || 0,
+                                    ultimo_operador: 'Sistema',
+                                    ultima_acao: '',
+                                    operador_email: false
+                                }
+                            });
+                        }
+                    }
+                }
 
                 // Aplicar filtros do dashboard
-                events = applyDashboardFiltersToEvents(events);
+                let filteredReversas = applyDashboardFiltersToEvents(reversasCompletas);
 
                 // Atualizar métricas
-                updateDashboardMetrics(events);
+                updateDashboardMetrics(filteredReversas);
                 
                 // Renderizar gráficos
-                renderDashboardCharts(events);
+                renderDashboardCharts(filteredReversas);
                 
-                // Renderizar tabela de eventos recentes
-                renderRecentEventsTable(events);
+                // Renderizar tabela de eventos recentes com formato específico
+                renderDashboardPedidosTable(filteredReversas);
 
                 // Atualizar timestamp
                 state.lastDashboardUpdate = new Date();
                 
                 if (showNotification) {
-                    showAlert('Dashboard atualizado com sucesso!', 'success');
+                    const totalEncontradas = reversasCompletas.length;
+                    const totalFiltradas = filteredReversas.length;
+                    const operadoresEmail = filteredReversas.filter(r => r.dashboardInfo?.operador_email).length;
+                    showAlert(`Dashboard atualizado! ${totalEncontradas} reversas encontradas, ${totalFiltradas} exibidas (${operadoresEmail} com operador email).`, 'success');
                 }
             } catch (error) {
                 console.error('Erro ao atualizar dashboard:', error);
-                if (showNotification) {
-                    showAlert('Erro ao atualizar dashboard: ' + error.message, 'error');
-                }
+                showAlert('Erro ao atualizar dashboard: ' + error.message, 'error');
             }
         }
 
@@ -3588,6 +3758,76 @@
                 </table>
                 <div style="margin-top: 15px; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 11px; color: #6b7280;">
                     <strong>Total:</strong> ${sortedEvents.length} eventos encontrados
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function renderDashboardPedidosTable(events) {
+            const container = document.getElementById('recentEventsTable');
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>Nenhum pedido "Aguardando Pagamento" encontrado.</p></div>';
+                return;
+            }
+
+            // Ordenar por data (mais recentes primeiro)
+            const sortedEvents = events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 10px; text-align: left;">Status</th>
+                            <th style="padding: 10px; text-align: left;">ID</th>
+                            <th style="padding: 10px; text-align: left;">Nome</th>
+                            <th style="padding: 10px; text-align: left;">Email</th>
+                            <th style="padding: 10px; text-align: left;">Solicitação</th>
+                            <th style="padding: 10px; text-align: left;">Reversa</th>
+                            <th style="padding: 10px; text-align: left;">Data</th>
+                            <th style="padding: 10px; text-align: left;">Data Entrega</th>
+                            <th style="padding: 10px; text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sortedEvents.forEach(event => {
+                const info = event.dashboardInfo || {};
+                
+                // Destacar linhas com operador email
+                const rowStyle = info.operador_email ? 'background: #fef3c7;' : '';
+                
+                tableHTML += `
+                    <tr style="border-bottom: 1px solid #f3f4f6; ${rowStyle}">
+                        <td style="padding: 8px;">
+                            <span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">
+                                Aguardando Pagamento
+                            </span>
+                            ${info.operador_email ? '<br><span style="background: #dcfce7; color: #166534; padding: 1px 4px; border-radius: 3px; font-size: 9px;">👤 Email</span>' : ''}
+                        </td>
+                        <td style="padding: 8px; font-family: monospace; font-size: 11px;">${info.ecommerce_number || 'N/A'}</td>
+                        <td style="padding: 8px; font-size: 11px;">${info.nome_cliente || 'N/A'}</td>
+                        <td style="padding: 8px; font-size: 11px;">${info.email_cliente || 'N/A'}</td>
+                        <td style="padding: 8px; font-size: 11px;">${info.solicitacao || 'N/A'}</td>
+                        <td style="padding: 8px; font-size: 11px;">${info.reversa || 'N/A'}</td>
+                        <td style="padding: 8px; font-size: 11px;">${info.data || 'N/A'}</td>
+                        <td style="padding: 8px; font-size: 11px;">${info.data_entrega || 'N/A'}</td>
+                        <td style="padding: 8px; text-align: right; font-weight: bold; font-size: 11px;">
+                            R$ ${parseFloat(info.total || 0).toFixed(2).replace('.', ',')}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 11px; color: #6b7280;">
+                    <strong>Total:</strong> ${sortedEvents.length} pedidos "Aguardando Pagamento"
+                    ${sortedEvents.filter(e => e.dashboardInfo?.operador_email).length > 0 ? 
+                        ` | <strong>Com operador Email:</strong> ${sortedEvents.filter(e => e.dashboardInfo?.operador_email).length}` : ''}
                 </div>
             `;
 
