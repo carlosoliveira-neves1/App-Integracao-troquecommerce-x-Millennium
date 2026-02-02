@@ -147,8 +147,26 @@ app.post('/api/troquecommerce/order', async (req, res) => {
     const { baseUrl, token, id, ecommerce_number } = req.body || {};
     const orderId = ecommerce_number || id; // Prioriza ecommerce_number
 
+    console.log('📥 Recebida requisição /order:', {
+        baseUrl,
+        token: token ? '[HIDDEN]' : 'MISSING',
+        id,
+        ecommerce_number,
+        orderId
+    });
+
     if (!baseUrl || !token || !orderId) {
-        return res.status(400).json({ message: 'baseUrl, token and orderId (id or ecommerce_number) are required' });
+        console.log('❌ Parâmetros faltando:', { 
+            hasBaseUrl: !!baseUrl, 
+            hasToken: !!token, 
+            hasId: !!id, 
+            hasEcommerceNumber: !!ecommerce_number,
+            orderId 
+        });
+        return res.status(400).json({ 
+            message: 'baseUrl, token and orderId (id or ecommerce_number) are required',
+            received: { baseUrl: !!baseUrl, token: !!token, id, ecommerce_number }
+        });
     }
 
     let endpoint;

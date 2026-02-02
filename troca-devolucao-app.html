@@ -3369,6 +3369,8 @@
                 for (const reversa of reversasList) {
                     try {
                         // Segunda chamada: GET /order com ID específico para buscar produtos e histórico completo
+                        console.log(`🔍 Buscando detalhes do pedido ${reversa.id} (ecommerce_number: ${reversa.ecommerce_number})`);
+                        
                         const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
                             method: 'POST',
                             headers: {
@@ -3377,7 +3379,8 @@
                             body: JSON.stringify({
                                 baseUrl: config.baseUrl,
                                 token: config.token,
-                                id: reversa.id
+                                id: reversa.id,
+                                ecommerce_number: reversa.ecommerce_number
                             })
                         });
 
