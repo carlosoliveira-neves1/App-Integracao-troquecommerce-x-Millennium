@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 4000;
 const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN || 'MyWebhookSecret123';
-const ACCEPTED_EVENTS = new Set(['6']); // 6 = Itens recebidos
+const ACCEPTED_EVENTS = new Set(['6', '21', '3']); // 6 = Itens recebidos, 21 = Pedido de troca aprovado, 3 = Reversa aprovada
 
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '1mb' }));
@@ -71,18 +71,115 @@ function isAuthorized(req) {
     return incomingToken && incomingToken === WEBHOOK_TOKEN;
 }
 
-function handleReverseOrderEvent(payload) {
-    // TODO: Integrar com o app Millennium (ex.: enfileirar nota para processamento).
-    console.log('[Troquecommerce] Evento recebido:', {
+async function handleReverseOrderEvent(payload) {
+    console.log('[Troquecommerce] Processando evento:', {
         webhook_event_id: payload.webhook_event_id,
         reverse_id: payload.id,
         ecommerce_number: payload.ecommerce_number,
         status: payload.status,
         created_at: payload.created_at,
     });
+
+    // Buscar automaticamente a nota no Millennium sem adicionar à fila
+    try {
+        const millenniumBaseUrl = process.env.MILLENNIUM_BASE_URL || 'https://api.millennium.com.br';
+        const vitrine = process.env.MILLENNIUM_VITRINE || '101';
+        
+        // Buscar pedido pelo número do e-commerce
+        const pedidoUrl = `${millenniumBaseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data?$format=json`;
+        const pedidoBody = {
+            SCRIPTFILIAL: null,
+            DATAI: '1900-01-01T00:00:00.000Z',
+            DATAF: '2100-12-31T23:59:59.999Z',
+            TIPO: "AC",
+            BLOQUEIOS: null,
+            CIDADE: null,
+            CLIENTE: null,
+            CLIENTE_ENTREGA: null,
+            CLI_GRUPO_LOJA: null,
+            COD_PEDIDOV: "",
+            COD_PEDIDO_MKT_PLACE: null,
+            COLECAO_PEDIDO: null,
+            COLECAO_PRODUTO: null,
+            COMANDA: null,
+            CONSIGNACAO: null,
+            COR: null,
+            EFETUADO: 2,
+            ENDERECO_RETIRADA: null,
+            ENTREGA_IMEDIATA: null,
+            ESTADO: null,
+            ESTAMPA: null,
+            FILTROPRO: true,
+            GRUPO_LOJA: null,
+            GRUPO_PRODUTO: null,
+            IGNORA_PARAM: false,
+            LISTA_CASAMENTO: false,
+            N_PEDIDO_CLIENTE: payload.ecommerce_number || "",
+            OPCAO_DATA: 1,
+            ORCAMENTO: null,
+            ORDEM: 0,
+            ORIGEM_PEDIDO: null,
+            PEDIDOV: null,
+            PONTO_RETIRADA: null,
+            PRODUTO: null,
+            PRODUTO_GRUPO: null,
+            PRODUTO_SUBGRUPO: null,
+            REGIAO: null,
+            REPRESENTANTE: null,
+            TABELA_PRECO: null,
+            TIPO_PEDIDO: null,
+            VENDEDOR: null,
+            VITRINE: vitrine
+        };
+
+        const response = await fetch(pedidoUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pedidoBody)
+        });
+
+        if (!response.ok) {
+            console.error('[Troquecommerce] Erro ao buscar pedido no Millennium:', response.status, response.statusText);
+            return;
+        }
+
+        const data = await response.json();
+        const pedidos = data?.value || data || [];
+        
+        if (pedidos.length > 0) {
+            const pedido = pedidos[0];
+            const numeroNota = pedido.nf || pedido.NF || pedido.nota || pedido.NOTA || pedido.NumeroNota;
+            
+            if (numeroNota && numeroNota !== '0') {
+                console.log(`[Troquecommerce] Nota ${numeroNota} encontrada para o pedido ${payload.ecommerce_number}`);
+                
+                // Opcional: buscar detalhes completos da nota
+                const detalhesUrl = `${millenniumBaseUrl}/api/millenium_eco/pedido_venda/listafaturamentos?vitrine=${vitrine}&nota=${numeroNota}&$format=json`;
+                const detalhesResponse = await fetch(detalhesUrl);
+                
+                if (detalhesResponse.ok) {
+                    const detalhes = await detalhesResponse.json();
+                    console.log(`[Troquecommerce] Detalhes da nota ${numeroNota}:`, {
+                        cliente: detalhes[0]?.cliente?.nome || 'N/A',
+                        valor: detalhes[0]?.valor_final || 'N/A',
+                        produtos: detalhes[0]?.produtos?.length || 0
+                    });
+                }
+            } else {
+                console.log(`[Troquecommerce] Pedido ${payload.ecommerce_number} encontrado, mas sem nota fiscal emitida`);
+            }
+        } else {
+            console.log(`[Troquecommerce] Pedido ${payload.ecommerce_number} não encontrado no Millennium`);
+        }
+        
+    } catch (error) {
+        console.error('[Troquecommerce] Erro ao processar evento automaticamente:', error);
+    }
 }
 
-app.post('/api/troquecommerce/webhook', (req, res) => {
+app.post('/api/troquecommerce/webhook', async (req, res) => {
     if (!isAuthorized(req)) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -99,11 +196,11 @@ app.post('/api/troquecommerce/webhook', (req, res) => {
     const payload = req.body;
 
     try {
-        handleReverseOrderEvent(payload);
-        return res.status(200).json({ message: 'Webhook received' });
+        await handleReverseOrderEvent(payload);
+        return res.status(200).json({ message: 'Webhook received and processed' });
     } catch (error) {
-        console.error('Erro ao tratar webhook:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        console.error('[Troquecommerce] Erro ao processar webhook:', error);
+        return res.status(500).json({ message: 'Internal server error', details: error.message });
     }
 });
 

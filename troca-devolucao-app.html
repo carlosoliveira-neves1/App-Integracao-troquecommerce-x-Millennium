@@ -656,6 +656,75 @@
             font-weight: 600;
         }
 
+        .tab-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .tab-content {
+            display: block;
+        }
+
+        .webhook-events-list .webhook-event-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+        }
+
+        .webhook-event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .webhook-event-id {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .webhook-event-type {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .webhook-event-meta {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .webhook-event-actions {
+            margin-top: 10px;
+        }
+
         .troque-reversa-meta {
             font-size: 13px;
             color: #4b5563;
@@ -949,34 +1018,75 @@
                 </div>
 
                 <div class="card" style="margin-top: 30px;">
-                    <h2>🔁 Reversas Troquecommerce</h2>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Status da reversa</label>
-                            <select id="troqueStatusFiltro">
-                                <option value="">Todos</option>
-                                <option value="pending">Pendente</option>
-                                <option value="in_transit">Em transporte</option>
-                                <option value="ready_to_return">Pronta para devolução</option>
-                                <option value="finished">Finalizada</option>
-                            </select>
+                    <div class="tab-header">
+                        <button class="tab-btn active" data-tab="reversasTab">🔁 Reversas</button>
+                        <button class="tab-btn" data-tab="webhookTab">📨 Eventos Webhook</button>
+                    </div>
+                    <!-- Reversas Tab Content -->
+                    <div class="tab-content" id="reversasTab">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Status da reversa</label>
+                                <select id="troqueStatusFiltro">
+                                    <option value="">Todos</option>
+                                    <option value="pending">Pendente</option>
+                                    <option value="in_transit">Em transporte</option>
+                                    <option value="ready_to_return">Pronta para devolução</option>
+                                    <option value="finished">Finalizada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Data inicial</label>
+                                <input type="date" id="troqueDataInicial">
+                            </div>
+                            <div class="form-group">
+                                <label>Data final</label>
+                                <input type="date" id="troqueDataFinal">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Data inicial</label>
-                            <input type="date" id="troqueDataInicial">
-                        </div>
-                        <div class="form-group">
-                            <label>Data final</label>
-                            <input type="date" id="troqueDataFinal">
+                        <button class="btn btn-primary" id="btnBuscarReversas" style="width: 100%; margin-bottom: 15px;">
+                            <span>🔁</span>
+                            <span>Buscar Reversas</span>
+                        </button>
+                        <div id="troqueReversasContainer" class="troque-reversa-list">
+                            <div class="empty-state" style="padding: 30px 20px;">
+                                <p>Use os filtros acima para listar as reversas abertas na Troquecommerce.</p>
+                            </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" id="btnBuscarReversas" style="width: 100%; margin-bottom: 15px;">
-                        <span>🔁</span>
-                        <span>Buscar Reversas</span>
+            </div>
+
+            <!-- Webhook Events Section -->
+            <div class="tab-content" id="webhookTab" style="display: none;">
+                <div class="config-section">
+                    <h3>📨 Eventos Recebidos via Webhook</h3>
+                    <div class="form-group">
+                        <label>Filtrar por tipo de evento</label>
+                        <select id="webhookEventFilter">
+                            <option value="">Todos os eventos</option>
+                            <option value="6">6 - Itens recebidos</option>
+                            <option value="21">21 - Pedido de troca aprovado</option>
+                            <option value="3">3 - Reversa aprovada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Filtrar por período</label>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <input type="datetime-local" id="webhookDataInicial">
+                            </div>
+                            <div class="form-group">
+                                <input type="datetime-local" id="webhookDataFinal">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="btnBuscarEventos" style="width: 100%; margin-bottom: 15px;">
+                        <span>📨</span>
+                        <span>Buscar Eventos</span>
                     </button>
-                    <div id="troqueReversasContainer" class="troque-reversa-list">
+                    <div id="webhookEventsContainer" class="webhook-events-list">
                         <div class="empty-state" style="padding: 30px 20px;">
-                            <p>Use os filtros acima para listar as reversas abertas na Troquecommerce.</p>
+                            <p>Clique em "Buscar Eventos" para listar os eventos recebidos via webhook.</p>
                         </div>
                     </div>
                 </div>
@@ -1063,7 +1173,8 @@
             notasFiltradas: [],
             scheduleTimer: null,
             ultimoAgendamentoExecutado: null,
-            troqueReversas: []
+            troqueReversas: [],
+            webhookEvents: []
         };
 
         const CONFIG_STORAGE_KEY = 'trocaDev_config';
@@ -1135,7 +1246,12 @@
             troqueDataInicial: document.getElementById('troqueDataInicial'),
             troqueDataFinal: document.getElementById('troqueDataFinal'),
             btnBuscarReversas: document.getElementById('btnBuscarReversas'),
-            troqueReversasContainer: document.getElementById('troqueReversasContainer')
+            troqueReversasContainer: document.getElementById('troqueReversasContainer'),
+            webhookEventFilter: document.getElementById('webhookEventFilter'),
+            webhookDataInicial: document.getElementById('webhookDataInicial'),
+            webhookDataFinal: document.getElementById('webhookDataFinal'),
+            btnBuscarEventos: document.getElementById('btnBuscarEventos'),
+            webhookEventsContainer: document.getElementById('webhookEventsContainer')
         };
 
         // Funções de utilidade
@@ -1263,14 +1379,15 @@
             }
 
             container.innerHTML = reversas.map((reversa, index) => {
-                const codigo = reversa.id || reversa.code || reversa.order_code || reversa.orderCode || `#${index + 1}`;
-                const pedidoOriginal = reversa?.original_order_number || reversa?.order_number || reversa?.orderNumber || 'N/A';
-                const status = formatarTroqueStatus(reversa.status || reversa.situation);
-                const createdAt = formatarDataHora(reversa.created_at || reversa.createdAt || reversa.dataCriacao);
-                const cliente = reversa?.customer?.name || reversa?.cliente?.nome || 'Cliente não informado';
-                const motivo = reversa?.reason || reversa?.motivo || '-';
-                const itens = Array.isArray(reversa?.items) ? reversa.items : (Array.isArray(reversa?.produtos) ? reversa.produtos : []);
-                const itensResumo = itens.length ? itens.map(item => `${item.quantity || item.quantidade || 1}x ${item.sku || item.codigo || item.description || item.descricao || 'Produto'}`).join('<br>') : 'Itens não informados';
+                const codigo = reversa.id || `#${index + 1}`;
+                const pedidoOriginal = reversa?.ecommerce_number || 'N/A';
+                const status = formatarTroqueStatus(reversa.status);
+                const createdAt = formatarDataHora(reversa.created_at);
+                const cliente = reversa?.client?.name || 'Cliente não informado';
+                const motivo = reversa?.reverse_type || '-';
+                const preco = reversa?.price ? `R$ ${reversa.price.toFixed(2)}` : 'Preço não informado';
+                const reembolso = reversa?.refund_value ? `R$ ${reversa.refund_value.toFixed(2)}` : 'Reembolso não informado';
+                const tracking = reversa?.tracking?.courier_collect_number || 'Sem tracking';
 
                 return `
                     <div class="troque-reversa-item">
@@ -1284,8 +1401,10 @@
                         <div class="troque-reversa-meta">
                             <p><strong>Cliente:</strong> ${cliente}</p>
                             <p><strong>Criada em:</strong> ${createdAt}</p>
-                            <p><strong>Motivo:</strong> ${motivo}</p>
-                            <p><strong>Itens:</strong><br>${itensResumo}</p>
+                            <p><strong>Tipo:</strong> ${motivo}</p>
+                            <p><strong>Valor:</strong> ${preco}</p>
+                            <p><strong>Reembolso:</strong> ${reembolso}</p>
+                            <p><strong>Tracking:</strong> ${tracking}</p>
                             <button class="btn btn-primary troque-reversa-carregar" data-index="${index}" style="margin-top:10px; width: 100%;">
                                 <span>📥</span>
                                 <span>Carregar nota no Millennium</span>
@@ -1349,6 +1468,8 @@
                 let reversas = [];
                 if (Array.isArray(data)) {
                     reversas = data;
+                } else if (Array.isArray(data?.list)) {
+                    reversas = data.list;
                 } else if (Array.isArray(data?.data)) {
                     reversas = data.data;
                 } else if (Array.isArray(data?.orders)) {
@@ -1413,6 +1534,165 @@
                 console.error('Erro ao carregar nota via reversa:', error);
                 showAlert(`Não foi possível carregar a nota para a reversa: ${error.message}`, 'error');
             }
+        }
+
+        // Funções para abas e eventos webhook
+        function initTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.style.display = 'none');
+                    
+                    // Add active class to clicked button and show corresponding content
+                    button.classList.add('active');
+                    document.getElementById(targetTab).style.display = 'block';
+                });
+            });
+        }
+
+        async function buscarEventosWebhook() {
+            const backendUrl = getBackendBaseUrl();
+            const eventFilter = elements.webhookEventFilter?.value;
+            const dataInicial = elements.webhookDataInicial?.value;
+            const dataFinal = elements.webhookDataFinal?.value;
+
+            elements.btnBuscarEventos.disabled = true;
+            const btnOriginalText = elements.btnBuscarEventos.innerHTML;
+            elements.btnBuscarEventos.innerHTML = '<span class="loading"></span> Buscando eventos...';
+
+            try {
+                // Simulação - na implementação real, buscaria do backend
+                // Por enquanto, vamos usar eventos simulados
+                const eventosSimulados = [
+                    {
+                        id: 'evt_001',
+                        eventId: '6',
+                        eventName: 'Itens recebidos',
+                        timestamp: new Date().toISOString(),
+                        payload: {
+                            id: '3324f8a0-e5ae-4fdd-8335-39bf987df6f1',
+                            ecommerce_number: '1603481046567-01',
+                            status: 'Aguardando Envio'
+                        }
+                    },
+                    {
+                        id: 'evt_002',
+                        eventId: '21',
+                        eventName: 'Pedido de troca aprovado',
+                        timestamp: new Date(Date.now() - 3600000).toISOString(),
+                        payload: {
+                            id: 'f8d1ad3c-fb39-4cb0-a2e3-6e97303dabb7',
+                            ecommerce_number: '1605291084054-01',
+                            status: 'Aguardando Envio'
+                        }
+                    },
+                    {
+                        id: 'evt_003',
+                        eventId: '3',
+                        eventName: 'Reversa aprovada',
+                        timestamp: new Date(Date.now() - 7200000).toISOString(),
+                        payload: {
+                            id: '9a803577-fda0-4cdc-a2df-565e89b3f5d5',
+                            ecommerce_number: '1606221102723-01',
+                            status: 'Aguardando Envio'
+                        }
+                    }
+                ];
+
+                let eventosFiltrados = eventosSimulados;
+
+                if (eventFilter) {
+                    eventosFiltrados = eventosFiltrados.filter(evt => evt.eventId === eventFilter);
+                }
+
+                if (dataInicial) {
+                    const dataInicio = new Date(dataInicial);
+                    eventosFiltrados = eventosFiltrados.filter(evt => new Date(evt.timestamp) >= dataInicio);
+                }
+
+                if (dataFinal) {
+                    const dataFim = new Date(dataFinal);
+                    eventosFiltrados = eventosFiltrados.filter(evt => new Date(evt.timestamp) <= dataFim);
+                }
+
+                state.webhookEvents = eventosFiltrados;
+                renderWebhookEvents();
+                showAlert(`${eventosFiltrados.length} evento(s) encontrado(s).`, 'success');
+
+            } catch (error) {
+                console.error('Erro ao buscar eventos webhook:', error);
+                showAlert(`Erro ao buscar eventos: ${error.message}`, 'error');
+                state.webhookEvents = [];
+                renderWebhookEvents();
+            } finally {
+                elements.btnBuscarEventos.disabled = false;
+                elements.btnBuscarEventos.innerHTML = btnOriginalText;
+            }
+        }
+
+        function renderWebhookEvents() {
+            const container = elements.webhookEventsContainer;
+            const eventos = state.webhookEvents || [];
+
+            if (!container) return;
+
+            if (eventos.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 30px 20px;"><p>Nenhum evento encontrado para os filtros informados.</p></div>';
+                return;
+            }
+
+            container.innerHTML = eventos.map((evento, index) => {
+                const timestamp = formatarDataHora(evento.timestamp);
+                const payload = evento.payload || {};
+
+                return `
+                    <div class="webhook-event-item">
+                        <div class="webhook-event-header">
+                            <div>
+                                <span class="webhook-event-id">${evento.id}</span>
+                                <small style="margin-left: 10px;">${timestamp}</small>
+                            </div>
+                            <span class="webhook-event-type">${evento.eventId} - ${evento.eventName}</span>
+                        </div>
+                        <div class="webhook-event-meta">
+                            <p><strong>ID Reversa:</strong> ${payload.id || 'N/A'}</p>
+                            <p><strong>Pedido:</strong> ${payload.ecommerce_number || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${payload.status || 'N/A'}</p>
+                        </div>
+                        <div class="webhook-event-actions">
+                            <button class="btn btn-primary btn-sm" onclick="buscarNotaDoEvento(${index})">
+                                <span>🔍</span>
+                                <span>Buscar Nota Millennium</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function buscarNotaDoEvento(eventIndex) {
+            const evento = state.webhookEvents?.[eventIndex];
+            if (!evento) {
+                showAlert('Evento não encontrado.', 'error');
+                return;
+            }
+
+            const payload = evento.payload || {};
+            const reversaSimulada = {
+                id: payload.id,
+                ecommerce_number: payload.ecommerce_number,
+                status: payload.status,
+                client: { name: 'Cliente do evento' },
+                created_at: evento.timestamp
+            };
+
+            await carregarReversaNoMillennium(eventIndex, reversaSimulada);
         }
 
         function startScheduleWatcher() {
@@ -2601,6 +2881,10 @@
         elements.dataFinal.value = formatoISO(hoje);
         elements.notaDataInicial.value = formatoISO(seteDiasAtras);
         elements.notaDataFinal.value = formatoISO(hoje);
+
+        // Event listeners para abas e webhook
+        initTabs();
+        elements.btnBuscarEventos.addEventListener('click', buscarEventosWebhook);
 
         console.log('✅ Sistema de Troca/Devolução carregado!');
     </script>
