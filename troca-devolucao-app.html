@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>H&M - Sistema de Troca/Devolução Automatizado v2.1</title>
+    <title>H&M - Sistema de Troca/Devolução [HOMOLOGAÇÃO] v2.1</title>
     <style>
         * {
             margin: 0;
@@ -1228,6 +1228,10 @@
     </script>
 </head>
 <body>
+    <!-- Banner de Homologação -->
+    <div style="background: #f59e0b; color: white; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">
+        🧪 AMBIENTE DE HOMOLOGAÇÃO - DADOS DE TESTE - NÃO USAR EM PRODUÇÃO
+    </div>
     <div class="container">
         <!-- Menu Principal -->
         <nav class="main-nav">
@@ -1488,12 +1492,25 @@
                         <h3>🌐 Troquecommerce API</h3>
                         <div class="form-group">
                             <label>Base URL</label>
-                            <input type="text" id="troqueBaseUrl" value="https://www.troquecommerce.com.br/api/public" placeholder="https://...">
+                            <input type="text" id="troqueBaseUrl" value="https://homolog.troquecommerce.com.br/api/public" placeholder="https://...">
                         </div>
                         <div class="form-group">
                             <label>Token de Acesso</label>
-                            <input type="text" id="troqueToken" placeholder="Informe o token da Troquecommerce">
+                            <input type="text" id="troqueToken" value="78916095-ef7a-4958-939d-6ede76c72f6f" placeholder="Informe o token da Troquecommerce">
                             <small style="color:#6b7280; font-size:12px;">O token é enviado no header <code>token</code> (somente leitura já atende à listagem).</small>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>🔗 Webhook Configuration</h3>
+                        <div class="form-group">
+                            <label>Webhook URL</label>
+                            <input type="text" id="webhookUrl" value="https://app-integracao-troquecommerce-x-mil.vercel.app/api/troquecommerce/webhook" readonly style="background: #f3f4f6;">
+                        </div>
+                        <div class="form-group">
+                            <label>Webhook Token (Header: X-Webhook-Token)</label>
+                            <input type="text" id="webhookToken" value="MyWebhookSecret123" placeholder="Token do webhook">
+                            <small style="color:#6b7280; font-size:12px;">Configure este token no Troquecommerce para autenticação do webhook.</small>
                         </div>
                     </div>
 
@@ -2142,7 +2159,7 @@
             'baseUrl','username','password','vitrine','faturar','autorizarNfe',
             'tipoAutorizacaoTroca','tipoPgtoCredito','trocaValorBruto',
             'whatsappFixo','whatsappAdicionais','enviarRelatorios',
-            'troqueBaseUrl','troqueToken',
+            'troqueBaseUrl','troqueToken','webhookUrl','webhookToken',
             'scheduleMode','scheduleDailyTimes','scheduleWeeklyTimes','scheduleWeeklyDays',
             'scheduleOnceDate','scheduleOnceTime'
         ];
@@ -2202,6 +2219,8 @@
             scheduleOnceTime: document.getElementById('scheduleOnceTime'),
             troqueBaseUrl: document.getElementById('troqueBaseUrl'),
             troqueToken: document.getElementById('troqueToken'),
+            webhookUrl: document.getElementById('webhookUrl'),
+            webhookToken: document.getElementById('webhookToken'),
             troqueStatusFiltro: document.getElementById('troqueStatusFiltro'),
             troqueDataInicial: document.getElementById('troqueDataInicial'),
             troqueDataFinal: document.getElementById('troqueDataFinal'),
@@ -2340,7 +2359,9 @@
         function getTroqueConfig() {
             const baseUrl = elements.troqueBaseUrl?.value.trim();
             const token = elements.troqueToken?.value.trim();
-            return { baseUrl, token };
+            const webhookUrl = elements.webhookUrl?.value.trim();
+            const webhookToken = elements.webhookToken?.value.trim();
+            return { baseUrl, token, webhookUrl, webhookToken };
         }
 
         function normalizarTroqueUrl(baseUrl = '') {
