@@ -725,6 +725,25 @@
             margin-top: 10px;
         }
 
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
         .troque-reversa-meta {
             font-size: 13px;
             color: #4b5563;
@@ -1064,9 +1083,32 @@
                         <label>Filtrar por tipo de evento</label>
                         <select id="webhookEventFilter">
                             <option value="">Todos os eventos</option>
-                            <option value="6">6 - Itens recebidos</option>
-                            <option value="21">21 - Pedido de troca aprovado</option>
+                            <option value="1">1 - Reversa criada</option>
+                            <option value="2">2 - Reversa aprovada</option>
                             <option value="3">3 - Reversa aprovada</option>
+                            <option value="4">4 - Status alterado</option>
+                            <option value="5">5 - Pedido de troca criado</option>
+                            <option value="6">6 - Itens recebidos</option>
+                            <option value="7">7 - Pedido de troca confirmado</option>
+                            <option value="8">8 - Cupom gerado</option>
+                            <option value="9">9 - Pagamento realizado</option>
+                            <option value="10">10 - E-mail enviado</option>
+                            <option value="11">11 - Objeto postado</option>
+                            <option value="12">12 - Entrega realizada</option>
+                            <option value="13">13 - Reversa finalizada</option>
+                            <option value="14">14 - Reversa cancelada</option>
+                            <option value="15">15 - Pedido de troca cancelado</option>
+                            <option value="16">16 - Estorno realizado</option>
+                            <option value="17">17 - Reembolso parcial</option>
+                            <option value="18">18 - Reembolso total</option>
+                            <option value="19">19 - Item retido</option>
+                            <option value="20">20 - Item devolvido</option>
+                            <option value="21">21 - Pedido de troca aprovado</option>
+                            <option value="22">22 - Troca direta realizada</option>
+                            <option value="23">23 - Segunda solicitação</option>
+                            <option value="24">24 - Exceção identificada</option>
+                            <option value="25">25 - Pedido de troca por produto criado</option>
+                            <option value="26">26 - Pedido de troca por produto confirmado</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1567,45 +1609,18 @@
             elements.btnBuscarEventos.innerHTML = '<span class="loading"></span> Buscando eventos...';
 
             try {
-                // Simulação - na implementação real, buscaria do backend
-                // Por enquanto, vamos usar eventos simulados
-                const eventosSimulados = [
-                    {
-                        id: 'evt_001',
-                        eventId: '6',
-                        eventName: 'Itens recebidos',
-                        timestamp: new Date().toISOString(),
-                        payload: {
-                            id: '3324f8a0-e5ae-4fdd-8335-39bf987df6f1',
-                            ecommerce_number: '1603481046567-01',
-                            status: 'Aguardando Envio'
-                        }
-                    },
-                    {
-                        id: 'evt_002',
-                        eventId: '21',
-                        eventName: 'Pedido de troca aprovado',
-                        timestamp: new Date(Date.now() - 3600000).toISOString(),
-                        payload: {
-                            id: 'f8d1ad3c-fb39-4cb0-a2e3-6e97303dabb7',
-                            ecommerce_number: '1605291084054-01',
-                            status: 'Aguardando Envio'
-                        }
-                    },
-                    {
-                        id: 'evt_003',
-                        eventId: '3',
-                        eventName: 'Reversa aprovada',
-                        timestamp: new Date(Date.now() - 7200000).toISOString(),
-                        payload: {
-                            id: '9a803577-fda0-4cdc-a2df-565e89b3f5d5',
-                            ecommerce_number: '1606221102723-01',
-                            status: 'Aguardando Envio'
-                        }
-                    }
-                ];
+                // Buscar todos os eventos do backend
+                const response = await fetch(`${backendUrl}/api/troquecommerce/webhook-events`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
 
-                let eventosFiltrados = eventosSimulados;
+                const data = await response.json();
+                let todosEventos = data.events || [];
+
+                // Aplicar filtros no frontend
+                let eventosFiltrados = todosEventos;
 
                 if (eventFilter) {
                     eventosFiltrados = eventosFiltrados.filter(evt => evt.eventId === eventFilter);
@@ -1623,7 +1638,7 @@
 
                 state.webhookEvents = eventosFiltrados;
                 renderWebhookEvents();
-                showAlert(`${eventosFiltrados.length} evento(s) encontrado(s).`, 'success');
+                showAlert(`${eventosFiltrados.length} evento(s) encontrado(s) de ${data.count || 0} total.`, 'success');
 
             } catch (error) {
                 console.error('Erro ao buscar eventos webhook:', error);
@@ -1649,26 +1664,46 @@
 
             container.innerHTML = eventos.map((evento, index) => {
                 const timestamp = formatarDataHora(evento.timestamp);
+                const receivedAt = formatarDataHora(evento.receivedAt);
                 const payload = evento.payload || {};
+                const client = payload.client || {};
+                const price = payload.price ? `R$ ${payload.price.toFixed(2)}` : 'N/A';
+                const refundValue = payload.refund_value ? `R$ ${payload.refund_value.toFixed(2)}` : 'N/A';
 
                 return `
                     <div class="webhook-event-item">
                         <div class="webhook-event-header">
                             <div>
                                 <span class="webhook-event-id">${evento.id}</span>
-                                <small style="margin-left: 10px;">${timestamp}</small>
+                                <small style="margin-left: 10px;">Recebido: ${receivedAt}</small>
                             </div>
                             <span class="webhook-event-type">${evento.eventId} - ${evento.eventName}</span>
                         </div>
                         <div class="webhook-event-meta">
-                            <p><strong>ID Reversa:</strong> ${payload.id || 'N/A'}</p>
-                            <p><strong>Pedido:</strong> ${payload.ecommerce_number || 'N/A'}</p>
-                            <p><strong>Status:</strong> ${payload.status || 'N/A'}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                <div>
+                                    <p><strong>ID Reversa:</strong> ${payload.id || 'N/A'}</p>
+                                    <p><strong>Pedido:</strong> ${payload.ecommerce_number || 'N/A'}</p>
+                                    <p><strong>Status:</strong> ${payload.status || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <p><strong>Cliente:</strong> ${client.name || 'N/A'}</p>
+                                    <p><strong>Valor:</strong> ${price}</p>
+                                    <p><strong>Reembolso:</strong> ${refundValue}</p>
+                                </div>
+                            </div>
+                            <p><strong>Tipo:</strong> ${payload.reverse_type || 'N/A'}</p>
+                            <p><strong>Criado em:</strong> ${payload.created_at ? formatarDataHora(payload.created_at) : 'N/A'}</p>
+                            ${payload.items ? `<p><strong>Itens:</strong> ${payload.items.length} item(s)</p>` : ''}
                         </div>
                         <div class="webhook-event-actions">
                             <button class="btn btn-primary btn-sm" onclick="buscarNotaDoEvento(${index})">
                                 <span>🔍</span>
                                 <span>Buscar Nota Millennium</span>
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="verDetalhesEvento(${index})" style="margin-left: 5px;">
+                                <span>📋</span>
+                                <span>Ver Detalhes</span>
                             </button>
                         </div>
                     </div>
@@ -1688,11 +1723,66 @@
                 id: payload.id,
                 ecommerce_number: payload.ecommerce_number,
                 status: payload.status,
-                client: { name: 'Cliente do evento' },
-                created_at: evento.timestamp
+                client: payload.client || { name: 'Cliente do evento' },
+                created_at: payload.created_at || evento.timestamp
             };
 
             await carregarReversaNoMillennium(eventIndex, reversaSimulada);
+        }
+
+        function verDetalhesEvento(eventIndex) {
+            const evento = state.webhookEvents?.[eventIndex];
+            if (!evento) {
+                showAlert('Evento não encontrado.', 'error');
+                return;
+            }
+
+            // Criar modal com detalhes completos
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                max-width: 800px;
+                max-height: 80vh;
+                overflow-y: auto;
+                position: relative;
+            `;
+
+            content.innerHTML = `
+                <h3>📨 Detalhes do Evento</h3>
+                <p><strong>ID:</strong> ${evento.id}</p>
+                <p><strong>Tipo:</strong> ${evento.eventId} - ${evento.eventName}</p>
+                <p><strong>Recebido em:</strong> ${formatarDataHora(evento.receivedAt)}</p>
+                <hr style="margin: 15px 0;">
+                <h4>📦 Payload Completo:</h4>
+                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(evento.payload, null, 2)}</pre>
+                <button onclick="this.parentElement.parentElement.remove()" style="margin-top: 15px;" class="btn btn-secondary">Fechar</button>
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // Fechar ao clicar fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
 
         function startScheduleWatcher() {

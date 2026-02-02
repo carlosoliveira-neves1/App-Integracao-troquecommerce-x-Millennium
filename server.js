@@ -7,6 +7,41 @@ const PORT = process.env.PORT || 4000;
 const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN || 'MyWebhookSecret123';
 const ACCEPTED_EVENTS = new Set(['6', '21', '3']); // 6 = Itens recebidos, 21 = Pedido de troca aprovado, 3 = Reversa aprovada
 
+// Armazenamento em memória para eventos recebidos (em produção, usar banco de dados)
+const webhookEvents = [];
+
+function getEventName(eventId) {
+    const eventNames = {
+        '1': 'Reversa criada',
+        '2': 'Reversa aprovada',
+        '3': 'Reversa aprovada',
+        '4': 'Status alterado',
+        '5': 'Pedido de troca criado',
+        '6': 'Itens recebidos',
+        '7': 'Pedido de troca confirmado',
+        '8': 'Cupom gerado',
+        '9': 'Pagamento realizado',
+        '10': 'E-mail enviado',
+        '11': 'Objeto postado',
+        '12': 'Entrega realizada',
+        '13': 'Reversa finalizada',
+        '14': 'Reversa cancelada',
+        '15': 'Pedido de troca cancelado',
+        '16': 'Estorno realizado',
+        '17': 'Reembolso parcial',
+        '18': 'Reembolso total',
+        '19': 'Item retido',
+        '20': 'Item devolvido',
+        '21': 'Pedido de troca aprovado',
+        '22': 'Troca direta realizada',
+        '23': 'Segunda solicitação',
+        '24': 'Exceção identificada',
+        '25': 'Pedido de troca por produto criado',
+        '26': 'Pedido de troca por produto confirmado'
+    };
+    return eventNames[eventId] || `Evento ${eventId}`;
+}
+
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '1mb' }));
 
@@ -79,6 +114,23 @@ async function handleReverseOrderEvent(payload) {
         status: payload.status,
         created_at: payload.created_at,
     });
+
+    // Salvar evento na lista (com timestamp de recebimento)
+    const eventoSalvo = {
+        id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        eventId: payload.webhook_event_id,
+        eventName: getEventName(payload.webhook_event_id),
+        timestamp: new Date().toISOString(),
+        receivedAt: new Date().toISOString(),
+        payload: payload
+    };
+    
+    webhookEvents.unshift(eventoSalvo); // Adicionar no início (mais recente primeiro)
+    
+    // Manter apenas os últimos 1000 eventos para não sobrecarregar memória
+    if (webhookEvents.length > 1000) {
+        webhookEvents.splice(1000);
+    }
 
     // Buscar automaticamente a nota no Millennium sem adicionar à fila
     try {
@@ -201,6 +253,24 @@ app.post('/api/troquecommerce/webhook', async (req, res) => {
     } catch (error) {
         console.error('[Troquecommerce] Erro ao processar webhook:', error);
         return res.status(500).json({ message: 'Internal server error', details: error.message });
+    }
+});
+
+// Endpoint para listar eventos webhook
+app.get('/api/troquecommerce/webhook-events', (_req, res) => {
+    try {
+        res.json({
+            success: true,
+            count: webhookEvents.length,
+            events: webhookEvents
+        });
+    } catch (error) {
+        console.error('[Troquecommerce] Erro ao listar eventos:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao listar eventos', 
+            details: error.message 
+        });
     }
 });
 
