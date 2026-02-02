@@ -14,6 +14,17 @@ app.get('/health', (_req, res) => {
     res.json({ status: 'ok', uptime: process.uptime() });
 });
 
+app.get('/', (_req, res) => {
+    res.json({
+        message: 'Troquecommerce webhook/proxy ativo',
+        endpoints: {
+            health: '/health',
+            webhook: '/api/troquecommerce/webhook',
+            orderListProxy: '/api/troquecommerce/order-list'
+        }
+    });
+});
+
 app.post('/api/troquecommerce/order-list', async (req, res) => {
     const { baseUrl, token, status, start_date, end_date } = req.body || {};
 
