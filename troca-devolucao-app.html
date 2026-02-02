@@ -1338,7 +1338,7 @@
                     <div style="display: flex; gap: 10px; align-items: end;">
                         <div style="flex: 1;">
                             <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #6b7280;">ID do Pedido:</label>
-                            <input type="text" id="pedidoEspecificoId" placeholder="Ex: 1550770502561-01" 
+                            <input type="text" id="pedidoEspecificoId" placeholder="Ex: 1499999999899" 
                                    style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
                         </div>
                         <button class="btn btn-primary" onclick="buscarPedidoEspecifico()">
@@ -3381,16 +3381,19 @@
                         if (detailResponse.ok) {
                             const detalhesReversa = await detailResponse.json();
                             
-                            // Identificar se o created_by é um email (contém @)
-                            let operadorEmail = false;
-                            let operador = 'Sistema';
+                            // Identificar se o último operador é um email (diferente de Sistema)
+                            let ultimoOperadorEmail = false;
+                            let ultimoOperador = 'Sistema';
+                            let ultimaAcao = '';
                             
-                            // Verificar diretamente no campo created_by do pedido
-                            if (detalhesReversa.created_by) {
-                                operador = detalhesReversa.created_by;
-                                // Verificar se o operador é um email (contém @)
-                                if (operador.includes('@')) {
-                                    operadorEmail = true;
+                            if (detalhesReversa.history && detalhesReversa.history.length > 0) {
+                                const ultimoHistorico = detalhesReversa.history[detalhesReversa.history.length - 1];
+                                ultimoOperador = ultimoHistorico.created_by || 'Sistema';
+                                ultimaAcao = ultimoHistorico.description || '';
+                                
+                                // Verificar se o operador é um email (contém @ e não é "Sistema")
+                                if (ultimoOperador && ultimoOperador !== 'Sistema' && ultimoOperador.includes('@')) {
+                                    ultimoOperadorEmail = true;
                                 }
                             }
                             
@@ -3416,8 +3419,9 @@
                                         (detalhesReversa.tracking?.delivery_date ? 
                                             new Date(detalhesReversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 'N/A'),
                                     total: reversa.price || reversa.refund_value || detalhesReversa.price || detalhesReversa.refund_value || 0,
-                                    ultimo_operador: operador,
-                                    operador_email: operadorEmail
+                                    ultimo_operador: ultimoOperador,
+                                    ultima_acao: ultimaAcao,
+                                    operador_email: ultimoOperadorEmail
                                 }
                             };
                             
