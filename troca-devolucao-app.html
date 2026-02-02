@@ -3362,10 +3362,18 @@
                 const listData = await listResponse.json();
                 const reversasList = listData.list || listData.data || listData.orders || [];
                 
-                // Para cada reversa encontrada, buscar detalhes completos
-                for (const reversa of reversasList) {
+                // PRIMEIRO: Filtrar pedidos que já têm operador email visível na lista
+                const pedidosComPossivelOperador = reversasList.filter(reversa => {
+                    // Verificar se já tem algum dado que indica operador
+                    return reversa.created_by && reversa.created_by !== 'Sistema' && reversa.created_by.includes('@');
+                });
+                
+                console.log(`📊 Encontrados ${reversasList.length} pedidos totais, ${pedidosComPossivelOperador.length} com possível operador email`);
+                
+                // SEGUNDO: Buscar detalhes apenas dos pedidos filtrados
+                for (const reversa of pedidosComPossivelOperador) {
                     try {
-                        // Segunda chamada: GET /order-detail com ID específico para buscar produtos
+                        // Segunda chamada: GET /order-detail com ID específico para buscar produtos e histórico completo
                         const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                             method: 'POST',
                             headers: {
@@ -3381,8 +3389,8 @@
                         if (detailResponse.ok) {
                             const detalhesReversa = await detailResponse.json();
                             
-                            // Identificar se o último operador é um email (diferente de Sistema)
-                            let ultimoOperadorEmail = false;
+                            // Verificar no histórico completo se realmente tem operador email
+                            let temOperadorEmailNoHistorico = false;
                             let ultimoOperador = 'Sistema';
                             let ultimaAcao = '';
                             
@@ -3391,111 +3399,66 @@
                                 ultimoOperador = ultimoHistorico.created_by || 'Sistema';
                                 ultimaAcao = ultimoHistorico.description || '';
                                 
-                                // Verificar se o operador é um email (contém @ e não é "Sistema")
-                                if (ultimoOperador && ultimoOperador !== 'Sistema' && ultimoOperador.includes('@')) {
-                                    ultimoOperadorEmail = true;
-                                }
+                                // Verificar se em ALGUM momento do histórico teve operador email
+                                temOperadorEmailNoHistorico = detalhesReversa.history.some(historico => {
+                                    const createdBy = historico.created_by;
+                                    return createdBy && createdBy !== 'Sistema' && createdBy.includes('@');
+                                });
                             }
                             
-                            // Combinar dados da lista com detalhes completos
-                            const reversaCompleta = {
-                                ...reversa,
-                                ...detalhesReversa,
-                                source: 'troquecommerce_api',
-                                timestamp: reversa.created_at || reversa.updated_at,
-                                eventId: 'dashboard_reversa',
-                                eventName: 'Reversa Aguardando Pagamento',
-                                // Adicionar informações específicas do dashboard
-                                dashboardInfo: {
-                                    id: reversa.id,
-                                    ecommerce_number: reversa.ecommerce_number,
-                                    nome_cliente: reversa.client?.name || detalhesReversa.client?.name || 'N/A',
-                                    email_cliente: reversa.client?.email || detalhesReversa.client?.email || 'N/A',
-                                    solicitacao: 'Devolução', // Padrão baseado nos exemplos
-                                    reversa: 'Postagem', // Padrão baseado nos exemplos
-                                    data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
-                                    data_entrega: reversa.tracking?.delivery_date ? 
-                                        new Date(reversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 
-                                        (detalhesReversa.tracking?.delivery_date ? 
-                                            new Date(detalhesReversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 'N/A'),
-                                    total: reversa.price || reversa.refund_value || detalhesReversa.price || detalhesReversa.refund_value || 0,
-                                    ultimo_operador: ultimoOperador,
-                                    ultima_acao: ultimaAcao,
-                                    operador_email: ultimoOperadorEmail
-                                }
-                            };
-                            
-                            reversasCompletas.push(reversaCompleta);
-                        } else {
-                            // Se falhar detalhes, usar dados básicos da lista
-                            reversasCompletas.push({
-                                ...reversa,
-                                source: 'troquecommerce_list_only',
-                                timestamp: reversa.created_at || reversa.updated_at,
-                                eventId: 'dashboard_reversa',
-                                eventName: 'Reversa Aguardando Pagamento',
-                                dashboardInfo: {
-                                    id: reversa.id,
-                                    ecommerce_number: reversa.ecommerce_number,
-                                    nome_cliente: reversa.client?.name || 'N/A',
-                                    email_cliente: reversa.client?.email || 'N/A',
-                                    solicitacao: 'Devolução',
-                                    reversa: 'Postagem',
-                                    data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
-                                    data_entrega: 'N/A',
-                                    total: reversa.price || 0,
-                                    ultimo_operador: 'Sistema',
-                                    ultima_acao: '',
-                                    operador_email: false
-                                }
-                            });
+                            // Adicionar apenas se realmente tiver operador email no histórico
+                            if (temOperadorEmailNoHistorico) {
+                                const reversaCompleta = {
+                                    ...reversa,
+                                    ...detalhesReversa,
+                                    source: 'troquecommerce_api',
+                                    timestamp: reversa.created_at || reversa.updated_at,
+                                    eventId: 'dashboard_reversa',
+                                    eventName: 'Reversa com operador email',
+                                    dashboardInfo: {
+                                        id: reversa.id,
+                                        ecommerce_number: reversa.ecommerce_number,
+                                        nome_cliente: reversa.client?.name || detalhesReversa.client?.name || 'N/A',
+                                        email_cliente: reversa.client?.email || detalhesReversa.client?.email || 'N/A',
+                                        solicitacao: 'Devolução',
+                                        reversa: 'Postagem',
+                                        data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
+                                        data_entrega: reversa.tracking?.delivery_date ? 
+                                            new Date(reversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 
+                                            (detalhesReversa.tracking?.delivery_date ? 
+                                                new Date(detalhesReversa.tracking.delivery_date).toLocaleDateString('pt-BR') : 'N/A'),
+                                        total: reversa.price || reversa.refund_value || detalhesReversa.price || detalhesReversa.refund_value || 0,
+                                        ultimo_operador: ultimoOperador,
+                                        ultima_acao: ultimaAcao,
+                                        operador_email: true
+                                    }
+                                };
+                                
+                                reversasCompletas.push(reversaCompleta);
+                            }
                         }
                     } catch (error) {
-                        console.error('Erro ao buscar detalhes da reversa:', reversa.id, error);
-                        // Adicionar mesmo assim com dados básicos
-                        reversasCompletas.push({
-                            ...reversa,
-                            source: 'troquecommerce_fallback',
-                            timestamp: reversa.created_at || reversa.updated_at,
-                            eventId: 'dashboard_reversa',
-                            eventName: 'Reversa Aguardando Pagamento',
-                            dashboardInfo: {
-                                id: reversa.id,
-                                ecommerce_number: reversa.ecommerce_number,
-                                nome_cliente: reversa.client?.name || 'N/A',
-                                email_cliente: reversa.client?.email || 'N/A',
-                                solicitacao: 'Devolução',
-                                reversa: 'Postagem',
-                                data: new Date(reversa.created_at).toLocaleDateString('pt-BR'),
-                                data_entrega: 'N/A',
-                                total: reversa.price || 0,
-                                ultimo_operador: 'Sistema',
-                                ultima_acao: '',
-                                operador_email: false
-                            }
-                        });
+                        console.error(`Erro ao buscar detalhes da reversa ${reversa.id}:`, error);
                     }
                 }
 
-                // Mostrar TODOS os pedidos (sem filtro automático)
-                let allReversas = reversasCompletas;
+                 // Já foram filtrados acima, usar diretamente
+                console.log(`✅ Dashboard: ${reversasCompletas.length} pedidos com operador email encontrados`);
 
-                // Atualizar métricas com todos os pedidos
-                updateDashboardMetrics(allReversas);
+                // Atualizar métricas com pedidos filtrados
+                updateDashboardMetrics(reversasCompletas);
                 
-                // Renderizar gráficos com todos os pedidos
-                renderDashboardCharts(allReversas);
+                // Renderizar gráficos com pedidos filtrados
+                renderDashboardCharts(reversasCompletas);
                 
-                // Renderizar tabela com todos os pedidos
-                renderDashboardPedidosTable(allReversas);
+                // Renderizar tabela com pedidos filtrados
+                renderDashboardPedidosTable(reversasCompletas);
 
                 // Atualizar timestamp
                 state.lastDashboardUpdate = new Date();
                 
                 if (showNotification) {
-                    const totalEncontradas = reversasCompletas.length;
-                    const operadoresEmail = allReversas.filter(r => r.dashboardInfo?.operador_email).length;
-                    showAlert(`Dashboard atualizado! ${totalEncontradas} pedidos encontrados, ${operadoresEmail} com operador email.`, 'success');
+                    showAlert(`Dashboard atualizado! ${reversasCompletas.length} pedidos com operador email encontrados.`, 'success');
                 }
             } catch (error) {
                 console.error('Erro ao atualizar dashboard:', error);
