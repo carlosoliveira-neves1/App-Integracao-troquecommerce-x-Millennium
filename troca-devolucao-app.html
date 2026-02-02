@@ -2627,6 +2627,17 @@
 
                 if (!listResponse.ok) {
                     const text = await listResponse.text();
+                    console.error('Erro na chamada order-list:', {
+                        status: listResponse.status,
+                        statusText: listResponse.statusText,
+                        response: text,
+                        requestPayload: {
+                            baseUrl: config.baseUrl,
+                            token: config.token ? '[HIDDEN]' : 'MISSING',
+                            status: 'aguardando pagamento',
+                            unchecked_by_integration: true
+                        }
+                    });
                     throw new Error(`HTTP ${listResponse.status}: ${text || listResponse.statusText}`);
                 }
 
@@ -2997,8 +3008,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        baseUrl: config.troqueBaseUrl,
-                        token: config.troqueToken,
+                        baseUrl: config.baseUrl,
+                        token: config.token,
                         status: 'aguardando pagamento',
                         unchecked_by_integration: true // Buscar apenas não processadas
                     })
@@ -3030,8 +3041,8 @@
                                         'Content-Type': 'application/json'
                                     },
                                     body: JSON.stringify({
-                                        baseUrl: config.troqueBaseUrl,
-                                        token: config.troqueToken,
+                                        baseUrl: config.baseUrl,
+                                        token: config.token,
                                         id: reversa.id
                                     })
                                 });
@@ -3278,7 +3289,7 @@
         async function refreshDashboard(showNotification = true) {
             try {
                 // Buscar reversas do Troquecommerce com status "aguardando pagamento"
-                const config = getConfig();
+                const config = getTroqueConfig();
                 const backendUrl = getBackendBaseUrl();
                 
                 // Primeira chamada: GET /order/list com status "aguardando pagamento"
@@ -3288,8 +3299,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        baseUrl: config.troqueBaseUrl,
-                        token: config.troqueToken,
+                        baseUrl: config.baseUrl,
+                        token: config.token,
                         status: 'aguardando pagamento',
                         unchecked_by_integration: true // Buscar apenas não processadas
                     })
@@ -3297,25 +3308,40 @@
 
                 let reversasCompletas = [];
                 
-                if (listResponse.ok) {
-                    const listData = await listResponse.json();
-                    const reversasList = listData.list || listData.data || listData.orders || [];
-                    
-                    // Para cada reversa encontrada, buscar detalhes completos
-                    for (const reversa of reversasList) {
-                        try {
-                            // Segunda chamada: GET /order com ID específico para buscar produtos
-                            const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    baseUrl: config.troqueBaseUrl,
-                                    token: config.troqueToken,
-                                    id: reversa.id
-                                })
-                            });
+                if (!listResponse.ok) {
+                    const text = await listResponse.text();
+                    console.error('Erro na chamada order-list (dashboard):', {
+                        status: listResponse.status,
+                        statusText: listResponse.statusText,
+                        response: text,
+                        requestPayload: {
+                            baseUrl: config.baseUrl,
+                            token: config.token ? '[HIDDEN]' : 'MISSING',
+                            status: 'aguardando pagamento',
+                            unchecked_by_integration: true
+                        }
+                    });
+                    throw new Error(`HTTP ${listResponse.status}: ${text || listResponse.statusText}`);
+                }
+
+                const listData = await listResponse.json();
+                const reversasList = listData.list || listData.data || listData.orders || [];
+                
+                // Para cada reversa encontrada, buscar detalhes completos
+                for (const reversa of reversasList) {
+                    try {
+                        // Segunda chamada: GET /order com ID específico para buscar produtos
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                baseUrl: config.baseUrl,
+                                token: config.token,
+                                id: reversa.id
+                            })
+                        });
 
                             if (detailResponse.ok) {
                                 const detalhesReversa = await detailResponse.json();
