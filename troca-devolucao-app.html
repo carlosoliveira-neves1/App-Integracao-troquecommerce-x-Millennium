@@ -3362,11 +3362,11 @@
                 const listData = await listResponse.json();
                 const reversasList = listData.list || listData.data || listData.orders || [];
                 
-                // PRIMEIRO: Pegar TODOS os pedidos sem filtro
-                console.log(`📊 Encontrados ${reversasList.length} pedidos totais`);
+                // PRIMEIRO: Pegar TODOS os IDs da lista retornada
+                console.log(`📊 Encontrados ${reversasList.length} pedidos totais na lista`);
                 
-                // SEGUNDO: Buscar detalhes de TODOS os pedidos no endpoint /order
-                for (const reversa of reversasList) {
+                // SEGUNDO: Para cada ID da lista, buscar detalhes completos no endpoint /order
+                for (const pedidoDaLista of reversasList) {
                     try {
                         // Segunda chamada: GET /order com ID específico para buscar produtos e histórico completo
                         console.log(`🔍 Buscando detalhes do pedido ${reversa.id} (ecommerce_number: ${reversa.ecommerce_number})`);
