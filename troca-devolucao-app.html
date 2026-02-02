@@ -155,6 +155,21 @@
             color: #991b1b;
         }
 
+        .source-badge.troquecommerce_api {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .source-badge.troquecommerce_list_only {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .source-badge.troquecommerce_fallback {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -2835,7 +2850,7 @@
                             <div class="webhook-event-actions">
                                 <button class="btn btn-primary btn-sm" onclick="buscarNotaDoEvento(${actualIndex})">
                                     <span>🔍</span>
-                                    <span>Buscar Dados do Webhook</span>
+                                    <span>Buscar Reversas Troquecommerce</span>
                                 </button>
                                 <button class="btn btn-secondary btn-sm" onclick="verDetalhesEvento(${actualIndex})" style="margin-left: 5px;">
                                     <span>📋</span>
@@ -2936,45 +2951,98 @@
             const payload = evento.payload || {};
             
             try {
-                // Buscar dados completos da reversa do Troquecommerce via webhook
+                // Buscar lista de reversas com status "aguardando pagamento" do Troquecommerce
                 const config = getConfig();
                 const backendUrl = getBackendBaseUrl();
                 
-                // Se tiver número do pedido, buscar dados atualizados do Troquecommerce
-                if (payload.ecommerce_number) {
-                    const response = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            baseUrl: config.troqueBaseUrl,
-                            token: config.troqueToken,
-                            status: payload.status || ''
-                        })
-                    });
+                // Primeira chamada: GET /order/list com status "aguardando pagamento"
+                const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.troqueBaseUrl,
+                        token: config.troqueToken,
+                        status: 'aguardando pagamento',
+                        unchecked_by_integration: true // Buscar apenas não processadas
+                    })
+                });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        const reversas = data.data || data.orders || data.items || [];
-                        
-                        // Encontrar a reversa específica pelo número do pedido
-                        const reversaEncontrada = reversas.find(r => 
+                if (listResponse.ok) {
+                    const listData = await listResponse.json();
+                    const reversasList = listData.list || listData.data || listData.orders || [];
+                    
+                    // Se tiver número do pedido específico, filtrar
+                    let reversasFiltradas = reversasList;
+                    if (payload.ecommerce_number) {
+                        reversasFiltradas = reversasList.filter(r => 
                             r.ecommerce_number === payload.ecommerce_number || 
                             r.order_number === payload.ecommerce_number
                         );
+                    }
 
-                        if (reversaEncontrada) {
-                            // Combinar dados do webhook com dados atualizados do Troquecommerce
-                            const reversaCompleta = {
-                                ...payload,
-                                ...reversaEncontrada,
-                                webhookEventId: evento.eventId,
-                                webhookTimestamp: evento.timestamp,
-                                source: 'webhook_troquecommerce'
-                            };
+                    if (reversasFiltradas.length > 0) {
+                        // Para cada reversa encontrada, buscar detalhes completos
+                        const reversasCompletas = [];
+                        
+                        for (const reversa of reversasFiltradas) {
+                            try {
+                                // Segunda chamada: GET /order com ID específico para buscar produtos
+                                const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        baseUrl: config.troqueBaseUrl,
+                                        token: config.troqueToken,
+                                        id: reversa.id
+                                    })
+                                });
+
+                                if (detailResponse.ok) {
+                                    const detalhesReversa = await detailResponse.json();
+                                    
+                                    // Combinar dados da lista com detalhes completos
+                                    const reversaCompleta = {
+                                        ...reversa,
+                                        ...detalhesReversa,
+                                        webhookEventId: evento.eventId,
+                                        webhookTimestamp: evento.timestamp,
+                                        source: 'troquecommerce_api'
+                                    };
+                                    
+                                    reversasCompletas.push(reversaCompleta);
+                                } else {
+                                    // Se falhar detalhes, usar dados básicos da lista
+                                    reversasCompletas.push({
+                                        ...reversa,
+                                        webhookEventId: evento.eventId,
+                                        webhookTimestamp: evento.timestamp,
+                                        source: 'troquecommerce_list_only'
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Erro ao buscar detalhes da reversa:', reversa.id, error);
+                                // Adicionar mesmo assim com dados básicos
+                                reversasCompletas.push({
+                                    ...reversa,
+                                    webhookEventId: evento.eventId,
+                                    webhookTimestamp: evento.timestamp,
+                                    source: 'troquecommerce_fallback'
+                                });
+                            }
+                        }
+
+                        // Carregar a primeira reversa encontrada (ou todas se múltiplas)
+                        if (reversasCompletas.length > 0) {
+                            await carregarReversaDoWebhook(eventIndex, reversasCompletas[0]);
                             
-                            await carregarReversaDoWebhook(eventIndex, reversaCompleta);
+                            // Se houver múltiplas, mostrar aviso
+                            if (reversasCompletas.length > 1) {
+                                showAlert(`Encontradas ${reversasCompletas.length} reversas. Carregando a primeira.`, 'info');
+                            }
                             return;
                         }
                     }

@@ -55,13 +55,15 @@ app.get('/', (_req, res) => {
         endpoints: {
             health: '/health',
             webhook: '/api/troquecommerce/webhook',
-            orderListProxy: '/api/troquecommerce/order-list'
+            orderListProxy: '/api/troquecommerce/order-list',
+            orderDetailProxy: '/api/troquecommerce/order-detail',
+            webhookEvents: '/api/troquecommerce/webhook-events'
         }
     });
 });
 
 app.post('/api/troquecommerce/order-list', async (req, res) => {
-    const { baseUrl, token, status, start_date, end_date } = req.body || {};
+    const { baseUrl, token, status, start_date, end_date, unchecked_by_integration, page } = req.body || {};
 
     if (!baseUrl || !token) {
         return res.status(400).json({ message: 'baseUrl and token are required' });
@@ -78,6 +80,8 @@ app.post('/api/troquecommerce/order-list', async (req, res) => {
     if (status) endpoint.searchParams.set('status', status);
     if (start_date) endpoint.searchParams.set('start_date', start_date);
     if (end_date) endpoint.searchParams.set('end_date', end_date);
+    if (unchecked_by_integration !== undefined) endpoint.searchParams.set('unchecked_by_integration', unchecked_by_integration);
+    if (page) endpoint.searchParams.set('page', page);
 
     try {
         const response = await fetch(endpoint.toString(), {
@@ -96,6 +100,44 @@ app.post('/api/troquecommerce/order-list', async (req, res) => {
         res.type('application/json').send(text);
     } catch (error) {
         console.error('Erro ao consultar order/list da Troquecommerce:', error);
+        res.status(500).json({ message: 'Erro ao consultar Troquecommerce', details: error.message });
+    }
+});
+
+app.post('/api/troquecommerce/order-detail', async (req, res) => {
+    const { baseUrl, token, id } = req.body || {};
+
+    if (!baseUrl || !token || !id) {
+        return res.status(400).json({ message: 'baseUrl, token and id are required' });
+    }
+
+    let endpoint;
+    try {
+        const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+        endpoint = new URL('order', normalizedBase);
+    } catch (error) {
+        return res.status(400).json({ message: 'Invalid baseUrl', details: error.message });
+    }
+
+    endpoint.searchParams.set('id', id);
+
+    try {
+        const response = await fetch(endpoint.toString(), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                token
+            }
+        });
+
+        const text = await response.text();
+        if (!response.ok) {
+            return res.status(response.status).send(text || response.statusText);
+        }
+
+        res.type('application/json').send(text);
+    } catch (error) {
+        console.error('Erro ao consultar order da Troquecommerce:', error);
         res.status(500).json({ message: 'Erro ao consultar Troquecommerce', details: error.message });
     }
 });
