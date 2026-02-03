@@ -1348,6 +1348,22 @@
                     </div>
                     <div id="pedidoEspecificoResultado" style="margin-top: 15px;"></div>
                 </div>
+
+                <!-- Buscar Todos os IDs -->
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h4 style="margin-bottom: 15px; color: #374151;">📋 Extrair Todos os IDs</h4>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" onclick="buscarTodosIds()">
+                            <span>📊</span>
+                            <span>Buscar Todos os Pedidos</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportarIdsParaCSV()" id="btnExportarCSV" style="display: none;">
+                            <span>📥</span>
+                            <span>Exportar CSV</span>
+                        </button>
+                    </div>
+                    <div id="todosIdsResultado" style="margin-top: 15px;"></div>
+                </div>
                 
                 <!-- Cards de Estatísticas -->
                 <div class="dashboard-metrics-grid">
@@ -5626,6 +5642,113 @@ ${JSON.stringify(pedidoData, null, 2)}
                     showAlert('Erro ao copiar JSON', 'error');
                 });
             }
+        }
+
+        // Variável global para armazenar os IDs
+        let todosOsIds = [];
+
+        // Função para buscar todos os IDs dos pedidos
+        async function buscarTodosIds() {
+            const resultadoDiv = document.getElementById('todosIdsResultado');
+            const btnExportar = document.getElementById('btnExportarCSV');
+            
+            try {
+                resultadoDiv.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Buscando todos os pedidos...</div>';
+                btnExportar.style.display = 'none';
+                
+                const config = getTroqueConfig();
+                const backendUrl = window.BACKEND_BASE_URL;
+                
+                // Buscar todos os pedidos em /order-list
+                const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        unchecked_by_integration: true
+                    })
+                });
+
+                if (!listResponse.ok) {
+                    throw new Error(`HTTP ${listResponse.status}: ${await listResponse.text()}`);
+                }
+
+                const listData = await listResponse.json();
+                const reversasList = listData.list || listData.data || listData.orders || [];
+                
+                // Extrair apenas os IDs
+                todosOsIds = reversasList.map(pedido => ({
+                    id: pedido.id,
+                    ecommerce_number: pedido.ecommerce_number,
+                    status: pedido.status,
+                    created_at: pedido.created_at
+                }));
+                
+                // Exibir resultados
+                resultadoDiv.innerHTML = `
+                    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                        <h5 style="color: #16a34a; margin: 0 0 10px 0;">✅ Busca Concluída!</h5>
+                        <p style="margin: 5px 0;"><strong>Total de pedidos encontrados:</strong> ${reversasList.length}</p>
+                        <p style="margin: 5px 0;"><strong>IDs extraídos:</strong> ${todosOsIds.length}</p>
+                        <p style="margin: 5px 0;"><strong>Data da busca:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px;">
+                        <h6 style="margin: 0 0 10px 0; color: #374151;">📋 Relatório de IDs:</h6>
+                        <div style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                            ${todosOsIds.map(item => 
+                                `<div style="padding: 2px 0; border-bottom: 1px solid #e5e7eb;">
+                                    ID: ${item.id} | E-commerce: ${item.ecommerce_number} | Status: ${item.status}
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                // Mostrar botão de exportação
+                btnExportar.style.display = 'inline-flex';
+                
+                showAlert(`✅ Encontrados ${todosOsIds.length} IDs de pedidos!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar todos os IDs:', error);
+                resultadoDiv.innerHTML = `
+                    <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; padding: 15px;">
+                        <h5 style="color: #dc2626; margin: 0 0 10px 0;">❌ Erro na Busca</h5>
+                        <p style="margin: 5px 0;">${error.message}</p>
+                    </div>
+                `;
+                showAlert('Erro ao buscar IDs: ' + error.message, 'error');
+            }
+        }
+
+        // Função para exportar IDs para CSV
+        function exportarIdsParaCSV() {
+            if (todosOsIds.length === 0) {
+                showAlert('Nenhum ID para exportar!', 'warning');
+                return;
+            }
+            
+            // Criar conteúdo CSV
+            let csvContent = "ID,E-commerce_number,Status,Created_at\n";
+            todosOsIds.forEach(item => {
+                csvContent += `"${item.id}","${item.ecommerce_number}","${item.status}","${item.created_at}"\n`;
+            });
+            
+            // Criar blob e download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `pedidos_ids_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`📥 CSV exportado com ${todosOsIds.length} IDs!`, 'success');
         }
 
         console.log('✅ H&M - Sistema de Troca/Devolução Automatizado carregado!');
