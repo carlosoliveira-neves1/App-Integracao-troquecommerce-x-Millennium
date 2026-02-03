@@ -102,12 +102,157 @@
             border: 1px solid #f59e0b;
             color: #d97706;
         }
+        
+        .relatorio-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .pedido-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .pedido-header {
+            background: #f9fafb;
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.2s;
+        }
+        
+        .pedido-header:hover {
+            background: #f3f4f6;
+        }
+        
+        .pedido-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .pedido-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .info-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+        
+        .info-value {
+            color: #6b7280;
+        }
+        
+        .expand-icon {
+            font-size: 18px;
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+        
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+        
+        .pedido-produtos {
+            display: none;
+            background: #fafafa;
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .pedido-produtos.show {
+            display: block;
+        }
+        
+        .produto-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .produto-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .acoes-relatorio {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .btn-acao {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primario {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primario:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secundario {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secundario:hover {
+            background: #4b5563;
+        }
+        
+        .contador-selecionados {
+            margin-left: auto;
+            font-weight: 500;
+            color: #374151;
+        }
     </style>
     <script>
         window.BACKEND_BASE_URL = window.BACKEND_BASE_URL || 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
     </script>
 </head>
 <body>
+    <!-- Botão Voltar -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <a href="index.html" style="background: #6b7280; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 14px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            ← Voltar
+        </a>
+    </div>
+    
     <!-- Banner de Homologação -->
     <div style="background: #f59e0b; color: white; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">
         🧪 AMBIENTE DE HOMOLOGAÇÃO - DADOS DE TESTE - NÃO USAR EM PRODUÇÃO
@@ -199,7 +344,7 @@
             }, 5000);
         }
 
-        // Buscar pedido específico
+        // Buscar pedido específico e gerar relatório
         async function buscarPedidoEspecifico() {
             const resultadoDiv = document.getElementById('pedidoEspecificoResultado');
             const pedidoId = document.getElementById('pedidoEspecificoId').value.trim();
@@ -233,26 +378,10 @@
 
                 const pedidoData = await response.json();
                 
-                resultadoDiv.innerHTML = `
-                    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 15px;">
-                        <h5 style="color: #16a34a; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h5>
-                        <p style="margin: 5px 0;"><strong>ID:</strong> ${pedidoData.id}</p>
-                        <p style="margin: 5px 0;"><strong>E-commerce:</strong> ${pedidoData.ecommerce_number}</p>
-                        <p style="margin: 5px 0;"><strong>Status:</strong> ${pedidoData.status}</p>
-                        <p style="margin: 5px 0;"><strong>Cliente:</strong> ${pedidoData.client?.name || 'N/A'}</p>
-                        <p style="margin: 5px 0;"><strong>Total:</strong> R$ ${(pedidoData.price || 0).toFixed(2)}</p>
-                        <button class="btn btn-secondary" onclick="copiarJSON('${pedidoId}')" style="margin-top: 10px;">
-                            <span>📋</span>
-                            <span>Copiar JSON</span>
-                        </button>
-                    </div>
-                `;
+                // Gerar relatório com checkboxes
+                gerarRelatorioPedidos([pedidoData]);
                 
-                // Salvar JSON para cópia
-                window.pedidoJSONCache = window.pedidoJSONCache || {};
-                window.pedidoJSONCache[pedidoId] = JSON.stringify(pedidoData, null, 2);
-                
-                showAlert('Pedido encontrado com sucesso!', 'success');
+                showAlert('Pedido encontrado e relatório gerado!', 'success');
                 
             } catch (error) {
                 console.error('Erro ao buscar pedido:', error);
@@ -263,6 +392,225 @@
                     </div>
                 `;
                 showAlert('Erro ao buscar pedido: ' + error.message, 'error');
+            }
+        }
+
+        // Gerar relatório de pedidos com checkboxes
+        function gerarRelatorioPedidos(pedidos) {
+            const resultadoDiv = document.getElementById('pedidoEspecificoResultado');
+            
+            resultadoDiv.innerHTML = `
+                <div class="relatorio-container">
+                    <h3 style="margin-bottom: 20px; color: #1f2937;">📋 Relatório de Pedidos</h3>
+                    
+                    <div class="acoes-relatorio">
+                        <button class="btn-acao btn-primario" onclick="adicionarSelecionadosAFila()">
+                            📤 Adicionar Selecionados à Fila
+                        </button>
+                        <button class="btn-acao btn-secundario" onclick="selecionarTodos()">
+                            ✅ Selecionar Todos
+                        </button>
+                        <button class="btn-acao btn-secundario" onclick="deselecionarTodos()">
+                            ❌ Deselecionar Todos
+                        </button>
+                        <span class="contador-selecionados" id="contadorSelecionados">
+                            0 selecionados
+                        </span>
+                    </div>
+                    
+                    <div id="pedidosContainer">
+                        ${pedidos.map((pedido, index) => gerarPedidoHTML(pedido, index)).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // Salvar pedidos globalmente para uso nas funções
+            window.pedidosRelatorio = pedidos;
+            atualizarContadorSelecionados();
+        }
+
+        // Gerar HTML para um pedido individual
+        function gerarPedidoHTML(pedido, index) {
+            return `
+                <div class="pedido-item">
+                    <div class="pedido-header" onclick="toggleProdutos(${index})">
+                        <input type="checkbox" class="pedido-checkbox" id="pedido-${index}" value="${pedido.id}" onchange="atualizarContadorSelecionados()">
+                        <div class="pedido-info">
+                            <div class="info-field">
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">${pedido.id}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Nº E-commerce:</span>
+                                <span class="info-value">${pedido.ecommerce_number}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value">${traduzirStatus(pedido.status)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Tipo:</span>
+                                <span class="info-value">${traduzirTipo(pedido.reverse_type)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Data Criação:</span>
+                                <span class="info-value">${formatarData(pedido.created_at)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Data Atualização:</span>
+                                <span class="info-value">${formatarData(pedido.updated_at)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Cliente:</span>
+                                <span class="info-value">${pedido.client?.name || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <span class="expand-icon" id="expand-${index}">▼</span>
+                    </div>
+                    
+                    <div class="pedido-produtos" id="produtos-${index}">
+                        <h4 style="margin-bottom: 15px; color: #374151;">📦 Produtos do Pedido</h4>
+                        ${pedido.items && pedido.items.length > 0 ? 
+                            pedido.items.map(produto => gerarProdutoHTML(produto)).join('') :
+                            '<p style="color: #6b7280; font-style: italic;">Nenhum produto encontrado.</p>'
+                        }
+                    </div>
+                </div>
+            `;
+        }
+
+        // Gerar HTML para um produto
+        function gerarProdutoHTML(produto) {
+            return `
+                <div class="produto-item">
+                    <div class="produto-info">
+                        <div class="info-field">
+                            <span class="info-label">ID Produto:</span>
+                            <span class="info-value">${produto.ecommerce_product_id || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">SKU:</span>
+                            <span class="info-value">${produto.sku || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">EAN:</span>
+                            <span class="info-value">${produto.ean || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Ref ID:</span>
+                            <span class="info-value">${produto.ref_id || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Descrição:</span>
+                            <span class="info-value">${produto.description || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Preço:</span>
+                            <span class="info-value">R$ ${(produto.price || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Quantidade:</span>
+                            <span class="info-value">${produto.quantity || 0}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Motivo:</span>
+                            <span class="info-value">${produto.reason?.description || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle produtos visíveis
+        function toggleProdutos(index) {
+            const produtosDiv = document.getElementById(`produtos-${index}`);
+            const expandIcon = document.getElementById(`expand-${index}`);
+            
+            produtosDiv.classList.toggle('show');
+            expandIcon.classList.toggle('expanded');
+        }
+
+        // Atualizar contador de selecionados
+        function atualizarContadorSelecionados() {
+            const checkboxes = document.querySelectorAll('.pedido-checkbox:checked');
+            const contador = document.getElementById('contadorSelecionados');
+            if (contador) {
+                contador.textContent = `${checkboxes.length} selecionados`;
+            }
+        }
+
+        // Selecionar todos
+        function selecionarTodos() {
+            const checkboxes = document.querySelectorAll('.pedido-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+            atualizarContadorSelecionados();
+        }
+
+        // Deselecionar todos
+        function deselecionarTodos() {
+            const checkboxes = document.querySelectorAll('.pedido-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            atualizarContadorSelecionados();
+        }
+
+        // Adicionar selecionados à fila
+        function adicionarSelecionadosAFila() {
+            const checkboxes = document.querySelectorAll('.pedido-checkbox:checked');
+            if (checkboxes.length === 0) {
+                showAlert('Selecione pelo menos um pedido!', 'warning');
+                return;
+            }
+            
+            const selecionados = [];
+            checkboxes.forEach(cb => {
+                const pedidoId = cb.value;
+                const pedido = window.pedidosRelatorio.find(p => p.id === pedidoId);
+                if (pedido) {
+                    selecionados.push(pedido);
+                }
+            });
+            
+            // Aqui você pode implementar a lógica para adicionar à fila
+            console.log('Pedidos selecionados para fila:', selecionados);
+            showAlert(`${selecionados.length} pedidos adicionados à fila de processamento!`, 'success');
+        }
+
+        // Traduzir status
+        function traduzirStatus(status) {
+            const traduccoes = {
+                'Aguardando': 'Aguardando',
+                'Processando': 'Processando',
+                'Finalizado': 'Finalizado',
+                'Cancelado': 'Cancelado',
+                'Pendente': 'Pendente'
+            };
+            return traduccoes[status] || status;
+        }
+
+        // Traduzir tipo
+        function traduzirTipo(tipo) {
+            const traduccoes = {
+                'Troca e devolução': 'Troca e Devolução',
+                'Troca': 'Troca',
+                'Devolução': 'Devolução'
+            };
+            return traduccoes[tipo] || tipo;
+        }
+
+        // Formatar data
+        function formatarData(dataString) {
+            if (!dataString) return 'N/A';
+            try {
+                const data = new Date(dataString);
+                return data.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                return dataString;
             }
         }
 
