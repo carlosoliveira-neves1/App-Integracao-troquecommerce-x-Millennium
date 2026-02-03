@@ -142,63 +142,6 @@ app.post('/api/troquecommerce/order-detail', async (req, res) => {
     }
 });
 
-app.post('/api/troquecommerce/order', async (req, res) => {
-    const { baseUrl, token, id, ecommerce_number } = req.body || {};
-    const orderId = ecommerce_number || id; // Prioriza ecommerce_number
-
-    console.log('📥 Recebida requisição /order:', {
-        baseUrl,
-        token: token ? '[HIDDEN]' : 'MISSING',
-        id,
-        ecommerce_number,
-        orderId
-    });
-
-    if (!baseUrl || !token || !orderId) {
-        console.log('❌ Parâmetros faltando:', { 
-            hasBaseUrl: !!baseUrl, 
-            hasToken: !!token, 
-            hasId: !!id, 
-            hasEcommerceNumber: !!ecommerce_number,
-            orderId 
-        });
-        return res.status(400).json({ 
-            message: 'baseUrl, token and orderId (id or ecommerce_number) are required',
-            received: { baseUrl: !!baseUrl, token: !!token, id, ecommerce_number }
-        });
-    }
-
-    let endpoint;
-    try {
-        const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        endpoint = new URL('api/public/order', normalizedBase);
-    } catch (error) {
-        return res.status(400).json({ message: 'Invalid baseUrl', details: error.message });
-    }
-
-    endpoint.searchParams.set('ecommerce_number', orderId);
-
-    try {
-        const response = await fetch(endpoint.toString(), {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                token
-            }
-        });
-
-        const text = await response.text();
-        if (!response.ok) {
-            return res.status(response.status).send(text || response.statusText);
-        }
-
-        res.type('application/json').send(text);
-    } catch (error) {
-        console.error('Erro ao consultar order da Troquecommerce:', error);
-        res.status(500).json({ message: 'Erro ao consultar Troquecommerce', details: error.message });
-    }
-});
-
 function isAuthorized(req) {
     if (!WEBHOOK_TOKEN) return true;
     const incomingToken = req.headers['x-webhook-token'];
