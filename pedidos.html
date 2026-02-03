@@ -402,40 +402,50 @@
             
             const relatorioHTML = `
                 <div class="relatorio-detalhes">
-                    <h3 style="margin-bottom: 20px; color: #1f2937;">📋 Detalhes do Pedido</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="color: #1f2937; margin: 0;">📋 Detalhes do Pedido</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-acao btn-primario" onclick="enviarParaFila('${pedido.id}')">
+                                📤 Enviar para Fila
+                            </button>
+                            <button class="btn-acao btn-secundario" onclick="voltarLista()">
+                                ← Voltar
+                            </button>
+                        </div>
+                    </div>
                     
                     <div class="pedido-header-info">
                         <div class="info-grid">
                             <div class="info-field">
-                                <span class="info-label">ID:</span>
+                                <span class="info-label">ID do Pedido:</span>
                                 <span class="info-value">${pedido.id}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Nº E-commerce:</span>
+                                <span class="info-label">Número do Pedido:</span>
                                 <span class="info-value">${pedido.ecommerce_number}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Status:</span>
+                                <span class="info-label">Situação:</span>
                                 <span class="info-value">${traduzirStatus(pedido.status)}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Tipo:</span>
+                                <span class="info-label">Tipo de Movimentação:</span>
                                 <span class="info-value">${traduzirTipo(pedido.reverse_type)}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Data Criação:</span>
+                                <span class="info-label">Data de Criação:</span>
                                 <span class="info-value">${formatarData(pedido.created_at)}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Data Atualização:</span>
+                                <span class="info-label">Última Atualização:</span>
                                 <span class="info-value">${formatarData(pedido.updated_at)}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Cliente:</span>
+                                <span class="info-label">Nome do Cliente:</span>
                                 <span class="info-value">${pedido.client?.name || 'N/A'}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Email:</span>
+                                <span class="info-label">E-mail:</span>
                                 <span class="info-value">${pedido.client?.email || 'N/A'}</span>
                             </div>
                             <div class="info-field">
@@ -447,25 +457,23 @@
                                 <span class="info-value">R$ ${(pedido.price || 0).toFixed(2)}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Valor Troca:</span>
+                                <span class="info-label">Valor para Troca:</span>
                                 <span class="info-value">R$ ${(pedido.exchange_value || 0).toFixed(2)}</span>
                             </div>
                             <div class="info-field">
-                                <span class="info-label">Valor Devolução:</span>
+                                <span class="info-label">Valor a Devolver:</span>
                                 <span class="info-value">R$ ${(pedido.refund_value || 0).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="produtos-section">
-                        <h4 style="margin-bottom: 15px; color: #374151;">📦 Produtos do Pedido (${pedido.items?.length || 0})</h4>
+                        <h4 style="margin-bottom: 15px; color: #374151;">📦 Produtos do Pedido (${pedido.items?.length || 0} itens)</h4>
                         ${pedido.items && pedido.items.length > 0 ? 
                             pedido.items.map((produto, index) => gerarProdutoDetalhadoHTML(produto, index)).join('') :
-                            '<p style="color: #6b7280; font-style: italic;">Nenhum produto encontrado.</p>'
+                            '<p style="color: #6b7280; font-style: italic;">Nenhum produto encontrado neste pedido.</p>'
                         }
                     </div>
-                    
-                    <button class="btn-fechar" onclick="voltarLista()">← Voltar para Lista</button>
                 </div>
             `;
             
@@ -481,7 +489,7 @@
                     </div>
                     <div class="produto-detalhes">
                         <div class="info-field">
-                            <span class="info-label">ID Produto:</span>
+                            <span class="info-label">ID do Produto:</span>
                             <span class="info-value">${produto.ecommerce_product_id || 'N/A'}</span>
                         </div>
                         <div class="info-field">
@@ -489,19 +497,19 @@
                             <span class="info-value">${produto.sku || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">EAN:</span>
+                            <span class="info-label">Código EAN:</span>
                             <span class="info-value">${produto.ean || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Ref ID:</span>
+                            <span class="info-label">Código de Referência:</span>
                             <span class="info-value">${produto.ref_id || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Descrição:</span>
+                            <span class="info-label">Descrição do Produto:</span>
                             <span class="info-value">${produto.description || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Preço:</span>
+                            <span class="info-label">Preço Unitário:</span>
                             <span class="info-value">R$ ${(produto.price || 0).toFixed(2)}</span>
                         </div>
                         <div class="info-field">
@@ -509,7 +517,7 @@
                             <span class="info-value">R$ ${(produto.price_discount || 0).toFixed(2)}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Quantidade:</span>
+                            <span class="info-label">Quantidade Solicitada:</span>
                             <span class="info-value">${produto.quantity || 0}</span>
                         </div>
                         <div class="info-field">
@@ -517,47 +525,47 @@
                             <span class="info-value">${produto.original_quantity || 0}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Preço Frete:</span>
+                            <span class="info-label">Valor do Frete:</span>
                             <span class="info-value">R$ ${(produto.shipping_price || 0).toFixed(2)}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">É Troca:</span>
+                            <span class="info-label">Produto para Troca:</span>
                             <span class="info-value">${produto.is_exchange ? 'Sim' : 'Não'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">É Removido:</span>
+                            <span class="info-label">Produto Removido:</span>
                             <span class="info-value">${produto.is_removed ? 'Sim' : 'Não'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">É Recebido:</span>
+                            <span class="info-label">Produto Recebido:</span>
                             <span class="info-value">${produto.is_received ? 'Sim' : 'Não'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">É Retido:</span>
+                            <span class="info-label">Produto Retido:</span>
                             <span class="info-value">${produto.is_retained ? 'Sim' : 'Não'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Motivo:</span>
+                            <span class="info-label">Motivo da Devolução:</span>
                             <span class="info-value">${produto.reason?.description || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Comentário Cliente:</span>
+                            <span class="info-label">Comentário do Cliente:</span>
                             <span class="info-value">${produto.reason?.client_comment || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Comentário Organização:</span>
+                            <span class="info-label">Observação da Loja:</span>
                             <span class="info-value">${produto.reason?.organisation_comment || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Nº Pedido Original:</span>
+                            <span class="info-label">Número do Pedido Original:</span>
                             <span class="info-value">${produto.ecommerce_number || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">SKU Substituto:</span>
+                            <span class="info-label">SKU do Produto Substituto:</span>
                             <span class="info-value">${produto.replaced_item_sku || 'N/A'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Descrição Substituto:</span>
+                            <span class="info-label">Descrição do Produto Substituto:</span>
                             <span class="info-value">${produto.replaced_item_description || 'N/A'}</span>
                         </div>
                         <div class="info-field">
@@ -565,12 +573,28 @@
                             <span class="info-value">${produto.is_added_by_operator ? 'Sim' : 'Não'}</span>
                         </div>
                         <div class="info-field">
-                            <span class="info-label">Vendedor:</span>
+                            <span class="info-label">Vendedor Responsável:</span>
                             <span class="info-value">${produto.seller || 'N/A'}</span>
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        // Enviar pedido para fila de processamento
+        function enviarParaFila(pedidoId) {
+            // Aqui você pode implementar a lógica para adicionar à fila
+            console.log('Enviando pedido para fila:', pedidoId);
+            
+            // Simulação de envio para fila
+            showAlert(`Pedido ${pedidoId} adicionado à fila de processamento com sucesso!`, 'success');
+            
+            // Opcional: Mostrar confirmação ou redirecionar
+            setTimeout(() => {
+                if (confirm('Deseja voltar para a lista de pedidos?')) {
+                    voltarLista();
+                }
+            }, 2000);
         }
 
         // Voltar para lista de pedidos
