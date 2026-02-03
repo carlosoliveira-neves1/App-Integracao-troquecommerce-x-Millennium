@@ -71,7 +71,7 @@ app.post('/api/troquecommerce/order-list', async (req, res) => {
     let endpoint;
     try {
         const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        endpoint = new URL('order/list', normalizedBase);
+        endpoint = new URL('api/public/order/list', normalizedBase);
     } catch (error) {
         return res.status(400).json({ message: 'Invalid baseUrl', details: error.message });
     }
@@ -114,7 +114,7 @@ app.post('/api/troquecommerce/order-detail', async (req, res) => {
     let endpoint;
     try {
         const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        endpoint = new URL('order', normalizedBase);
+        endpoint = new URL('api/public/order', normalizedBase);
     } catch (error) {
         return res.status(400).json({ message: 'Invalid baseUrl', details: error.message });
     }
@@ -171,7 +171,7 @@ app.post('/api/troquecommerce/order', async (req, res) => {
     let endpoint;
     try {
         const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-        endpoint = new URL('order', normalizedBase);
+        endpoint = new URL('api/public/order', normalizedBase);
     } catch (error) {
         return res.status(400).json({ message: 'Invalid baseUrl', details: error.message });
     }
