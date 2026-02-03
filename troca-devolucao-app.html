@@ -1361,6 +1361,10 @@
                             <span>📥</span>
                             <span>Exportar CSV</span>
                         </button>
+                        <button class="btn btn-info" onclick="buscarDetalhesTodosPedidos()" id="btnBuscarDetalhes" style="display: none;">
+                            <span>🔍</span>
+                            <span>Buscar Detalhes dos Pedidos</span>
+                        </button>
                     </div>
                     <div id="todosIdsResultado" style="margin-top: 15px;"></div>
                 </div>
@@ -5749,6 +5753,145 @@ ${JSON.stringify(pedidoData, null, 2)}
             document.body.removeChild(link);
             
             showAlert(`📥 CSV exportado com ${todosOsIds.length} IDs!`, 'success');
+        }
+
+        // Variável global para armazenar detalhes completos
+        let detalhesCompletosDosPedidos = [];
+
+        // Função para buscar detalhes de todos os pedidos
+        async function buscarDetalhesTodosPedidos() {
+            if (todosOsIds.length === 0) {
+                showAlert('Primeiro busque os IDs dos pedidos!', 'warning');
+                return;
+            }
+            
+            const resultadoDiv = document.getElementById('todosIdsResultado');
+            const btnBuscarDetalhes = document.getElementById('btnBuscarDetalhes');
+            
+            try {
+                // Desabilitar botão durante processamento
+                btnBuscarDetalhes.disabled = true;
+                btnBuscarDetalhes.innerHTML = '<span>🔄</span><span>Processando...</span>';
+                
+                resultadoDiv.innerHTML += '<div style="text-align: center; padding: 20px; margin-top: 15px;">🔍 Buscando detalhes de todos os pedidos...</div>';
+                
+                const config = getTroqueConfig();
+                const backendUrl = window.BACKEND_BASE_URL;
+                detalhesCompletosDosPedidos = [];
+                
+                let processados = 0;
+                let erros = 0;
+                
+                // Para cada ID, buscar detalhes completos
+                for (const pedidoInfo of todosOsIds) {
+                    try {
+                        console.log(`🔍 Buscando detalhes do pedido ID: ${pedidoInfo.id}`);
+                        
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                baseUrl: config.baseUrl,
+                                token: config.token,
+                                id: pedidoInfo.id
+                            })
+                        });
+
+                        if (detailResponse.ok) {
+                            const detalhesPedido = await detailResponse.json();
+                            
+                            // Adicionar informações básicas do relatório
+                            const pedidoCompleto = {
+                                ...pedidoInfo,
+                                detalhes: detalhesPedido
+                            };
+                            
+                            detalhesCompletosDosPedidos.push(pedidoCompleto);
+                            processados++;
+                            
+                            // Atualizar progresso
+                            const progresso = Math.round((processados + erros) / todosOsIds.length * 100);
+                            resultadoDiv.innerHTML = resultadoDiv.innerHTML.replace(
+                                /🔍 Buscando detalhes.*\(\d+\/\d+\)/,
+                                `🔍 Buscando detalhes... ${progresso}% (${processados + erros}/${todosOsIds.length})`
+                            );
+                            
+                        } else {
+                            console.error(`❌ Erro ao buscar detalhes do pedido ${pedidoInfo.id}:`, detailResponse.status);
+                            erros++;
+                        }
+                        
+                        // Pequena pausa para não sobrecarregar a API
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                    } catch (error) {
+                        console.error(`❌ Erro ao processar pedido ${pedidoInfo.id}:`, error);
+                        erros++;
+                    }
+                }
+                
+                // Exibir resultados finais
+                resultadoDiv.innerHTML += `
+                    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 15px; margin-top: 15px;">
+                        <h5 style="color: #16a34a; margin: 0 0 10px 0;">✅ Detalhes Concluídos!</h5>
+                        <p style="margin: 5px 0;"><strong>Pedidos processados:</strong> ${processados}</p>
+                        <p style="margin: 5px 0;"><strong>Erros:</strong> ${erros}</p>
+                        <p style="margin: 5px 0;"><strong>Total de IDs:</strong> ${todosOsIds.length}</p>
+                        <p style="margin: 5px 0;"><strong>Data da busca:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+                        <button class="btn btn-success" onclick="exportarDetalhesParaCSV()" style="margin-top: 10px;">
+                            <span>📥</span>
+                            <span>Exportar Detalhes Completos</span>
+                        </button>
+                    </div>
+                `;
+                
+                showAlert(`✅ Detalhes de ${processados} pedidos obtidos!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar detalhes dos pedidos:', error);
+                showAlert('Erro ao buscar detalhes: ' + error.message, 'error');
+            } finally {
+                // Reabilitar botão
+                btnBuscarDetalhes.disabled = false;
+                btnBuscarDetalhes.innerHTML = '<span>🔍</span><span>Buscar Detalhes dos Pedidos</span>';
+            }
+        }
+
+        // Função para exportar detalhes completos para CSV
+        function exportarDetalhesParaCSV() {
+            if (detalhesCompletosDosPedidos.length === 0) {
+                showAlert('Nenhum detalhe para exportar!', 'warning');
+                return;
+            }
+            
+            // Criar conteúdo CSV com detalhes completos
+            let csvContent = "ID,E-commerce_number,Status,Cliente,Email,Total,Data_Criacao,Operador_Ultimo,Itens\n";
+            
+            detalhesCompletosDosPedidos.forEach(item => {
+                const detalhes = item.detalhes;
+                const cliente = detalhes.client || {};
+                const itens = detalhes.items || [];
+                const ultimoOperador = detalhes.history && detalhes.history.length > 0 
+                    ? detalhes.history[detalhes.history.length - 1].created_by 
+                    : 'Sistema';
+                
+                csvContent += `"${item.id}","${item.ecommerce_number}","${item.status}","${cliente.name || 'N/A'}","${cliente.email || 'N/A'}","${detalhes.price || 0}","${item.created_at}","${ultimoOperador}","${itens.length} itens"\n`;
+            });
+            
+            // Criar blob e download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `pedidos_detalhes_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`📥 CSV de detalhes exportado com ${detalhesCompletosDosPedidos.length} pedidos!`, 'success');
         }
 
         console.log('✅ H&M - Sistema de Troca/Devolução Automatizado carregado!');
