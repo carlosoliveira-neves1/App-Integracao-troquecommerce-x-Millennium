@@ -581,8 +581,8 @@
             renderQueue();
         }
         
-        // Processar item
-        function processItem(itemId) {
+        // Processar item (integração com sistema real)
+        async function processItem(itemId) {
             const item = queueData.find(i => i.id === itemId);
             if (!item) return;
             
@@ -593,25 +593,105 @@
             renderQueue();
             updateStats();
             
-            // Simular processamento
-            setTimeout(() => {
-                const success = Math.random() > 0.2; // 80% de sucesso
+            try {
+                // Carregar configurações do localStorage ou usar padrão
+                const config = loadConfig();
                 
-                if (success) {
-                    item.status = 'concluido';
-                    item.completedAt = new Date().toISOString();
-                    addToHistory(item);
-                    showAlert(`✅ Pedido ${item.pedidoId} processado com sucesso!`, 'success');
-                } else {
-                    item.status = 'erro';
-                    item.error = 'Erro simulado de processamento';
-                    showAlert(`❌ Erro ao processar pedido ${item.pedidoId}`, 'error');
+                // Verificar se integração está ativa
+                if (!config.enabled) {
+                    throw new Error('Integração com Millennium está desativada. Configure em Configurações.');
                 }
                 
-                queueData = queueData.filter(i => i.id !== itemId);
-                renderQueue();
-                updateStats();
-            }, 3000 + Math.random() * 2000); // 3-5 segundos
+                // Preparar body para API do Millennium
+                const body = prepareNotaBody(item.pedidoId, config);
+                
+                // Chamar API real de processamento
+                const response = await fetch(`${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': getAuthHeader(config),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+                
+                item.status = 'concluido';
+                item.completedAt = new Date().toISOString();
+                item.response = data;
+                addToHistory(item);
+                showAlert(`✅ Nota ${item.pedidoId} processada com sucesso!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao processar nota:', error);
+                item.status = 'erro';
+                item.error = error.message;
+                item.completedAt = new Date().toISOString();
+                showAlert(`❌ Erro ao processar nota ${item.pedidoId}: ${error.message}`, 'error');
+            }
+            
+            queueData = queueData.filter(i => i.id !== itemId);
+            renderQueue();
+            updateStats();
+        }
+        
+        // Carregar configurações
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('troquecommerce_config');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                
+                // Verificar se integração Millennium está ativa
+                if (!config.millenniumEnabled) {
+                    showAlert('⚠️ Integração com Millennium está desativada. Configure em Configurações.', 'warning');
+                }
+                
+                return {
+                    baseUrl: config.millenniumBaseUrl || 'http://179.124.195.107:6017',
+                    username: config.millenniumUsername || 'seu_usuario',
+                    password: config.millenniumPassword || 'sua_senha',
+                    vitrine: config.millenniumVitrine || '101',
+                    enabled: config.millenniumEnabled !== false
+                };
+            }
+            
+            // Configurações padrão do Millennium
+            return {
+                baseUrl: 'http://179.124.195.107:6017',
+                username: 'seu_usuario',
+                password: 'sua_senha',
+                vitrine: '101',
+                enabled: false
+            };
+        }
+        
+        // Preparar body para API do Millennium
+        function prepareNotaBody(pedidoId, config) {
+            // Estrutura base para API de troca/devolução
+            return {
+                // Campos básicos
+                VITRINE: config.vitrine || '101',
+                PEDIDO: pedidoId.toString(),
+                // Outros campos necessários para a API
+                DATA: new Date().toISOString().split('T')[0],
+                HORA: new Date().toTimeString().split(' ')[0],
+                USUARIO: config.username || 'system',
+                // Campos específicos para troca/devolução
+                MOTIVO: 'TROCA_DEVOLUCAO',
+                STATUS: 'PENDENTE'
+            };
+        }
+        
+        // Gerar header de autenticação
+        function getAuthHeader(config) {
+            const username = config.username || 'seu_usuario';
+            const password = config.password || 'sua_senha';
+            return 'Basic ' + btoa(`${username}:${password}`);
         }
         
         // Retentar item

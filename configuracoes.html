@@ -348,6 +348,42 @@
             </div>
         </div>
         
+        <!-- Configurações do Millennium -->
+        <div class="config-section">
+            <h2>🏢 Configurações do Millennium</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="millenniumBaseUrl">URL Base Millennium</label>
+                    <input type="url" id="millenniumBaseUrl" value="http://179.124.195.107:6017" placeholder="http://179.124.195.107:6017">
+                    <div class="info-text">URL base do servidor Millennium ERP</div>
+                </div>
+                <div class="form-group">
+                    <label for="millenniumVitrine">Vitrine Padrão</label>
+                    <input type="number" id="millenniumVitrine" value="101" placeholder="101">
+                    <div class="info-text">Código da vitrine para processamento</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="millenniumUsername">Usuário Millennium</label>
+                    <input type="text" id="millenniumUsername" placeholder="seu_usuario_millennium">
+                    <div class="info-text">Usuário para autenticação na API do Millennium</div>
+                </div>
+                <div class="form-group">
+                    <label for="millenniumPassword">Senha Millennium</label>
+                    <input type="password" id="millenniumPassword" placeholder="sua_senha_millennium">
+                    <div class="info-text">Senha para autenticação na API do Millennium</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center;">
+                    <input type="checkbox" id="millenniumEnabled" checked style="width: auto; margin-right: 10px;">
+                    Integração Millennium Ativa
+                </label>
+                <div class="info-text">Ativar/desativar processamento de notas no Millennium</div>
+            </div>
+        </div>
+        
         <!-- Configurações de Processamento -->
         <div class="config-section">
             <h2>⚙️ Configurações de Processamento</h2>
@@ -494,7 +530,13 @@
                 enableLogs: document.getElementById('enableLogs').checked,
                 debugMode: document.getElementById('debugMode').checked,
                 emailNotifications: document.getElementById('emailNotifications').value,
-                slackWebhook: document.getElementById('slackWebhook').value
+                slackWebhook: document.getElementById('slackWebhook').value,
+                // Configurações do Millennium
+                millenniumBaseUrl: document.getElementById('millenniumBaseUrl').value,
+                millenniumVitrine: document.getElementById('millenniumVitrine').value,
+                millenniumUsername: document.getElementById('millenniumUsername').value,
+                millenniumPassword: document.getElementById('millenniumPassword').value,
+                millenniumEnabled: document.getElementById('millenniumEnabled').checked
             };
             
             // Salvar no localStorage
@@ -512,20 +554,33 @@
             if (savedConfig) {
                 const config = JSON.parse(savedConfig);
                 
-                // Preencher campos
+                // Preencher campos da API Troquecommerce
                 document.getElementById('troqueBaseUrl').value = config.troqueBaseUrl || 'https://www.troquecommerce.com.br';
                 document.getElementById('troqueToken').value = config.troqueToken || '78916095-ef7a-4958-939d-6ede76c72f6f';
                 document.getElementById('backendUrl').value = config.backendUrl || 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
                 document.getElementById('timeout').value = config.timeout || '30';
+                
+                // Preencher campos do Webhook
                 document.getElementById('webhookUrl').value = config.webhookUrl || '';
                 document.getElementById('webhookSecret').value = config.webhookSecret || '';
                 document.getElementById('webhookEnabled').checked = config.webhookEnabled !== false;
+                
+                // Preencher campos do Millennium
+                document.getElementById('millenniumBaseUrl').value = config.millenniumBaseUrl || 'http://179.124.195.107:6017';
+                document.getElementById('millenniumVitrine').value = config.millenniumVitrine || '101';
+                document.getElementById('millenniumUsername').value = config.millenniumUsername || '';
+                document.getElementById('millenniumPassword').value = config.millenniumPassword || '';
+                document.getElementById('millenniumEnabled').checked = config.millenniumEnabled !== false;
+                
+                // Preencher campos de Processamento
                 document.getElementById('autoProcess').checked = config.autoProcess || false;
                 document.getElementById('processInterval').value = config.processInterval || '5';
                 document.getElementById('maxQueueSize').value = config.maxQueueSize || '100';
                 document.getElementById('retryAttempts').value = config.retryAttempts || '3';
                 document.getElementById('enableLogs').checked = config.enableLogs !== false;
                 document.getElementById('debugMode').checked = config.debugMode || false;
+                
+                // Preencher campos de Notificação
                 document.getElementById('emailNotifications').value = config.emailNotifications || '';
                 document.getElementById('slackWebhook').value = config.slackWebhook || '';
             }
