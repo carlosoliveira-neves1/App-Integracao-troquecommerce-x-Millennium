@@ -321,6 +321,4 @@ app.use((err, _req, res, _next) => {
     res.status(500).json({ message: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Troquecommerce webhook server listening on http://localhost:${PORT}`);
-});
+module.exports = app;
