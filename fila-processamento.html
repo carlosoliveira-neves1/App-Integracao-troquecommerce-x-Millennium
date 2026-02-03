@@ -489,8 +489,87 @@
             }, 5000);
         }
         
-        // Adicionar pedido à fila
-        function addToQueue(pedidoId, priority = 'medium') {
+        // Carregar dados reais da fila do sistema
+        function loadRealQueueData() {
+            // Tentar carregar dados do localStorage (do troca-devolucao-app.html)
+            const savedQueue = localStorage.getItem('troca_devolucao_fila');
+            if (savedQueue) {
+                try {
+                    const filaData = JSON.parse(savedQueue);
+                    // Converter formato do sistema antigo para novo formato
+                    queueData = filaData.map((item, index) => ({
+                        id: item.id || Date.now() + index,
+                        pedidoId: item.nota || item.pedido || `NF-${index + 1}`,
+                        status: item.status || 'pendente',
+                        priority: item.priority || 'medium',
+                        addedAt: item.addedAt || new Date().toISOString(),
+                        startedAt: item.startedAt || null,
+                        completedAt: item.completedAt || null,
+                        attempts: item.attempts || 0,
+                        error: item.error || null,
+                        response: item.response || null,
+                        body: item.body || null
+                    }));
+                    console.log('✅ Dados reais da fila carregados:', queueData.length, 'itens');
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao carregar fila:', error);
+                }
+            }
+            
+            // Verificar se há dados em outra chave
+            const alternativeQueue = localStorage.getItem('fila_troca_devolucao');
+            if (alternativeQueue) {
+                try {
+                    const filaData = JSON.parse(alternativeQueue);
+                    queueData = filaData.map((item, index) => ({
+                        id: item.id || Date.now() + index,
+                        pedidoId: item.nota || item.pedido || `NF-${index + 1}`,
+                        status: item.status || 'pendente',
+                        priority: item.priority || 'medium',
+                        addedAt: item.addedAt || new Date().toISOString(),
+                        startedAt: item.startedAt || null,
+                        completedAt: item.completedAt || null,
+                        attempts: item.attempts || 0,
+                        error: item.error || null,
+                        response: item.response || null,
+                        body: item.body || null
+                    }));
+                    console.log('✅ Dados alternativos da fila carregados:', queueData.length, 'itens');
+                    return true;
+                } catch (error) {
+                    console.error('Erro ao carregar fila alternativa:', error);
+                }
+            }
+            
+            console.log('📋 Nenhum dado real encontrado na fila');
+            return false;
+        }
+        
+        // Sincronizar fila com sistema existente
+        function syncQueueWithSystem() {
+            // Salvar dados da fila no formato compatível
+            const compatibleData = queueData.map(item => ({
+                id: item.id,
+                nota: item.pedidoId,
+                status: item.status,
+                priority: item.priority,
+                addedAt: item.addedAt,
+                startedAt: item.startedAt,
+                completedAt: item.completedAt,
+                attempts: item.attempts,
+                error: item.error,
+                response: item.response,
+                body: item.body
+            }));
+            
+            // Salvar em ambas as chaves para compatibilidade
+            localStorage.setItem('troque_devolucao_fila', JSON.stringify(compatibleData));
+            localStorage.setItem('fila_troca_devolucao', JSON.stringify(compatibleData));
+        }
+        
+        // Adicionar pedido à fila (integrado com sistema real)
+        function addToQueue(pedidoId, priority = 'medium', bodyData = null) {
             const queueItem = {
                 id: Date.now() + Math.random(),
                 pedidoId: pedidoId,
@@ -500,10 +579,13 @@
                 startedAt: null,
                 completedAt: null,
                 attempts: 0,
-                error: null
+                error: null,
+                response: null,
+                body: bodyData || prepareNotaBody(pedidoId, loadConfig())
             };
             
             queueData.push(queueItem);
+            syncQueueWithSystem(); // Sincronizar com sistema
             renderQueue();
             updateStats();
             showAlert(`📦 Pedido ${pedidoId} adicionado à fila!`, 'success');
@@ -636,6 +718,7 @@
             }
             
             queueData = queueData.filter(i => i.id !== itemId);
+            syncQueueWithSystem(); // Sincronizar com sistema após processamento
             renderQueue();
             updateStats();
         }
@@ -701,66 +784,14 @@
             
             item.status = 'pendente';
             item.error = null;
+            syncQueueWithSystem(); // Sincronizar com sistema
             renderQueue();
             updateStats();
-        }
-        
-        // Remover da fila
-        function removeFromQueue(itemId) {
-            queueData = queueData.filter(i => i.id !== itemId);
-            renderQueue();
-            updateStats();
-            showAlert('🗑️ Item removido da fila', 'warning');
-        }
-        
-        // Iniciar processamento automático
-        function startProcessing() {
-            if (isProcessing) {
-                showAlert('⚠️ Processamento já está em andamento', 'warning');
-                return;
-            }
-            
-            isProcessing = true;
-            showAlert('▶️ Processamento automático iniciado!', 'success');
-            
-            const processNext = () => {
-                if (!isProcessing) return;
-                
-                const pendingItems = queueData.filter(i => i.status === 'pendente');
-                if (pendingItems.length === 0) {
-                    isProcessing = false;
-                    showAlert('⏹️ Todos os pedidos foram processados!', 'success');
-                    return;
-                }
-                
-                const nextItem = pendingItems[0]; // Pega o primeiro
-                processItem(nextItem.id);
-                
-                // Processa próximo após 5 segundos
-                setTimeout(processNext, 5000);
-            };
-            
-            processNext();
-        }
-        
-        // Pausar processamento
-        function pauseProcessing() {
-            isProcessing = false;
-            showAlert('⏸️ Processamento pausado', 'warning');
-        }
-        
-        // Limpar fila
-        function clearQueue() {
-            if (confirm('Tem certeza que deseja limpar toda a fila?')) {
-                queueData = [];
-                renderQueue();
-                updateStats();
-                showAlert('🗑️ Fila limpa com sucesso!', 'success');
-            }
         }
         
         // Atualizar fila
         function refreshQueue() {
+            loadRealQueueData(); // Recarregar dados reais
             renderQueue();
             updateStats();
             showAlert('🔄 Fila atualizada!', 'success');
@@ -856,21 +887,27 @@
             });
         }
         
-        // Adicionar dados de exemplo
+        // Adicionar dados de exemplo (removido - agora usa dados reais)
         function addSampleData() {
-            addToQueue('12345', 'high');
-            addToQueue('12346', 'medium');
-            addToQueue('12347', 'low');
-            addToQueue('12348', 'medium');
+            // Não adiciona mais dados mock
+            console.log('Sistema pronto para receber dados reais da fila');
         }
         
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
-            addSampleData();
+            loadRealQueueData(); // Carregar dados reais do sistema
             renderQueue();
             renderHistory();
             updateStats();
-            console.log('✅ Fila de processamento carregada!');
+            console.log('✅ Fila de processamento carregada com dados reais!');
+            
+            // Verificar se há dados reais
+            if (queueData.length === 0) {
+                console.log('📋 Fila vazia. Adicione pedidos através do sistema.');
+                showAlert('📋 Fila vazia. Adicione pedidos através do sistema.', 'info');
+            } else {
+                console.log(`📋 Encontrados ${queueData.length} itens na fila real.`);
+            }
         });
     </script>
 </body>
