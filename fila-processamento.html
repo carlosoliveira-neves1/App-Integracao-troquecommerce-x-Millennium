@@ -859,6 +859,62 @@
             document.getElementById('erroCount').textContent = stats.erro;
         }
         
+        // Remover da fila
+        function removeFromQueue(itemId) {
+            queueData = queueData.filter(i => i.id !== itemId);
+            syncQueueWithSystem(); // Sincronizar com sistema
+            renderQueue();
+            updateStats();
+            showAlert('🗑️ Item removido da fila', 'warning');
+        }
+        
+        // Iniciar processamento automático
+        function startProcessing() {
+            if (isProcessing) {
+                showAlert('⚠️ Processamento já está em andamento', 'warning');
+                return;
+            }
+            
+            isProcessing = true;
+            showAlert('▶️ Processamento automático iniciado!', 'success');
+            
+            const processNext = () => {
+                if (!isProcessing) return;
+                
+                const pendingItems = queueData.filter(i => i.status === 'pendente');
+                if (pendingItems.length === 0) {
+                    isProcessing = false;
+                    showAlert('⏹️ Todos os pedidos foram processados!', 'success');
+                    return;
+                }
+                
+                const nextItem = pendingItems[0]; // Pega o primeiro
+                processItem(nextItem.id);
+                
+                // Processa próximo após 5 segundos
+                setTimeout(processNext, 5000);
+            };
+            
+            processNext();
+        }
+        
+        // Pausar processamento
+        function pauseProcessing() {
+            isProcessing = false;
+            showAlert('⏸️ Processamento pausado', 'warning');
+        }
+        
+        // Limpar fila
+        function clearQueue() {
+            if (confirm('Tem certeza que deseja limpar toda a fila?')) {
+                queueData = [];
+                syncQueueWithSystem(); // Sincronizar com sistema
+                renderQueue();
+                updateStats();
+                showAlert('🗑️ Fila limpa com sucesso!', 'success');
+            }
+        }
+        
         // Funções auxiliares
         function getPriorityText(priority) {
             const priorities = {
