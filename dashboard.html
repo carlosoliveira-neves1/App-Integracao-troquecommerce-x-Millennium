@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H&M - Dashboard [HOMOLOGAÇÃO] v2.1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-info {
+            background: #0ea5e9;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #0284c7;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            color: #16a34a;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            color: #d97706;
+        }
+    </style>
+    <script>
+        window.BACKEND_BASE_URL = window.BACKEND_BASE_URL || 'https://app-integracao-troquecommerce-x-mil.vercel.app';
+    </script>
+</head>
+<body>
+    <!-- Banner de Homologação -->
+    <div style="background: #f59e0b; color: white; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">
+        🧪 AMBIENTE DE HOMOLOGAÇÃO - DADOS DE TESTE - NÃO USAR EM PRODUÇÃO
+    </div>
+    
+    <div class="container">
+        <h1 style="margin-bottom: 30px; color: #1f2937;">📊 Dashboard - Extração de IDs</h1>
+        
+        <!-- Busca de Pedido Específico -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="margin-bottom: 15px; color: #374151;">🔍 Buscar Pedido Específico</h4>
+            <div style="display: flex; gap: 10px; align-items: end;">
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #6b7280;">ID do Pedido:</label>
+                    <input type="text" id="pedidoEspecificoId" value="1531830502307-01" placeholder="Ex: 1499999999899" 
+                           style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <button class="btn btn-primary" onclick="buscarPedidoEspecifico()">
+                    <span>🔍</span>
+                    <span>Buscar Pedido</span>
+                </button>
+            </div>
+            <div id="pedidoEspecificoResultado" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- Buscar Todos os IDs -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="margin-bottom: 15px; color: #374151;">📋 Extrair Todos os IDs</h4>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-primary" onclick="buscarTodosIds()">
+                    <span>📊</span>
+                    <span>Buscar Todos os Pedidos</span>
+                </button>
+                <button class="btn btn-secondary" onclick="exportarIdsParaCSV()" id="btnExportarCSV" style="display: none;">
+                    <span>📥</span>
+                    <span>Exportar CSV</span>
+                </button>
+                <button class="btn btn-info" onclick="buscarDetalhesTodosPedidos()" id="btnBuscarDetalhes" style="display: none;">
+                    <span>🔍</span>
+                    <span>Buscar Detalhes dos Pedidos</span>
+                </button>
+            </div>
+            <div id="todosIdsResultado" style="margin-top: 15px;"></div>
+        </div>
+        
+        <!-- Configuração -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="margin-bottom: 15px; color: #374151;">⚙️ Configuração</h4>
+            <div style="display: grid; gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #6b7280;">Base URL:</label>
+                    <input type="text" id="troqueBaseUrl" value="https://troquecommerce.com.br/api/public" placeholder="https://..." 
+                           style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 14px; color: #6b7280;">Token:</label>
+                    <input type="text" id="troqueToken" value="78916095-ef7a-4958-939d-6ede76c72f6f" placeholder="Informe o token da Troquecommerce" 
+                           style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Área de Alertas -->
+        <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;"></div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let todosOsIds = [];
+        let detalhesCompletosDosPedidos = [];
+
+        // Funções de configuração
+        function getTroqueConfig() {
+            const baseUrl = document.getElementById('troqueBaseUrl')?.value.trim();
+            const token = document.getElementById('troqueToken')?.value.trim();
+            return { baseUrl, token };
+        }
+
+        // Funções de alerta
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Buscar pedido específico
+        async function buscarPedidoEspecifico() {
+            const resultadoDiv = document.getElementById('pedidoEspecificoResultado');
+            const pedidoId = document.getElementById('pedidoEspecificoId').value.trim();
+            
+            if (!pedidoId) {
+                showAlert('Digite um ID de pedido!', 'warning');
+                return;
+            }
+            
+            try {
+                resultadoDiv.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Buscando pedido...</div>';
+                
+                const config = getTroqueConfig();
+                const backendUrl = window.BACKEND_BASE_URL;
+                
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        ecommerce_number: pedidoId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const pedidoData = await response.json();
+                
+                resultadoDiv.innerHTML = `
+                    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 15px;">
+                        <h5 style="color: #16a34a; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h5>
+                        <p style="margin: 5px 0;"><strong>ID:</strong> ${pedidoData.id}</p>
+                        <p style="margin: 5px 0;"><strong>E-commerce:</strong> ${pedidoData.ecommerce_number}</p>
+                        <p style="margin: 5px 0;"><strong>Status:</strong> ${pedidoData.status}</p>
+                        <p style="margin: 5px 0;"><strong>Cliente:</strong> ${pedidoData.client?.name || 'N/A'}</p>
+                        <p style="margin: 5px 0;"><strong>Total:</strong> R$ ${(pedidoData.price || 0).toFixed(2)}</p>
+                        <button class="btn btn-secondary" onclick="copiarJSON('${pedidoId}')" style="margin-top: 10px;">
+                            <span>📋</span>
+                            <span>Copiar JSON</span>
+                        </button>
+                    </div>
+                `;
+                
+                // Salvar JSON para cópia
+                window.pedidoJSONCache = window.pedidoJSONCache || {};
+                window.pedidoJSONCache[pedidoId] = JSON.stringify(pedidoData, null, 2);
+                
+                showAlert('Pedido encontrado com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar pedido:', error);
+                resultadoDiv.innerHTML = `
+                    <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; padding: 15px;">
+                        <h5 style="color: #dc2626; margin: 0 0 10px 0;">❌ Erro na Busca</h5>
+                        <p style="margin: 5px 0;">${error.message}</p>
+                    </div>
+                `;
+                showAlert('Erro ao buscar pedido: ' + error.message, 'error');
+            }
+        }
+
+        // Copiar JSON
+        function copiarJSON(pedidoId) {
+            if (window.pedidoJSONCache && window.pedidoJSONCache[pedidoId]) {
+                navigator.clipboard.writeText(window.pedidoJSONCache[pedidoId]).then(() => {
+                    showAlert('JSON copiado para área de transferência!', 'success');
+                }).catch(err => {
+                    console.error('Erro ao copiar:', err);
+                    showAlert('Erro ao copiar JSON', 'error');
+                });
+            }
+        }
+
+        // Buscar todos os IDs
+        async function buscarTodosIds() {
+            const resultadoDiv = document.getElementById('todosIdsResultado');
+            const btnExportar = document.getElementById('btnExportarCSV');
+            
+            try {
+                resultadoDiv.innerHTML = '<div style="text-align: center; padding: 20px;">🔄 Buscando todos os pedidos...</div>';
+                btnExportar.style.display = 'none';
+                
+                const config = getTroqueConfig();
+                const backendUrl = window.BACKEND_BASE_URL;
+                
+                const listResponse = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        unchecked_by_integration: true
+                    })
+                });
+
+                if (!listResponse.ok) {
+                    throw new Error(`HTTP ${listResponse.status}: ${await listResponse.text()}`);
+                }
+
+                const listData = await listResponse.json();
+                const reversasList = listData.list || listData.data || listData.orders || [];
+                
+                todosOsIds = reversasList.map(pedido => ({
+                    id: pedido.id,
+                    ecommerce_number: pedido.ecommerce_number,
+                    status: pedido.status,
+                    created_at: pedido.created_at
+                }));
+                
+                resultadoDiv.innerHTML = `
+                    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                        <h5 style="color: #16a34a; margin: 0 0 10px 0;">✅ Busca Concluída!</h5>
+                        <p style="margin: 5px 0;"><strong>Total de pedidos encontrados:</strong> ${reversasList.length}</p>
+                        <p style="margin: 5px 0;"><strong>IDs extraídos:</strong> ${todosOsIds.length}</p>
+                        <p style="margin: 5px 0;"><strong>Data da busca:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px;">
+                        <h6 style="margin: 0 0 10px 0; color: #374151;">📋 Relatório de IDs:</h6>
+                        <div style="max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;">
+                            ${todosOsIds.map(item => 
+                                `<div style="padding: 2px 0; border-bottom: 1px solid #e5e7eb;">
+                                    ID: ${item.id} | E-commerce: ${item.ecommerce_number} | Status: ${item.status}
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                btnExportar.style.display = 'inline-flex';
+                document.getElementById('btnBuscarDetalhes').style.display = 'inline-flex';
+                
+                showAlert(`✅ Encontrados ${todosOsIds.length} IDs de pedidos!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar todos os IDs:', error);
+                resultadoDiv.innerHTML = `
+                    <div style="background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; padding: 15px;">
+                        <h5 style="color: #dc2626; margin: 0 0 10px 0;">❌ Erro na Busca</h5>
+                        <p style="margin: 5px 0;">${error.message}</p>
+                    </div>
+                `;
+                showAlert('Erro ao buscar IDs: ' + error.message, 'error');
+            }
+        }
+
+        // Exportar IDs para CSV
+        function exportarIdsParaCSV() {
+            if (todosOsIds.length === 0) {
+                showAlert('Nenhum ID para exportar!', 'warning');
+                return;
+            }
+            
+            let csvContent = "ID,E-commerce_number,Status,Created_at\n";
+            todosOsIds.forEach(item => {
+                csvContent += `"${item.id}","${item.ecommerce_number}","${item.status}","${item.created_at}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `pedidos_ids_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`📥 CSV exportado com ${todosOsIds.length} IDs!`, 'success');
+        }
+
+        // Buscar detalhes de todos os pedidos
+        async function buscarDetalhesTodosPedidos() {
+            if (todosOsIds.length === 0) {
+                showAlert('Primeiro busque os IDs dos pedidos!', 'warning');
+                return;
+            }
+            
+            const resultadoDiv = document.getElementById('todosIdsResultado');
+            const btnBuscarDetalhes = document.getElementById('btnBuscarDetalhes');
+            
+            try {
+                btnBuscarDetalhes.disabled = true;
+                btnBuscarDetalhes.innerHTML = '<span>🔄</span><span>Processando...</span>';
+                
+                resultadoDiv.innerHTML += '<div style="text-align: center; padding: 20px; margin-top: 15px;">🔍 Buscando detalhes de todos os pedidos...</div>';
+                
+                const config = getTroqueConfig();
+                const backendUrl = window.BACKEND_BASE_URL;
+                detalhesCompletosDosPedidos = [];
+                
+                let processados = 0;
+                let erros = 0;
+                
+                for (const pedidoInfo of todosOsIds) {
+                    try {
+                        console.log(`🔍 Buscando detalhes do pedido ID: ${pedidoInfo.id}`);
+                        
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                baseUrl: config.baseUrl,
+                                token: config.token,
+                                id: pedidoInfo.id
+                            })
+                        });
+
+                        if (detailResponse.ok) {
+                            const detalhesPedido = await detailResponse.json();
+                            
+                            const pedidoCompleto = {
+                                ...pedidoInfo,
+                                detalhes: detalhesPedido
+                            };
+                            
+                            detalhesCompletosDosPedidos.push(pedidoCompleto);
+                            processados++;
+                            
+                            const progresso = Math.round((processados + erros) / todosOsIds.length * 100);
+                            resultadoDiv.innerHTML = resultadoDiv.innerHTML.replace(
+                                /🔍 Buscando detalhes.*\(\d+\/\d+\)/,
+                                `🔍 Buscando detalhes... ${progresso}% (${processados + erros}/${todosOsIds.length})`
+                            );
+                            
+                        } else {
+                            console.error(`❌ Erro ao buscar detalhes do pedido ${pedidoInfo.id}:`, detailResponse.status);
+                            erros++;
+                        }
+                        
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                    } catch (error) {
+                        console.error(`❌ Erro ao processar pedido ${pedidoInfo.id}:`, error);
+                        erros++;
+                    }
+                }
+                
+                resultadoDiv.innerHTML += `
+                    <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; padding: 15px; margin-top: 15px;">
+                        <h5 style="color: #16a34a; margin: 0 0 10px 0;">✅ Detalhes Concluídos!</h5>
+                        <p style="margin: 5px 0;"><strong>Pedidos processados:</strong> ${processados}</p>
+                        <p style="margin: 5px 0;"><strong>Erros:</strong> ${erros}</p>
+                        <p style="margin: 5px 0;"><strong>Total de IDs:</strong> ${todosOsIds.length}</p>
+                        <p style="margin: 5px 0;"><strong>Data da busca:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+                        <button class="btn btn-success" onclick="exportarDetalhesParaCSV()" style="margin-top: 10px;">
+                            <span>📥</span>
+                            <span>Exportar Detalhes Completos</span>
+                        </button>
+                    </div>
+                `;
+                
+                showAlert(`✅ Detalhes de ${processados} pedidos obtidos!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar detalhes dos pedidos:', error);
+                showAlert('Erro ao buscar detalhes: ' + error.message, 'error');
+            } finally {
+                btnBuscarDetalhes.disabled = false;
+                btnBuscarDetalhes.innerHTML = '<span>🔍</span><span>Buscar Detalhes dos Pedidos</span>';
+            }
+        }
+
+        // Exportar detalhes para CSV
+        function exportarDetalhesParaCSV() {
+            if (detalhesCompletosDosPedidos.length === 0) {
+                showAlert('Nenhum detalhe para exportar!', 'warning');
+                return;
+            }
+            
+            let csvContent = "ID,E-commerce_number,Status,Cliente,Email,Total,Data_Criacao,Operador_Ultimo,Itens\n";
+            
+            detalhesCompletosDosPedidos.forEach(item => {
+                const detalhes = item.detalhes;
+                const cliente = detalhes.client || {};
+                const itens = detalhes.items || [];
+                const ultimoOperador = detalhes.history && detalhes.history.length > 0 
+                    ? detalhes.history[detalhes.history.length - 1].created_by 
+                    : 'Sistema';
+                
+                csvContent += `"${item.id}","${item.ecommerce_number}","${item.status}","${cliente.name || 'N/A'}","${cliente.email || 'N/A'}","${detalhes.price || 0}","${item.created_at}","${ultimoOperador}","${itens.length} itens"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `pedidos_detalhes_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert(`📥 CSV de detalhes exportado com ${detalhesCompletosDosPedidos.length} pedidos!`, 'success');
+        }
+
+        // Atalho de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+                e.preventDefault();
+                const input = document.getElementById('pedidoEspecificoId');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }
+        });
+
+        console.log('✅ Dashboard carregado!');
+    </script>
+</body>
+</html>

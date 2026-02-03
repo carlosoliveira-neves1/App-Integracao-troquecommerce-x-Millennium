@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H&M - Pedidos [HOMOLOGAÇÃO] v2.1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            color: #16a34a;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            color: #d97706;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+    </style>
+    <script>
+        window.BACKEND_BASE_URL = window.BACKEND_BASE_URL || 'https://app-integracao-troquecommerce-x-mil.vercel.app';
+    </script>
+</head>
+<body>
+    <!-- Banner de Homologação -->
+    <div style="background: #f59e0b; color: white; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">
+        🧪 AMBIENTE DE HOMOLOGAÇÃO - DADOS DE TESTE - NÃO USAR EM PRODUÇÃO
+    </div>
+    
+    <div class="container">
+        <h1 style="margin-bottom: 30px; color: #1f2937;">📦 Pedidos</h1>
+        
+        <!-- Filtros de Busca -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="margin-bottom: 15px; color: #374151;">🔍 Buscar Reversas</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="form-group">
+                    <label>Status da reversa</label>
+                    <select id="statusFilter">
+                        <option value="">Todos</option>
+                        <option value="pending">Pendente</option>
+                        <option value="processing">Processando</option>
+                        <option value="completed">Concluído</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data inicial</label>
+                    <input type="date" id="dataInicial" placeholder="dd/mm/aaaa">
+                </div>
+                <div class="form-group">
+                    <label>Data final</label>
+                    <input type="date" id="dataFinal" placeholder="dd/mm/aaaa">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="buscarReversas()" style="margin-top: 15px;">
+                <span>🔁</span>
+                <span>Buscar Reversas</span>
+            </button>
+        </div>
+        
+        <!-- Resultados -->
+        <div id="resultadosReversas" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="margin-bottom: 15px; color: #374151;">📋 Resultados</h4>
+            <div id="listaReversas">
+                <div style="text-align: center; padding: 40px; color: #6b7280;">
+                    <p>Use os filtros acima para listar as reversas abertas na Troquecommerce.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Área de Alertas -->
+        <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px;"></div>
+    </div>
+
+    <script>
+        // Funções de alerta
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Buscar reversas
+        async function buscarReversas() {
+            const resultadosDiv = document.getElementById('listaReversas');
+            const status = document.getElementById('statusFilter').value;
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+            
+            try {
+                resultadosDiv.innerHTML = '<div style="text-align: center; padding: 40px;">🔄 Buscando reversas...</div>';
+                
+                const config = {
+                    baseUrl: 'https://troquecommerce.com.br/api/public',
+                    token: '78916095-ef7a-4958-939d-6ede76c72f6f'
+                };
+                
+                const backendUrl = window.BACKEND_BASE_URL;
+                
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        status: status || undefined,
+                        start_date: dataInicial || undefined,
+                        end_date: dataFinal || undefined,
+                        unchecked_by_integration: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                const reversas = data.list || data.data || data.orders || [];
+                
+                if (reversas.length === 0) {
+                    resultadosDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #6b7280;">
+                            <p>Nenhuma reversa encontrada com os filtros selecionados.</p>
+                        </div>
+                    `;
+                    showAlert('Nenhuma reversa encontrada', 'warning');
+                    return;
+                }
+                
+                // Renderizar lista de reversas
+                resultadosDiv.innerHTML = `
+                    <div style="margin-bottom: 15px;">
+                        <p style="color: #6b7280;"><strong>${reversas.length}</strong> reversas encontradas</p>
+                    </div>
+                    <div style="display: grid; gap: 15px;">
+                        ${reversas.map(reversa => `
+                            <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px;">
+                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 10px;">
+                                    <div>
+                                        <h5 style="margin: 0 0 5px 0; color: #1f2937;">${reversa.ecommerce_number}</h5>
+                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">${reversa.client?.name || 'Cliente não informado'}</p>
+                                    </div>
+                                    <span style="background: #f3f4f6; color: #374151; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                        ${reversa.status || 'Sem status'}
+                                    </span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; font-size: 14px;">
+                                    <div>
+                                        <span style="color: #6b7280;">Data:</span>
+                                        <strong>${new Date(reversa.created_at).toLocaleDateString('pt-BR')}</strong>
+                                    </div>
+                                    <div>
+                                        <span style="color: #6b7280;">Valor:</span>
+                                        <strong>R$ ${(reversa.price || 0).toFixed(2)}</strong>
+                                    </div>
+                                    <div>
+                                        <span style="color: #6b7280;">Tipo:</span>
+                                        <strong>${reversa.reverse_type || 'Não informado'}</strong>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <button class="btn btn-secondary" onclick="verDetalhes('${reversa.id}')">
+                                        <span>👁️</span>
+                                        <span>Ver Detalhes</span>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                showAlert(`${reversas.length} reversas encontradas!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar reversas:', error);
+                resultadosDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #dc2626;">
+                        <p>Erro ao buscar reversas: ${error.message}</p>
+                    </div>
+                `;
+                showAlert('Erro ao buscar reversas: ' + error.message, 'error');
+            }
+        }
+
+        // Ver detalhes da reversa
+        async function verDetalhes(reversaId) {
+            try {
+                const config = {
+                    baseUrl: 'https://troquecommerce.com.br/api/public',
+                    token: '78916095-ef7a-4958-939d-6ede76c72f6f'
+                };
+                
+                const backendUrl = window.BACKEND_BASE_URL;
+                
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        id: reversaId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const detalhes = await response.json();
+                
+                // Mostrar detalhes em um modal ou alert
+                const detalhesTexto = `
+ID: ${detalhes.id}
+E-commerce: ${detalhes.ecommerce_number}
+Cliente: ${detalhes.client?.name || 'N/A'}
+Email: ${detalhes.client?.email || 'N/A'}
+Status: ${detalhes.status}
+Valor: R$ ${(detalhes.price || 0).toFixed(2)}
+Data: ${new Date(detalhes.created_at).toLocaleString('pt-BR')}
+Itens: ${detalhes.items?.length || 0}
+                `.trim();
+                
+                alert(detalhesTexto);
+                
+            } catch (error) {
+                console.error('Erro ao buscar detalhes:', error);
+                showAlert('Erro ao buscar detalhes: ' + error.message, 'error');
+            }
+        }
+
+        console.log('✅ Página de Pedidos carregada!');
+    </script>
+</body>
+</html>
