@@ -227,6 +227,40 @@
             </button>
         </div>
         
+        <!-- Configurações da Fila -->
+        <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h4 style="margin-bottom: 15px; color: #374151;">⚙️ Configurações da Fila de Processamento</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div class="form-group">
+                    <label for="tipoPgtoCredito">Tipo Pgto Crédito *</label>
+                    <input type="text" id="tipoPgtoCredito" placeholder="Ex: 001" required>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">Código do tipo de pagamento para crédito (obrigatório)</div>
+                </div>
+                <div class="form-group">
+                    <label for="vitrine">Vitrine</label>
+                    <input type="number" id="vitrine" value="101" placeholder="101">
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 5px;">Código da vitrine para processamento</div>
+                </div>
+                <div class="form-group">
+                    <label for="autorizarNfe">Autorizar NF-e</label>
+                    <select id="autorizarNfe">
+                        <option value="S">Sim</option>
+                        <option value="N">Não</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tipoAutorizacaoTroca">Tipo Autorização Troca</label>
+                    <input type="text" id="tipoAutorizacaoTroca" placeholder="Ex: 001">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="trocaValorBruto" style="width: auto; margin-right: 8px;">
+                        Troca pelo Valor Bruto
+                    </label>
+                </div>
+            </div>
+        </div>
+        
         <!-- Resultados -->
         <div id="resultadosReversas" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <h4 style="margin-bottom: 15px; color: #374151;">📋 Resultados</h4>
@@ -404,13 +438,19 @@
                 <div class="relatorio-detalhes">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h3 style="color: #1f2937; margin: 0;">📋 Detalhes do Pedido</h3>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-acao btn-primario" onclick="enviarParaFila('${pedido.id}')">
-                                📤 Enviar para Fila
+                        <div class="acoes-relatorio">
+                            <button class="btn-acao btn-primario" onclick="adicionarSelecionadosAFila()">
+                                📤 Adicionar Selecionados à Fila
                             </button>
-                            <button class="btn-acao btn-secundario" onclick="voltarLista()">
-                                ← Voltar
+                            <button class="btn-acao btn-secundario" onclick="selecionarTodos()">
+                                ✅ Selecionar Todos
                             </button>
+                            <button class="btn-acao btn-secundario" onclick="deselecionarTodos()">
+                                ❌ Deselecionar Todos
+                            </button>
+                            <span class="contador-selecionados" id="contadorSelecionados">
+                                0 selecionados
+                            </span>
                         </div>
                     </div>
                     
@@ -473,6 +513,15 @@
                             pedido.items.map((produto, index) => gerarProdutoDetalhadoHTML(produto, index)).join('') :
                             '<p style="color: #6b7280; font-style: italic;">Nenhum produto encontrado neste pedido.</p>'
                         }
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button class="btn-acao btn-primario" onclick="adicionarIndividualAFila('${pedido.id}')">
+                            📤 Adicionar este Pedido à Fila
+                        </button>
+                        <button class="btn-acao btn-secundario" onclick="voltarLista()">
+                            ← Voltar para Lista
+                        </button>
                     </div>
                 </div>
             `;
@@ -595,6 +644,186 @@
                     voltarLista();
                 }
             }, 2000);
+        }
+        
+        // Obter configurações da fila
+        function getConfig() {
+            const savedConfig = localStorage.getItem('troquecommerce_config');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                return {
+                    vitrine: config.millenniumVitrine || '101',
+                    tipoPgtoCredito: document.getElementById('tipoPgtoCredito').value || config.tipoPgtoCredito || '',
+                    autorizarNfe: document.getElementById('autorizarNfe').value || config.autorizarNfe || 'S',
+                    tipoAutorizacaoTroca: document.getElementById('tipoAutorizacaoTroca').value || config.tipoAutorizacaoTroca || '',
+                    trocaValorBruto: document.getElementById('trocaValorBruto').checked || config.trocaValorBruto || false,
+                    baseUrl: config.millenniumBaseUrl || 'http://179.124.195.107:6017',
+                    username: config.millenniumUsername || '',
+                    password: config.millenniumPassword || ''
+                };
+            }
+            
+            return {
+                vitrine: document.getElementById('vitrine').value || '101',
+                tipoPgtoCredito: document.getElementById('tipoPgtoCredito').value || '',
+                autorizarNfe: document.getElementById('autorizarNfe').value || 'S',
+                tipoAutorizacaoTroca: document.getElementById('tipoAutorizacaoTroca').value || '',
+                trocaValorBruto: document.getElementById('trocaValorBruto').checked || false,
+                baseUrl: 'http://179.124.195.107:6017',
+                username: '',
+                password: ''
+            };
+        }
+        
+        // Adicionar selecionados à fila (migrado do troca-devolucao-app.html)
+        async function adicionarSelecionadosAFila() {
+            const checkboxes = document.querySelectorAll('.pedido-checkbox:checked');
+            if (checkboxes.length === 0) {
+                showAlert('Nenhum pedido selecionado.', 'warning');
+                return;
+            }
+
+            const config = getConfig();
+            
+            // Validar campo obrigatório
+            if (!config.tipoPgtoCredito || config.tipoPgtoCredito === '') {
+                showAlert('Por favor, preencha o campo "Tipo Pgto Crédito" antes de adicionar à fila', 'error');
+                document.getElementById('tipoPgtoCredito').focus();
+                return;
+            }
+            
+            let adicionados = 0;
+            let erros = 0;
+
+            for (const checkbox of checkboxes) {
+                try {
+                    const pedidoId = checkbox.value;
+                    
+                    // Criar item para a fila
+                    const filaItem = {
+                        id: Date.now() + Math.random(),
+                        pedidoId: pedidoId,
+                        status: 'pendente',
+                        priority: 'medium',
+                        addedAt: new Date().toISOString(),
+                        startedAt: null,
+                        completedAt: null,
+                        attempts: 0,
+                        error: null,
+                        response: null,
+                        body: {
+                            vitrine: config.vitrine,
+                            faturar: 'T',
+                            autorizar_nfe: config.autorizarNfe,
+                            tipo_autorizacao_troca: config.tipoAutorizacaoTroca,
+                            pedido: pedidoId,
+                            tipo_pgto_credito: config.tipoPgtoCredito,
+                            troca_pelo_valor_bruto: config.trocaValorBruto,
+                            data: new Date().toISOString().split('T')[0],
+                            hora: new Date().toTimeString().split(' ')[0],
+                            usuario: config.username || 'system'
+                        }
+                    };
+                    
+                    // Adicionar à fila global
+                    addToQueue(pedidoId, 'medium', filaItem.body);
+                    adicionados++;
+                    
+                } catch (error) {
+                    console.error(`Erro ao adicionar pedido ${checkbox.value}:`, error);
+                    erros++;
+                }
+            }
+
+            // Limpar seleção
+            checkboxes.forEach(cb => cb.checked = false);
+            atualizarContadorSelecionados();
+
+            // Mostrar resultado
+            if (adicionados > 0) {
+                showAlert(`${adicionados} pedido(s) adicionado(s) à fila com sucesso${erros > 0 ? ` e ${erros} erro(s)` : ''}.`, erros > 0 ? 'warning' : 'success');
+            } else {
+                showAlert('Não foi possível adicionar nenhum pedido à fila.', 'error');
+            }
+        }
+        
+        // Adicionar à fila individual (migrado do troca-devolucao-app.html)
+        function adicionarIndividualAFila(pedidoId) {
+            const config = getConfig();
+            
+            // Validar campo obrigatório
+            if (!config.tipoPgtoCredito || config.tipoPgtoCredito === '') {
+                showAlert('Por favor, preencha o campo "Tipo Pgto Crédito" antes de adicionar à fila', 'error');
+                document.getElementById('tipoPgtoCredito').focus();
+                return;
+            }
+            
+            const body = {
+                vitrine: config.vitrine,
+                faturar: 'T',
+                autorizar_nfe: config.autorizarNfe,
+                tipo_autorizacao_troca: config.tipoAutorizacaoTroca,
+                pedido: pedidoId,
+                tipo_pgto_credito: config.tipoPgtoCredito,
+                troca_pelo_valor_bruto: config.trocaValorBruto,
+                data: new Date().toISOString().split('T')[0],
+                hora: new Date().toTimeString().split(' ')[0],
+                usuario: config.username || 'system'
+            };
+
+            const filaItem = {
+                id: Date.now(),
+                pedidoId: pedidoId,
+                status: 'pendente',
+                priority: 'medium',
+                addedAt: new Date().toISOString(),
+                startedAt: null,
+                completedAt: null,
+                attempts: 0,
+                error: null,
+                response: null,
+                body: body
+            };
+
+            // Adicionar à fila global
+            addToQueue(pedidoId, 'medium', body);
+            showAlert(`Pedido ${pedidoId} adicionado à fila com sucesso!`, 'success');
+        }
+        
+        // Função global addToQueue (compatibilidade com fila-processamento.html)
+        function addToQueue(pedidoId, priority = 'medium', bodyData = null) {
+            // Obter fila existente ou criar nova
+            let queueData = [];
+            const savedQueue = localStorage.getItem('troque_devolucao_fila');
+            if (savedQueue) {
+                try {
+                    queueData = JSON.parse(savedQueue);
+                } catch (error) {
+                    console.error('Erro ao carregar fila:', error);
+                }
+            }
+            
+            const queueItem = {
+                id: Date.now() + Math.random(),
+                pedidoId: pedidoId,
+                status: 'pendente',
+                priority: priority,
+                addedAt: new Date().toISOString(),
+                startedAt: null,
+                completedAt: null,
+                attempts: 0,
+                error: null,
+                response: null,
+                body: bodyData
+            };
+            
+            queueData.push(queueItem);
+            
+            // Salvar em ambas as chaves para compatibilidade
+            localStorage.setItem('troque_devolucao_fila', JSON.stringify(queueData));
+            localStorage.setItem('fila_troca_devolucao', JSON.stringify(queueData));
+            
+            console.log(`✅ Pedido ${pedidoId} adicionado à fila global`);
         }
 
         // Voltar para lista de pedidos
