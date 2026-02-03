@@ -105,7 +105,7 @@ app.post('/api/troquecommerce/order-list', async (req, res) => {
 
 app.post('/api/troquecommerce/order-detail', async (req, res) => {
     const { baseUrl, token, id, ecommerce_number } = req.body || {};
-    const orderId = ecommerce_number || id; // Prioriza ecommerce_number
+    const orderId = id || ecommerce_number; // Prioriza id
 
     if (!baseUrl || !token || !orderId) {
         return res.status(400).json({ message: 'baseUrl, token and orderId (id or ecommerce_number) are required' });
@@ -119,7 +119,7 @@ app.post('/api/troquecommerce/order-detail', async (req, res) => {
         return res.status(400).json({ message: 'Invalid baseUrl', details: error.message });
     }
 
-    endpoint.searchParams.set('ecommerce_number', orderId);
+    endpoint.searchParams.set('id', orderId);
 
     try {
         const response = await fetch(endpoint.toString(), {

@@ -215,7 +215,7 @@
                 const config = getTroqueConfig();
                 const backendUrl = window.BACKEND_BASE_URL;
                 
-                const response = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -223,7 +223,7 @@
                     body: JSON.stringify({
                         baseUrl: config.baseUrl,
                         token: config.token,
-                        ecommerce_number: pedidoId
+                        id: pedidoId
                     })
                 });
 
@@ -404,7 +404,7 @@
                     try {
                         console.log(`🔍 Buscando detalhes do pedido ID: ${pedidoInfo.id}`);
                         
-                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order`, {
+                        const detailResponse = await fetch(`${backendUrl}/api/troquecommerce/order-detail`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
