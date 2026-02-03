@@ -97,6 +97,86 @@
             border: 1px solid #d1d5db;
             border-radius: 4px;
         }
+        
+        .relatorio-detalhes {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .pedido-header-info {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .info-field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 2px;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .produtos-section {
+            margin-top: 20px;
+        }
+        
+        .produto-item {
+            background: #fafafa;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .produto-header {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .produto-detalhes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+        }
+        
+        .btn-fechar {
+            background: #6b7280;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        .btn-fechar:hover {
+            background: #4b5563;
+        }
     </style>
     <script>
         window.BACKEND_BASE_URL = window.BACKEND_BASE_URL || 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
@@ -307,23 +387,233 @@
 
                 const detalhes = await response.json();
                 
-                // Mostrar detalhes em um modal ou alert
-                const detalhesTexto = `
-ID: ${detalhes.id}
-E-commerce: ${detalhes.ecommerce_number}
-Cliente: ${detalhes.client?.name || 'N/A'}
-Email: ${detalhes.client?.email || 'N/A'}
-Status: ${detalhes.status}
-Valor: R$ ${(detalhes.price || 0).toFixed(2)}
-Data: ${new Date(detalhes.created_at).toLocaleString('pt-BR')}
-Itens: ${detalhes.items?.length || 0}
-                `.trim();
-                
-                alert(detalhesTexto);
+                // Gerar relatório detalhado
+                mostrarRelatorioDetalhado(detalhes);
                 
             } catch (error) {
                 console.error('Erro ao buscar detalhes:', error);
                 showAlert('Erro ao buscar detalhes: ' + error.message, 'error');
+            }
+        }
+
+        // Mostrar relatório detalhado do pedido
+        function mostrarRelatorioDetalhado(pedido) {
+            const resultadosDiv = document.getElementById('listaReversas');
+            
+            const relatorioHTML = `
+                <div class="relatorio-detalhes">
+                    <h3 style="margin-bottom: 20px; color: #1f2937;">📋 Detalhes do Pedido</h3>
+                    
+                    <div class="pedido-header-info">
+                        <div class="info-grid">
+                            <div class="info-field">
+                                <span class="info-label">ID:</span>
+                                <span class="info-value">${pedido.id}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Nº E-commerce:</span>
+                                <span class="info-value">${pedido.ecommerce_number}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value">${traduzirStatus(pedido.status)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Tipo:</span>
+                                <span class="info-value">${traduzirTipo(pedido.reverse_type)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Data Criação:</span>
+                                <span class="info-value">${formatarData(pedido.created_at)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Data Atualização:</span>
+                                <span class="info-value">${formatarData(pedido.updated_at)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Cliente:</span>
+                                <span class="info-value">${pedido.client?.name || 'N/A'}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value">${pedido.client?.email || 'N/A'}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Telefone:</span>
+                                <span class="info-value">${pedido.client?.phone || 'N/A'}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Valor Total:</span>
+                                <span class="info-value">R$ ${(pedido.price || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Valor Troca:</span>
+                                <span class="info-value">R$ ${(pedido.exchange_value || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="info-field">
+                                <span class="info-label">Valor Devolução:</span>
+                                <span class="info-value">R$ ${(pedido.refund_value || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="produtos-section">
+                        <h4 style="margin-bottom: 15px; color: #374151;">📦 Produtos do Pedido (${pedido.items?.length || 0})</h4>
+                        ${pedido.items && pedido.items.length > 0 ? 
+                            pedido.items.map((produto, index) => gerarProdutoDetalhadoHTML(produto, index)).join('') :
+                            '<p style="color: #6b7280; font-style: italic;">Nenhum produto encontrado.</p>'
+                        }
+                    </div>
+                    
+                    <button class="btn-fechar" onclick="voltarLista()">← Voltar para Lista</button>
+                </div>
+            `;
+            
+            resultadosDiv.innerHTML = relatorioHTML;
+        }
+
+        // Gerar HTML detalhado para um produto
+        function gerarProdutoDetalhadoHTML(produto, index) {
+            return `
+                <div class="produto-item">
+                    <div class="produto-header">
+                        Produto ${index + 1}: ${produto.description || 'Sem descrição'}
+                    </div>
+                    <div class="produto-detalhes">
+                        <div class="info-field">
+                            <span class="info-label">ID Produto:</span>
+                            <span class="info-value">${produto.ecommerce_product_id || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">SKU:</span>
+                            <span class="info-value">${produto.sku || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">EAN:</span>
+                            <span class="info-value">${produto.ean || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Ref ID:</span>
+                            <span class="info-value">${produto.ref_id || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Descrição:</span>
+                            <span class="info-value">${produto.description || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Preço:</span>
+                            <span class="info-value">R$ ${(produto.price || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Preço com Desconto:</span>
+                            <span class="info-value">R$ ${(produto.price_discount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Quantidade:</span>
+                            <span class="info-value">${produto.quantity || 0}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Quantidade Original:</span>
+                            <span class="info-value">${produto.original_quantity || 0}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Preço Frete:</span>
+                            <span class="info-value">R$ ${(produto.shipping_price || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">É Troca:</span>
+                            <span class="info-value">${produto.is_exchange ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">É Removido:</span>
+                            <span class="info-value">${produto.is_removed ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">É Recebido:</span>
+                            <span class="info-value">${produto.is_received ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">É Retido:</span>
+                            <span class="info-value">${produto.is_retained ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Motivo:</span>
+                            <span class="info-value">${produto.reason?.description || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Comentário Cliente:</span>
+                            <span class="info-value">${produto.reason?.client_comment || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Comentário Organização:</span>
+                            <span class="info-value">${produto.reason?.organisation_comment || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Nº Pedido Original:</span>
+                            <span class="info-value">${produto.ecommerce_number || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">SKU Substituto:</span>
+                            <span class="info-value">${produto.replaced_item_sku || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Descrição Substituto:</span>
+                            <span class="info-value">${produto.replaced_item_description || 'N/A'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Adicionado por Operador:</span>
+                            <span class="info-value">${produto.is_added_by_operator ? 'Sim' : 'Não'}</span>
+                        </div>
+                        <div class="info-field">
+                            <span class="info-label">Vendedor:</span>
+                            <span class="info-value">${produto.seller || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Voltar para lista de pedidos
+        function voltarLista() {
+            buscarReversas();
+        }
+
+        // Traduzir status
+        function traduzirStatus(status) {
+            const traduccoes = {
+                'Aguardando': 'Aguardando',
+                'Processando': 'Processando',
+                'Finalizado': 'Finalizado',
+                'Cancelado': 'Cancelado',
+                'Pendente': 'Pendente'
+            };
+            return traduccoes[status] || status;
+        }
+
+        // Traduzir tipo
+        function traduzirTipo(tipo) {
+            const traduccoes = {
+                'Troca e devolução': 'Troca e Devolução',
+                'Troca': 'Troca',
+                'Devolução': 'Devolução'
+            };
+            return traduccoes[tipo] || tipo;
+        }
+
+        // Formatar data
+        function formatarData(dataString) {
+            if (!dataString) return 'N/A';
+            try {
+                const data = new Date(dataString);
+                return data.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                return dataString;
             }
         }
 
