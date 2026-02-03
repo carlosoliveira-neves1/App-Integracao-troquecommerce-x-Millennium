@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - H&M Sistema de Troca/Devolução</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #1f2937;
+            font-size: 2rem;
+        }
+        
+        .config-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .config-section h2 {
+            color: #1f2937;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #10b981;
+        }
+        
+        .status-offline {
+            background: #ef4444;
+        }
+        
+        .status-warning {
+            background: #f59e0b;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            color: #16a34a;
+        }
+        
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+        }
+        
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #f59e0b;
+            color: #d97706;
+        }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .config-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .config-card h3 {
+            margin-bottom: 15px;
+            color: #374151;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #10b981;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão Voltar -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <a href="index.html" style="background: #6b7280; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 14px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            ← Voltar
+        </a>
+    </div>
+    
+    <!-- Banner de Homologação -->
+    <div style="background: #f59e0b; color: white; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">
+        🧪 AMBIENTE DE HOMOLOGAÇÃO - DADOS DE TESTE - NÃO USAR EM PRODUÇÃO
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>⚙️ Configurações</h1>
+                <p style="color: #6b7280;">Gerencie as configurações do sistema</p>
+            </div>
+            <div>
+                <span class="status-indicator status-online"></span>
+                Sistema Online
+            </div>
+        </div>
+        
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+        
+        <!-- Configurações da API -->
+        <div class="config-section">
+            <h2>🔗 Configurações da API</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="troqueBaseUrl">URL Base Troquecommerce</label>
+                    <input type="url" id="troqueBaseUrl" value="https://www.troquecommerce.com.br" placeholder="https://www.troquecommerce.com.br">
+                    <div class="info-text">URL base da API do Troquecommerce</div>
+                </div>
+                <div class="form-group">
+                    <label for="troqueToken">Token de Autenticação</label>
+                    <input type="text" id="troqueToken" value="78916095-ef7a-4958-939d-6ede76c72f6f" placeholder="Token da API">
+                    <div class="info-text">Token para autenticação na API</div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="backendUrl">URL Backend Proxy</label>
+                    <input type="url" id="backendUrl" value="https://app-integracao-troquecommerce-x-mil-iota.vercel.app" placeholder="URL do backend">
+                    <div class="info-text">URL do backend proxy Vercel</div>
+                </div>
+                <div class="form-group">
+                    <label for="timeout">Timeout (segundos)</label>
+                    <input type="number" id="timeout" value="30" min="5" max="300">
+                    <div class="info-text">Timeout para requisições à API</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Configurações de Webhook -->
+        <div class="config-section">
+            <h2>🪝 Configurações de Webhook</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="webhookUrl">URL do Webhook</label>
+                    <input type="url" id="webhookUrl" placeholder="https://seu-sistema.com/webhook/troquecommerce">
+                    <div class="info-text">URL para receber eventos do Troquecommerce</div>
+                </div>
+                <div class="form-group">
+                    <label for="webhookSecret">Secret do Webhook</label>
+                    <input type="text" id="webhookSecret" placeholder="secret-key">
+                    <div class="info-text">Chave secreta para validação do webhook</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display: flex; align-items: center;">
+                    <input type="checkbox" id="webhookEnabled" checked style="width: auto; margin-right: 10px;">
+                    Webhook Ativo
+                </label>
+                <div class="info-text">Ativar/desativar recebimento de webhooks</div>
+            </div>
+        </div>
+        
+        <!-- Configurações de Processamento -->
+        <div class="config-section">
+            <h2>⚙️ Configurações de Processamento</h2>
+            <div class="config-grid">
+                <div class="config-card">
+                    <h3>🔄 Processamento Automático</h3>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" id="autoProcess" style="width: auto; margin-right: 10px;">
+                            Processamento Automático
+                        </label>
+                        <div class="info-text">Processar pedidos automaticamente</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="processInterval">Intervalo (minutos)</label>
+                        <input type="number" id="processInterval" value="5" min="1" max="60">
+                        <div class="info-text">Intervalo entre verificações</div>
+                    </div>
+                </div>
+                
+                <div class="config-card">
+                    <h3>📤 Fila de Processamento</h3>
+                    <div class="form-group">
+                        <label for="maxQueueSize">Tamanho Máximo da Fila</label>
+                        <input type="number" id="maxQueueSize" value="100" min="10" max="1000">
+                        <div class="info-text">Máximo de itens na fila</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="retryAttempts">Tentativas de Retry</label>
+                        <input type="number" id="retryAttempts" value="3" min="1" max="10">
+                        <div class="info-text">Número de tentativas em caso de falha</div>
+                    </div>
+                </div>
+                
+                <div class="config-card">
+                    <h3>📋 Logs e Debug</h3>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" id="enableLogs" checked style="width: auto; margin-right: 10px;">
+                            Habilitar Logs
+                        </label>
+                        <div class="info-text">Registrar logs de operações</div>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" id="debugMode" style="width: auto; margin-right: 10px;">
+                            Modo Debug
+                        </label>
+                        <div class="info-text">Informações detalhadas de debug</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Configurações de Notificação -->
+        <div class="config-section">
+            <h2>📧 Configurações de Notificação</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="emailNotifications">E-mail para Notificações</label>
+                    <input type="email" id="emailNotifications" placeholder="admin@empresa.com">
+                    <div class="info-text">E-mail para receber alertas do sistema</div>
+                </div>
+                <div class="form-group">
+                    <label for="slackWebhook">Webhook Slack (opcional)</label>
+                    <input type="url" id="slackWebhook" placeholder="https://hooks.slack.com/...">
+                    <div class="info-text">Webhook para notificações no Slack</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tipos de Notificação</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="width: auto; margin-right: 5px;">
+                        Erros de API
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="width: auto; margin-right: 5px;">
+                        Falhas no Processamento
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" style="width: auto; margin-right: 5px;">
+                        Relatórios Diários
+                    </label>
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" style="width: auto; margin-right: 5px;">
+                        Status da Fila
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Botões de Ação -->
+        <div class="config-section">
+            <h2>💾 Ações</h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveConfig()">
+                    💾 Salvar Configurações
+                </button>
+                <button class="btn btn-secondary" onclick="testConnection()">
+                    🔧 Testar Conexão
+                </button>
+                <button class="btn btn-success" onclick="exportConfig()">
+                    📤 Exportar Config
+                </button>
+                <button class="btn btn-secondary" onclick="importConfig()">
+                    📥 Importar Config
+                </button>
+                <button class="btn btn-danger" onclick="resetConfig()">
+                    🔄 Restaurar Padrão
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Função para mostrar alertas
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+        
+        // Salvar configurações
+        function saveConfig() {
+            const config = {
+                troqueBaseUrl: document.getElementById('troqueBaseUrl').value,
+                troqueToken: document.getElementById('troqueToken').value,
+                backendUrl: document.getElementById('backendUrl').value,
+                timeout: document.getElementById('timeout').value,
+                webhookUrl: document.getElementById('webhookUrl').value,
+                webhookSecret: document.getElementById('webhookSecret').value,
+                webhookEnabled: document.getElementById('webhookEnabled').checked,
+                autoProcess: document.getElementById('autoProcess').checked,
+                processInterval: document.getElementById('processInterval').value,
+                maxQueueSize: document.getElementById('maxQueueSize').value,
+                retryAttempts: document.getElementById('retryAttempts').value,
+                enableLogs: document.getElementById('enableLogs').checked,
+                debugMode: document.getElementById('debugMode').checked,
+                emailNotifications: document.getElementById('emailNotifications').value,
+                slackWebhook: document.getElementById('slackWebhook').value
+            };
+            
+            // Salvar no localStorage
+            localStorage.setItem('troquecommerce_config', JSON.stringify(config));
+            
+            // Salvar no backend (se necessário)
+            console.log('Configurações salvas:', config);
+            
+            showAlert('✅ Configurações salvas com sucesso!', 'success');
+        }
+        
+        // Carregar configurações
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('troquecommerce_config');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                
+                // Preencher campos
+                document.getElementById('troqueBaseUrl').value = config.troqueBaseUrl || 'https://www.troquecommerce.com.br';
+                document.getElementById('troqueToken').value = config.troqueToken || '78916095-ef7a-4958-939d-6ede76c72f6f';
+                document.getElementById('backendUrl').value = config.backendUrl || 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
+                document.getElementById('timeout').value = config.timeout || '30';
+                document.getElementById('webhookUrl').value = config.webhookUrl || '';
+                document.getElementById('webhookSecret').value = config.webhookSecret || '';
+                document.getElementById('webhookEnabled').checked = config.webhookEnabled !== false;
+                document.getElementById('autoProcess').checked = config.autoProcess || false;
+                document.getElementById('processInterval').value = config.processInterval || '5';
+                document.getElementById('maxQueueSize').value = config.maxQueueSize || '100';
+                document.getElementById('retryAttempts').value = config.retryAttempts || '3';
+                document.getElementById('enableLogs').checked = config.enableLogs !== false;
+                document.getElementById('debugMode').checked = config.debugMode || false;
+                document.getElementById('emailNotifications').value = config.emailNotifications || '';
+                document.getElementById('slackWebhook').value = config.slackWebhook || '';
+            }
+        }
+        
+        // Testar conexão
+        async function testConnection() {
+            showAlert('🔧 Testando conexão...', 'warning');
+            
+            try {
+                const config = {
+                    baseUrl: document.getElementById('troqueBaseUrl').value,
+                    token: document.getElementById('troqueToken').value
+                };
+                
+                const backendUrl = document.getElementById('backendUrl').value;
+                
+                const response = await fetch(`${backendUrl}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                if (response.ok) {
+                    showAlert('✅ Conexão testada com sucesso!', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                showAlert(`❌ Erro na conexão: ${error.message}`, 'error');
+            }
+        }
+        
+        // Exportar configurações
+        function exportConfig() {
+            const config = {
+                troqueBaseUrl: document.getElementById('troqueBaseUrl').value,
+                troqueToken: document.getElementById('troqueToken').value,
+                backendUrl: document.getElementById('backendUrl').value,
+                timeout: document.getElementById('timeout').value,
+                webhookUrl: document.getElementById('webhookUrl').value,
+                webhookSecret: document.getElementById('webhookSecret').value,
+                webhookEnabled: document.getElementById('webhookEnabled').checked,
+                autoProcess: document.getElementById('autoProcess').checked,
+                processInterval: document.getElementById('processInterval').value,
+                maxQueueSize: document.getElementById('maxQueueSize').value,
+                retryAttempts: document.getElementById('retryAttempts').value,
+                enableLogs: document.getElementById('enableLogs').checked,
+                debugMode: document.getElementById('debugMode').checked,
+                emailNotifications: document.getElementById('emailNotifications').value,
+                slackWebhook: document.getElementById('slackWebhook').value
+            };
+            
+            const dataStr = JSON.stringify(config, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'troquecommerce-config.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showAlert('📤 Configurações exportadas!', 'success');
+        }
+        
+        // Importar configurações
+        function importConfig() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = event => {
+                    try {
+                        const config = JSON.parse(event.target.result);
+                        
+                        // Preencher campos
+                        document.getElementById('troqueBaseUrl').value = config.troqueBaseUrl || '';
+                        document.getElementById('troqueToken').value = config.troqueToken || '';
+                        document.getElementById('backendUrl').value = config.backendUrl || '';
+                        document.getElementById('timeout').value = config.timeout || '30';
+                        document.getElementById('webhookUrl').value = config.webhookUrl || '';
+                        document.getElementById('webhookSecret').value = config.webhookSecret || '';
+                        document.getElementById('webhookEnabled').checked = config.webhookEnabled !== false;
+                        document.getElementById('autoProcess').checked = config.autoProcess || false;
+                        document.getElementById('processInterval').value = config.processInterval || '5';
+                        document.getElementById('maxQueueSize').value = config.maxQueueSize || '100';
+                        document.getElementById('retryAttempts').value = config.retryAttempts || '3';
+                        document.getElementById('enableLogs').checked = config.enableLogs !== false;
+                        document.getElementById('debugMode').checked = config.debugMode || false;
+                        document.getElementById('emailNotifications').value = config.emailNotifications || '';
+                        document.getElementById('slackWebhook').value = config.slackWebhook || '';
+                        
+                        showAlert('📥 Configurações importadas com sucesso!', 'success');
+                    } catch (error) {
+                        showAlert('❌ Erro ao importar arquivo: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        // Restaurar configurações padrão
+        function resetConfig() {
+            if (confirm('Tem certeza que deseja restaurar as configurações padrão?')) {
+                document.getElementById('troqueBaseUrl').value = 'https://www.troquecommerce.com.br';
+                document.getElementById('troqueToken').value = '78916095-ef7a-4958-939d-6ede76c72f6f';
+                document.getElementById('backendUrl').value = 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
+                document.getElementById('timeout').value = '30';
+                document.getElementById('webhookUrl').value = '';
+                document.getElementById('webhookSecret').value = '';
+                document.getElementById('webhookEnabled').checked = false;
+                document.getElementById('autoProcess').checked = false;
+                document.getElementById('processInterval').value = '5';
+                document.getElementById('maxQueueSize').value = '100';
+                document.getElementById('retryAttempts').value = '3';
+                document.getElementById('enableLogs').checked = true;
+                document.getElementById('debugMode').checked = false;
+                document.getElementById('emailNotifications').value = '';
+                document.getElementById('slackWebhook').value = '';
+                
+                showAlert('🔄 Configurações restauradas para o padrão!', 'success');
+            }
+        }
+        
+        // Carregar configurações ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            console.log('✅ Página de configurações carregada!');
+        });
+    </script>
+</body>
+</html>
