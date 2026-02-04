@@ -749,21 +749,25 @@
                     
                     // Adicionar produtos reais do pedido ao body
                     const pedido = state.pedidoAtual; // Usar pedido atual carregado
-                    console.log('📦 Pedido atual:', pedido);
+                    console.log('📦 Pedido atual completo:', pedido);
+                    console.log('🛍️ Produtos do pedido:', pedido?.produtos);
                     
                     if (pedido && pedido.produtos && pedido.produtos.length > 0) {
-                        console.log('🛍️ Produtos encontrados:', pedido.produtos);
+                        console.log('✅ Produtos encontrados, quantity:', pedido.produtos.length);
                         filaItem.body.produtos = pedido.produtos.map(produto => {
                             const produtoFormatado = {
                                 quantidade: parseInt(produto.quantidade_solicitada) || 1,
                                 preco: parseFloat(produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
                                 barra: produto.sku || produto.codigo_ean || "07300230816192" // Usar SKU优先
                             };
+                            console.log('📋 Produto original:', produto);
                             console.log('📋 Produto formatado:', produtoFormatado);
                             return produtoFormatado;
                         });
+                        console.log('🎯 Produtos finais na fila:', filaItem.body.produtos);
                     } else {
-                        console.log('⚠️ Usando produto padrão - produtos não encontrados');
+                        console.log('⚠️ Usando produto padrão - produtos não encontrados no pedido');
+                        console.log('🔍 Estrutura do pedido:', Object.keys(pedido || {}));
                         // Produto padrão se não tiver dados
                         filaItem.body.produtos = [{
                             quantidade: 1.00,
@@ -806,17 +810,44 @@
             }
             
             const body = {
-                vitrine: config.vitrine,
-                faturar: 'T',
-                autorizar_nfe: config.autorizarNfe,
-                tipo_autorizacao_troca: config.tipoAutorizacaoTroca,
+                vitrine: parseInt(config.vitrine) || 101, // Código da vitrine/loja
+                faturar: 'A', // Flag para faturamento ("A" = Automático)
+                autorizar_nfe: 'T', // Autorizar nota fiscal ("T" = True/Sim)
+                tipo_autorizacao_troca: 3, // Tipo de autorização da troca
+                produtos: [], // Será preenchido com produtos reais
+                nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
+                saida: 20577, // Código da saída/pedido original
+                cod_endereco: 24002, // Código do endereço
+                pagamentos: [{
+                    tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
+                }],
+                troca_pelo_valor_bruto: 'T', // Troca pelo valor bruto ("T" = True/Sim)
                 pedido: pedidoId,
-                tipo_pgto_credito: config.tipoPgtoCredito,
-                troca_pelo_valor_bruto: config.trocaValorBruto,
                 data: new Date().toISOString().split('T')[0],
                 hora: new Date().toTimeString().split(' ')[0],
                 usuario: config.username || 'system'
             };
+            
+            // Adicionar produtos reais do pedido ao body
+            const pedido = state.pedidoAtual; // Usar pedido atual carregado
+            console.log('📦 Pedido atual (individual):', pedido);
+            
+            if (pedido && pedido.produtos && pedido.produtos.length > 0) {
+                console.log('✅ Produtos encontrados (individual):', pedido.produtos.length);
+                body.produtos = pedido.produtos.map(produto => ({
+                    quantidade: parseInt(produto.quantidade_solicitada) || 1,
+                    preco: parseFloat(produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
+                    barra: produto.sku || produto.codigo_ean || "07300230816192"
+                }));
+                console.log('🎯 Produtos finais (individual):', body.produtos);
+            } else {
+                console.log('⚠️ Usando produto padrão (individual)');
+                body.produtos = [{
+                    quantidade: 1.00,
+                    preco: 0.01,
+                    barra: "07300230816192"
+                }];
+            }
 
             const filaItem = {
                 id: Date.now(),
