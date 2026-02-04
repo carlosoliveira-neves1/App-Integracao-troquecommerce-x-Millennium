@@ -597,7 +597,9 @@
                 
                 console.log('🔍 Buscando código de saída para:', numeroPedido);
                 
-                const response = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
+                // Tentar busca sem filtro primeiro para ver todos os pedidos
+                console.log('📋 Buscando todos os pedidos para análise...');
+                const responseTodos = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
                     method: 'POST',
                     headers: {
                         'Authorization': authHeader,
@@ -605,11 +607,11 @@
                     },
                     body: JSON.stringify({
                         SCRIPTFILIAL: null,
-                        DATAI: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString(),
+                        DATAI: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(), // 1 mês
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
-                        N_PEDIDO_CLIENTE: numeroPedido,
+                        N_PEDIDO_CLIENTE: "", // Sem filtro para ver todos
                         EFETUADO: 2,
                         FILTROPRO: false,
                         OPCAO_DATA: 0,
@@ -617,52 +619,107 @@
                     })
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                if (!responseTodos.ok) {
+                    throw new Error(`HTTP ${responseTodos.status}: ${await responseTodos.text()}`);
                 }
                 
-                const data = await response.json();
-                console.log('📋 Resposta Millennium:', data);
+                const dataTodos = await responseTodos.json();
+                console.log('📋 Todos os pedidos encontrados:', dataTodos?.length, 'pedidos');
                 
-                if (data && data.length > 0) {
-                    const pedido = data[0];
-                    const dados = {
-                        codigoSaida: pedido.PEDIDOV || 20577,
-                        notaFiscal: pedido.NF || 366,
-                        codigoPedido: pedido.COD_PEDIDOV,
-                        numeroObjeto: pedido.NUMERO_OBJETO,
-                        numeroCliente: pedido.N_PEDIDO_CLIENTE
-                    };
+                // Mostrar alguns exemplos para análise
+                if (dataTodos && dataTodos.length > 0) {
+                    console.log('🔍 Exemplos de pedidos encontrados:');
+                    dataTodos.slice(0, 3).forEach((pedido, index) => {
+                        console.log(`Pedido ${index + 1}:`, {
+                            N_PEDIDO_CLIENTE: pedido.N_PEDIDO_CLIENTE,
+                            COD_PEDIDOV: pedido.COD_PEDIDOV,
+                            PEDIDOV: pedido.PEDIDOV,
+                            NF: pedido.NF
+                        });
+                    });
                     
-                    // Armazenar dados globalmente
-                    state.dadosMillennium = dados;
+                    // Tentar encontrar correspondência
+                    const pedidoEncontrado = dataTodos.find(p => 
+                        p.N_PEDIDO_CLIENTE === numeroPedido ||
+                        p.COD_PEDIDOV === numeroPedido ||
+                        p.PEDIDOV?.toString() === numeroPedido ||
+                        p.N_PEDIDO_CLIENTE?.includes(numeroPedido) ||
+                        numeroPedido.includes(p.N_PEDIDO_CLIENTE)
+                    );
                     
-                    // Preencher campos do card 3
-                    document.getElementById('codigoSaidaSelecionado').value = dados.codigoSaida;
-                    document.getElementById('notaFiscal').value = dados.notaFiscal;
-                    
-                    resultadoDiv.innerHTML = `
-                        <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
-                            <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
-                                <div><strong>Código Saída:</strong> ${dados.codigoSaida}</div>
-                                <div><strong>Nota Fiscal:</strong> ${dados.notaFiscal}</div>
-                                <div><strong>Código Pedido:</strong> ${dados.codigoPedido || 'N/A'}</div>
-                                <div><strong>Número Cliente:</strong> ${dados.numeroCliente}</div>
-                                <div><strong>Objeto:</strong> ${dados.numeroObjeto || 'N/A'}</div>
+                    if (pedidoEncontrado) {
+                        const dados = {
+                            codigoSaida: pedidoEncontrado.PEDIDOV || 20577,
+                            notaFiscal: pedidoEncontrado.NF || 366,
+                            codigoPedido: pedidoEncontrado.COD_PEDIDOV,
+                            numeroObjeto: pedidoEncontrado.NUMERO_OBJETO,
+                            numeroCliente: pedidoEncontrado.N_PEDIDO_CLIENTE
+                        };
+                        
+                        // Armazenar dados globalmente
+                        state.dadosMillennium = dados;
+                        
+                        // Preencher campos do card 3
+                        document.getElementById('codigoSaidaSelecionado').value = dados.codigoSaida;
+                        document.getElementById('notaFiscal').value = dados.notaFiscal;
+                        
+                        resultadoDiv.innerHTML = `
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                                <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                                    <div><strong>Código Saída:</strong> ${dados.codigoSaida}</div>
+                                    <div><strong>Nota Fiscal:</strong> ${dados.notaFiscal}</div>
+                                    <div><strong>Código Pedido:</strong> ${dados.codigoPedido || 'N/A'}</div>
+                                    <div><strong>Número Cliente:</strong> ${dados.numeroCliente}</div>
+                                    <div><strong>Objeto:</strong> ${dados.numeroObjeto || 'N/A'}</div>
+                                </div>
+                                <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                    <strong>Debug:</strong> Encontrado usando busca ampla e correspondência flexível
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    
-                    showAlert('Código de saída encontrado com sucesso!', 'success');
+                        `;
+                        
+                        showAlert('Código de saída encontrado com sucesso!', 'success');
+                    } else {
+                        // Mostrar pedidos disponíveis para referência
+                        resultadoDiv.innerHTML = `
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7;">
+                                <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ Pedido Não Encontrado</h4>
+                                <p>Pedido <strong>${numeroPedido}</strong> não encontrado.</p>
+                                <p><strong>Foram encontrados ${dataTodos.length} pedidos no Millennium.</strong></p>
+                                <details style="margin-top: 10px;">
+                                    <summary style="cursor: pointer; font-weight: bold;">📋 Ver exemplos de pedidos disponíveis:</summary>
+                                    <div style="margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                                        ${dataTodos.slice(0, 10).map(p => `
+                                            <div style="padding: 5px; border-bottom: 1px solid #ddd; font-size: 12px;">
+                                                <strong>N_PEDIDO_CLIENTE:</strong> ${p.N_PEDIDO_CLIENTE || 'N/A'}<br>
+                                                <strong>COD_PEDIDOV:</strong> ${p.COD_PEDIDOV || 'N/A'}<br>
+                                                <strong>PEDIDOV:</strong> ${p.PEDIDOV || 'N/A'}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </details>
+                                <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                    <strong>Sugestão:</strong> Tente usar um dos números acima ou verifique se o pedido foi realmente integrado com o Millennium.
+                                </div>
+                            </div>
+                        `;
+                        showAlert('Pedido não encontrado no Millennium', 'warning');
+                    }
                 } else {
                     resultadoDiv.innerHTML = `
                         <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
-                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Pedido Não Encontrado</h4>
-                            <p>Nenhum pedido encontrado com o número: ${numeroPedido}</p>
+                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Nenhum Pedido Encontrado</h4>
+                            <p>Nenhum pedido encontrado no período pesquisado no Millennium.</p>
+                            <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                <strong>Possíveis causas:</strong><br>
+                                • Não há pedidos no período<br>
+                                • Problema de conexão com Millennium<br>
+                                • Pedidos não integrados
+                            </div>
                         </div>
                     `;
-                    showAlert('Pedido não encontrado no Millennium', 'error');
+                    showAlert('Nenhum pedido encontrado no Millennium', 'error');
                 }
                 
             } catch (error) {
@@ -670,7 +727,13 @@
                 resultadoDiv.innerHTML = `
                     <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
                         <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Erro na Busca</h4>
-                        <p>Erro: ${error.message}</p>
+                        <p><strong>Erro:</strong> ${error.message}</p>
+                        <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                            <strong>Verifique:</strong><br>
+                            • Conexão com Millennium<br>
+                            • Credenciais corretas<br>
+                            • Endpoint disponível
+                        </div>
                     </div>
                 `;
                 showAlert('Erro ao buscar código de saída: ' + error.message, 'error');
