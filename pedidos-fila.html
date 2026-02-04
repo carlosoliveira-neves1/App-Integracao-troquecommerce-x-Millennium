@@ -751,8 +751,23 @@
             }
         }
 
-        // Buscar dados do pedido no Millennium
+        // Cache para dados do Millennium
+        const millenniumCache = new Map();
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+        // Cache para múltiplos pedidos
+        const millenniumBatchCache = new Map();
+
+        // Buscar dados do pedido no Millennium (OTIMIZADA)
         async function buscarDadosPedidoMillennium(numeroPedidoCliente) {
+            // Verificar cache primeiro
+            const cacheKey = numeroPedidoCliente;
+            const cached = millenniumCache.get(cacheKey);
+            if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+                console.log('📋 Usando cache do Millennium para:', numeroPedidoCliente);
+                return cached.data;
+            }
+
             try {
                 const username = 'integracao';
                 const password = '@5z5u2hmc4u';
@@ -760,6 +775,10 @@
                 const authHeader = 'Basic ' + btoa(`${username}:${password}`);
                 
                 console.log('🔍 Buscando dados do pedido no Millennium:', numeroPedidoCliente);
+                
+                // Otimização 1: Buscar apenas pedidos recentes (últimos 30 dias)
+                const trintaDiasAtras = new Date();
+                trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
                 
                 const response = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
                     method: 'POST',
@@ -769,13 +788,13 @@
                     },
                     body: JSON.stringify({
                         SCRIPTFILIAL: null,
-                        DATAI: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString(), // 3 meses atrás
+                        DATAI: trintaDiasAtras.toISOString(), // Últimos 30 dias apenas
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
                         N_PEDIDO_CLIENTE: numeroPedidoCliente,
                         EFETUADO: 2,
-                        FILTROPRO: true,
+                        FILTROPRO: false, // Otimização 2: Desabilitar filtro de produtos
                         OPCAO_DATA: 0,
                         ORDEM: 0
                     })
@@ -788,10 +807,17 @@
                 const data = await response.json();
                 console.log('📋 Resposta Millennium:', data);
                 
+                let result = {
+                    saida: 20577,
+                    nota: 366,
+                    codigoPedido: null,
+                    numeroObjeto: null
+                };
+                
                 if (data && data.length > 0) {
                     const pedido = data[0];
                     console.log('✅ Pedido encontrado no Millennium:', pedido);
-                    return {
+                    result = {
                         saida: pedido.PEDIDOV || 20577,
                         nota: pedido.NF || 366,
                         codigoPedido: pedido.COD_PEDIDOV,
@@ -799,13 +825,15 @@
                     };
                 } else {
                     console.log('⚠️ Pedido não encontrado no Millennium');
-                    return {
-                        saida: 20577,
-                        nota: 366,
-                        codigoPedido: null,
-                        numeroObjeto: null
-                    };
                 }
+                
+                // Salvar no cache
+                millenniumCache.set(cacheKey, {
+                    data: result,
+                    timestamp: Date.now()
+                });
+                
+                return result;
                 
             } catch (error) {
                 console.error('Erro ao buscar dados no Millennium:', error);
@@ -815,6 +843,272 @@
                     codigoPedido: null,
                     numeroObjeto: null
                 };
+            }
+        }
+
+        // Buscar múltiplos pedidos em lote (OTIMIZAÇÃO PRINCIPAL)
+        async function buscarMultiplosPedidosMillennium(numerosPedidos) {
+            // Verificar cache de lote
+            const batchKey = numerosPedidos.sort().join(',');
+            const cachedBatch = millenniumBatchCache.get(batchKey);
+            if (cachedBatch && (Date.now() - cachedBatch.timestamp) < CACHE_DURATION) {
+                console.log('📦 Usando cache de lote para', numerosPedidos.length, 'pedidos');
+                return cachedBatch.data;
+            }
+
+            try {
+                const username = 'integracao';
+                const password = '@5z5u2hmc4u';
+                const baseUrl = 'http://179.124.195.107:6017';
+                const authHeader = 'Basic ' + btoa(`${username}:${password}`);
+                
+                console.log('🚀 Buscando', numerosPedidos.length, 'pedidos em lote no Millennium');
+                
+                // Otimização 3: Buscar todos os pedidos de uma vez sem filtro específico
+                const trintaDiasAtras = new Date();
+                trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+                
+                const response = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        SCRIPTFILIAL: null,
+                        DATAI: trintaDiasAtras.toISOString(),
+                        DATAF: new Date().toISOString(),
+                        TIPO: "AC",
+                        COD_PEDIDOV: "",
+                        N_PEDIDO_CLIENTE: "", // Otimização 4: Buscar todos sem filtro
+                        EFETUADO: 2,
+                        FILTROPRO: false,
+                        OPCAO_DATA: 0,
+                        ORDEM: 0
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const data = await response.json();
+                console.log('📋 Resposta Millennium (lote):', data?.length, 'pedidos encontrados');
+                
+                // Criar mapa de resultados
+                const resultados = new Map();
+                
+                if (data && data.length > 0) {
+                    data.forEach(pedido => {
+                        const numeroCliente = pedido.N_PEDIDO_CLIENTE;
+                        if (numeroCliente) {
+                            resultados.set(numeroCliente, {
+                                saida: pedido.PEDIDOV || 20577,
+                                nota: pedido.NF || 366,
+                                codigoPedido: pedido.COD_PEDIDOV,
+                                numeroObjeto: pedido.NUMERO_OBJETO
+                            });
+                        }
+                    });
+                }
+                
+                // Salvar cache individual e de lote
+                numerosPedidos.forEach(numero => {
+                    const resultado = resultados.get(numero) || {
+                        saida: 20577,
+                        nota: 366,
+                        codigoPedido: null,
+                        numeroObjeto: null
+                    };
+                    
+                    millenniumCache.set(numero, {
+                        data: resultado,
+                        timestamp: Date.now()
+                    });
+                });
+                
+                // Salvar cache de lote
+                const batchResult = new Map();
+                numerosPedidos.forEach(numero => {
+                    batchResult.set(numero, resultados.get(numero) || {
+                        saida: 20577,
+                        nota: 366,
+                        codigoPedido: null,
+                        numeroObjeto: null
+                    });
+                });
+                
+                millenniumBatchCache.set(batchKey, {
+                    data: batchResult,
+                    timestamp: Date.now()
+                });
+                
+                console.log('✅ Cache de lote salvo para', batchResult.size, 'pedidos');
+                return batchResult;
+                
+            } catch (error) {
+                console.error('Erro ao buscar dados em lote no Millennium:', error);
+                
+                // Retornar mapa vazio em caso de erro
+                const resultadoVazio = new Map();
+                numerosPedidos.forEach(numero => {
+                    resultadoVazio.set(numero, {
+                        saida: 20577,
+                        nota: 366,
+                        codigoPedido: null,
+                        numeroObjeto: null
+                    });
+                });
+                return resultadoVazio;
+            }
+        }
+
+        // Adicionar selecionados à fila (OTIMIZADO)
+        async function adicionarSelecionadosAFila() {
+            if (state.selectedPedidos.size === 0) {
+                showAlert('Nenhum pedido selecionado.', 'warning');
+                return;
+            }
+
+            const startTime = Date.now();
+            let adicionados = 0;
+            let erros = 0;
+
+            try {
+                // Otimização 5: Buscar todos os dados do Millennium em lote primeiro
+                const numerosPedidos = Array.from(state.selectedPedidos).map(pedidoId => {
+                    const pedido = state.pedidos.find(p => p.id === pedidoId);
+                    return pedido?.ecommerce_number;
+                }).filter(Boolean);
+
+                console.log('🚀 Iniciando busca otimizada para', numerosPedidos.length, 'pedidos');
+                
+                // Buscar todos os dados em lote
+                const dadosMillenniumLote = await buscarMultiplosPedidosMillennium(numerosPedidos);
+                
+                console.log('⚡ Dados obtidos em', Date.now() - startTime, 'ms');
+                
+                // Agora processar cada pedido com os dados já em cache
+                for (const pedidoId of state.selectedPedidos) {
+                    try {
+                        const pedido = state.pedidos.find(p => p.id === pedidoId);
+                        if (!pedido) continue;
+
+                        // Usar dados do cache
+                        const dadosMillennium = dadosMillenniumLote.get(pedido.ecommerce_number) || {
+                            saida: 20577,
+                            nota: 366,
+                            codigoPedido: null,
+                            numeroObjeto: null
+                        };
+                        
+                        // Buscar detalhes do pedido (produtos)
+                        const config = {
+                            baseUrl: 'https://www.troquecommerce.com.br',
+                            token: 'a7bf11c0-ef38-45b3-b336-9009df528385'
+                        };
+                        
+                        const response = await fetch(`${window.BACKEND_BASE_URL}/api/troquecommerce/order-detail`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                baseUrl: config.baseUrl,
+                                token: config.token,
+                                id: pedidoId
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                        }
+
+                        const detalhes = await response.json();
+                        
+                        // Preparar item para a fila
+                        const filaItem = {
+                            id: Date.now() + Math.random(),
+                            pedidoId: pedidoId,
+                            pedidoNumero: pedido.ecommerce_number,
+                            status: 'pendente',
+                            priority: 'medium',
+                            addedAt: new Date().toISOString(),
+                            startedAt: null,
+                            completedAt: null,
+                            attempts: 0,
+                            error: null,
+                            response: null,
+                            body: {
+                                vitrine: 101,
+                                faturar: 'A',
+                                autorizar_nfe: 'T',
+                                tipo_autorizacao_troca: 3,
+                                produtos: [],
+                                nota: dadosMillennium.nota,
+                                saida: dadosMillennium.saida,
+                                cod_endereco: 24002,
+                                tipo_pgto_credito: 120,
+                                troca_pelo_valor_bruto: 'T',
+                                data: new Date().toISOString().split('T')[0],
+                                hora: new Date().toTimeString().split(' ')[0],
+                                usuario: 'integracao'
+                            }
+                        };
+
+                        // Adicionar produtos se encontrados
+                        if (detalhes.items && detalhes.items.length > 0) {
+                            filaItem.body.produtos = detalhes.items.map(produto => ({
+                                quantidade: parseInt(produto.quantity) || 1,
+                                preco: parseFloat(produto.price) || 0.01,
+                                barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                            }));
+                        } else if (detalhes.products && detalhes.products.length > 0) {
+                            filaItem.body.produtos = detalhes.products.map(produto => ({
+                                quantidade: parseInt(produto.quantity) || 1,
+                                preco: parseFloat(produto.price) || 0.01,
+                                barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                            }));
+                        } else {
+                            filaItem.body.produtos = [{
+                                quantidade: 1.00,
+                                preco: 0.01,
+                                barra: "07300230816192"
+                            }];
+                        }
+
+                        // Adicionar à fila
+                        state.fila.push(filaItem);
+                        adicionados++;
+                        
+                    } catch (error) {
+                        console.error(`Erro ao adicionar pedido ${pedidoId}:`, error);
+                        erros++;
+                    }
+                }
+
+                const totalTime = Date.now() - startTime;
+                console.log('⚡ Processamento concluído em', totalTime, 'ms');
+                
+                // Limpar seleção
+                state.selectedPedidos.clear();
+                document.getElementById('selectAll').checked = false;
+                updateSelectedCount();
+                renderPedidos();
+
+                saveFila();
+                renderFila();
+                updateStats();
+
+                if (adicionados > 0) {
+                    showAlert(`${adicionados} pedido(s) adicionado(s) à fila com sucesso${erros > 0 ? ` e ${erros} erro(s)` : ''}. (Tempo: ${totalTime}ms)`, erros > 0 ? 'warning' : 'success');
+                } else {
+                    showAlert('Não foi possível adicionar nenhum pedido à fila.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro no processamento em lote:', error);
+                showAlert('Erro no processamento: ' + error.message, 'error');
             }
         }
 
