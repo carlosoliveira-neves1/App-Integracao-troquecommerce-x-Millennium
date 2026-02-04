@@ -769,7 +769,7 @@
                         console.log('🔍 Estrutura do pedido:', Object.keys(pedido || {}));
                         
                         // Tentar encontrar produtos em outros campos possíveis
-                        const possibleProductFields = ['items', 'products', 'itens', 'order_items', 'reverse_items'];
+                        const possibleProductFields = ['items', 'products', 'itens', 'order_items', 'reverse_items', 'reverse_products'];
                         let foundProducts = null;
                         
                         for (const field of possibleProductFields) {
@@ -865,7 +865,7 @@
                 console.log('⚠️ Usando produto padrão (individual) - buscando em outros campos');
                 
                 // Tentar encontrar produtos em outros campos possíveis
-                const possibleProductFields = ['items', 'products', 'itens', 'order_items', 'reverse_items'];
+                const possibleProductFields = ['items', 'products', 'itens', 'order_items', 'reverse_items', 'reverse_products'];
                 let foundProducts = null;
                 
                 for (const field of possibleProductFields) {
