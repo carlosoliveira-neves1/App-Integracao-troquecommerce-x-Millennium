@@ -688,7 +688,7 @@
                 const body = prepareNotaBody(item.pedidoId, config);
                 
                 // Usar Basic Auth diretamente (já sabemos que funciona)
-                const response = await fetch(`${baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, {
+                const response = await fetch(`${baseUrl}/api/millenium_eco/troca_devolucao/inclui`, {
                     method: 'POST',
                     headers: {
                         'Authorization': 'Basic ' + btoa(`${username}:${password}`),
@@ -739,6 +739,7 @@
                     username: config.millenniumUsername || 'integracao',
                     password: config.millenniumPassword || '@5z5u2hmc4u',
                     vitrine: config.millenniumVitrine || '101',
+                    tipoPgtoCredito: config.tipoPgtoCredito || '120',
                     enabled: config.millenniumEnabled !== false
                 };
             }
@@ -749,24 +750,29 @@
                 username: 'integracao',
                 password: '@5z5u2hmc4u',
                 vitrine: '101',
+                tipoPgtoCredito: '120',
                 enabled: true
             };
         }
         
         // Preparar body para API do Millennium
         function prepareNotaBody(pedidoId, config) {
-            // Estrutura base para API de troca/devolução
+            // Payload correto para API do Millennium
             return {
-                // Campos básicos
-                VITRINE: config.vitrine || '101',
-                PEDIDO: pedidoId.toString(),
-                // Outros campos necessários para a API
-                DATA: new Date().toISOString().split('T')[0],
-                HORA: new Date().toTimeString().split(' ')[0],
-                USUARIO: config.username || 'system',
-                // Campos específicos para troca/devolução
-                MOTIVO: 'TROCA_DEVOLUCAO',
-                STATUS: 'PENDENTE'
+                vitrine: parseInt(config.vitrine || '101'),
+                faturar: "A",
+                autorizar_nfe: "T",
+                tipo_autorizacao_troca: 3,
+                produtos: [{
+                    quantidade: 1.00,
+                    preco: 0.01,
+                    barra: "0789123456789" // Código de barras padrão
+                }],
+                nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
+                saida: 20577,
+                cod_endereco: 24002,
+                tipo_pgto_credito: parseInt(config.tipoPgtoCredito) || 120,
+                troca_pelo_valor_bruto: "T"
             };
         }
         
