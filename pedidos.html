@@ -438,6 +438,9 @@
 
         // Mostrar relatório detalhado do pedido
         function mostrarRelatorioDetalhado(pedido) {
+            // Armazenar dados do pedido no state para uso posterior
+            state.pedidoAtual = pedido;
+            
             const resultadosDiv = document.getElementById('listaReversas');
             
             const relatorioHTML = `
@@ -736,14 +739,22 @@
                     };
                     
                     // Adicionar produtos reais do pedido ao body
-                    const pedido = state.pedidos.find(p => p.id === pedidoId);
+                    const pedido = state.pedidoAtual; // Usar pedido atual carregado
+                    console.log('📦 Pedido atual:', pedido);
+                    
                     if (pedido && pedido.produtos && pedido.produtos.length > 0) {
-                        filaItem.body.produtos = pedido.produtos.map(produto => ({
-                            quantidade: parseInt(produto.quantidade_solicitada) || 1,
-                            preco: parseFloat(produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
-                            barra: produto.codigo_ean || "07300230816192"
-                        }));
+                        console.log('🛍️ Produtos encontrados:', pedido.produtos);
+                        filaItem.body.produtos = pedido.produtos.map(produto => {
+                            const produtoFormatado = {
+                                quantidade: parseInt(produto.quantidade_solicitada) || 1,
+                                preco: parseFloat(produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
+                                barra: produto.sku || produto.codigo_ean || "07300230816192" // Usar SKU优先
+                            };
+                            console.log('📋 Produto formatado:', produtoFormatado);
+                            return produtoFormatado;
+                        });
                     } else {
+                        console.log('⚠️ Usando produto padrão - produtos não encontrados');
                         // Produto padrão se não tiver dados
                         filaItem.body.produtos = [{
                             quantidade: 1.00,
