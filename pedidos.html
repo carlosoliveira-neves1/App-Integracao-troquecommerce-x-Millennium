@@ -729,7 +729,9 @@
                             nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
                             saida: 20577,
                             cod_endereco: 24002,
-                            tipo_pgto_credito: config.tipoPgtoCredito || 120,
+                            pagamentos: [{
+                                tipo_pgto: parseInt(config.tipoPgtoCredito) || 120
+                            }],
                             troca_pelo_valor_bruto: 'T',
                             pedido: pedidoId,
                             data: new Date().toISOString().split('T')[0],
