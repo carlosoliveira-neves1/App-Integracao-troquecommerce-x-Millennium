@@ -611,8 +611,7 @@
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
-                        N_PEDIDO_CLIENTE: "", // Deixar vazio
-                        cod_pedido_mkt_place: numeroPedido, // Usar este campo
+                        N_PEDIDO_CLIENTE: numeroPedido, // Usar este campo
                         EFETUADO: 2,
                         FILTROPRO: false,
                         OPCAO_DATA: 0,
@@ -662,9 +661,9 @@
                             </div>
                             <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
                                 <strong>Busca Direta:</strong><br>
-                                • Filtro: cod_pedido_mkt_place = "${numeroPedido}"<br>
+                                • Filtro: N_PEDIDO_CLIENTE = "${numeroPedido}"<br>
                                 • Retorno: cod_pedidov = "${dados.codigoSaida}"<br>
-                                • Mapeamento: ecommerce_number → cod_pedido_mkt_place → cod_pedidov
+                                • Mapeamento: ecommerce_number → N_PEDIDO_CLIENTE → cod_pedidov
                             </div>
                         </div>
                     `;
@@ -1108,8 +1107,7 @@
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
-                        N_PEDIDO_CLIENTE: "", // Deixar vazio
-                        cod_pedido_mkt_place: numeroPedidoCliente, // Usar este campo
+                        N_PEDIDO_CLIENTE: numeroPedidoCliente, // Usar este campo
                         EFETUADO: 2,
                         FILTROPRO: false, // Otimização 2: Desabilitar filtro de produtos
                         OPCAO_DATA: 0,
