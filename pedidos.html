@@ -346,10 +346,13 @@
                     <div style="display: grid; gap: 15px;">
                         ${reversas.map(reversa => `
                             <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 15px;">
-                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 10px;">
-                                    <div>
-                                        <h5 style="margin: 0 0 5px 0; color: #1f2937;">${reversa.ecommerce_number}</h5>
-                                        <p style="margin: 0; color: #6b7280; font-size: 14px;">${reversa.client?.name || 'Cliente não informado'}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" name="pedidoSelecionado" value="${reversa.id}" onchange="atualizarContadorSelecionados()">
+                                        <div>
+                                            <h5 style="margin: 0 0 5px 0; color: #1f2937;">${reversa.ecommerce_number}</h5>
+                                            <p style="margin: 0; color: #6b7280; font-size: 14px;">${reversa.client?.name || 'Cliente não informado'}</p>
+                                        </div>
                                     </div>
                                     <span style="background: #f3f4f6; color: #374151; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
                                         ${reversa.status || 'Sem status'}
@@ -379,6 +382,9 @@
                         `).join('')}
                     </div>
                 `;
+                
+                // Atualizar contador após renderizar
+                atualizarContadorSelecionados();
                 
                 showAlert(`${reversas.length} reversas encontradas!`, 'success');
                 
@@ -817,13 +823,10 @@
             let queueData = [];
             const savedQueue = localStorage.getItem('troque_devolucao_fila');
             if (savedQueue) {
-                try {
-                    queueData = JSON.parse(savedQueue);
-                } catch (error) {
-                    console.error('Erro ao carregar fila:', error);
-                }
+                queueData = JSON.parse(savedQueue);
             }
             
+            // Criar item para a fila
             const queueItem = {
                 id: Date.now() + Math.random(),
                 pedidoId: pedidoId,
@@ -835,7 +838,13 @@
                 attempts: 0,
                 error: null,
                 response: null,
-                body: bodyData
+                body: bodyData || {
+                    vitrine: getConfig().vitrine,
+                    pedido: pedidoId,
+                    data: new Date().toISOString().split('T')[0],
+                    hora: new Date().toTimeString().split(' ')[0],
+                    usuario: getConfig().username || 'system'
+                }
             };
             
             queueData.push(queueItem);
@@ -845,6 +854,27 @@
             localStorage.setItem('fila_troca_devolucao', JSON.stringify(queueData));
             
             console.log(`✅ Pedido ${pedidoId} adicionado à fila global`);
+        }
+        
+        // Funções de seleção
+        function selecionarTodos() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="pedidoSelecionado"]');
+            checkboxes.forEach(checkbox => checkbox.checked = true);
+            atualizarContadorSelecionados();
+        }
+        
+        function deselecionarTodos() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="pedidoSelecionado"]');
+            checkboxes.forEach(checkbox => checkbox.checked = false);
+            atualizarContadorSelecionados();
+        }
+        
+        function atualizarContadorSelecionados() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="pedidoSelecionado"]:checked');
+            const contador = document.getElementById('contadorSelecionados');
+            if (contador) {
+                contador.textContent = `${checkboxes.length} selecionados`;
+            }
         }
 
         // Voltar para lista de pedidos
