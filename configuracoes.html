@@ -306,7 +306,7 @@
                 </div>
                 <div class="form-group">
                     <label for="troqueToken">Token de Autenticação</label>
-                    <input type="text" id="troqueToken" value="78916095-ef7a-4958-939d-6ede76c72f6f" placeholder="Token da API">
+                    <input type="text" id="troqueToken" value="a7bf11c0-ef38-45b3-b336-9009df528385" placeholder="Token da API">
                     <div class="info-text">Token para autenticação na API</div>
                 </div>
             </div>
@@ -576,7 +576,7 @@
                 
                 // Preencher campos da API Troquecommerce
                 document.getElementById('troqueBaseUrl').value = config.troqueBaseUrl || 'https://www.troquecommerce.com.br';
-                document.getElementById('troqueToken').value = config.troqueToken || '78916095-ef7a-4958-939d-6ede76c72f6f';
+                document.getElementById('troqueToken').value = config.troqueToken || 'a7bf11c0-ef38-45b3-b336-9009df528385';
                 document.getElementById('backendUrl').value = config.backendUrl || 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
                 document.getElementById('timeout').value = config.timeout || '30';
                 
@@ -716,7 +716,7 @@
         function resetConfig() {
             if (confirm('Tem certeza que deseja restaurar as configurações padrão?')) {
                 document.getElementById('troqueBaseUrl').value = 'https://www.troquecommerce.com.br';
-                document.getElementById('troqueToken').value = '78916095-ef7a-4958-939d-6ede76c72f6f';
+                document.getElementById('troqueToken').value = 'a7bf11c0-ef38-45b3-b336-9009df528385';
                 document.getElementById('backendUrl').value = 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
                 document.getElementById('timeout').value = '30';
                 document.getElementById('webhookUrl').value = '';
