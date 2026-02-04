@@ -631,8 +631,8 @@
                     console.log('✅ Pedido encontrado:', pedido);
                     
                     const dados = {
-                        codigoSaida: pedido.cod_pedidov || pedido.pedidov || 20577, // Usar cod_pedidov como código de saída
-                        notaFiscal: pedido.nf || 366,
+                        codigoSaida: pedido.pedidov, // Usar pedidov como código de saída
+                        notaFiscal: pedido.nf, // Usar nf como nota fiscal
                         codigoPedido: pedido.cod_pedidov,
                         numeroObjeto: pedido.numero_objeto,
                         numeroCliente: pedido.n_pedido_cliente,
@@ -651,9 +651,9 @@
                         <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
                             <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
-                                <div><strong>Código Saída (cod_pedidov):</strong> ${dados.codigoSaida}</div>
+                                <div><strong>Código Saída (pedidov):</strong> ${dados.codigoSaida}</div>
                                 <div><strong>Nota Fiscal (nf):</strong> ${dados.notaFiscal}</div>
-                                <div><strong>Código Pedido:</strong> ${dados.codigoPedido || 'N/A'}</div>
+                                <div><strong>Código Pedido (cod_pedidov):</strong> ${dados.codigoPedido || 'N/A'}</div>
                                 <div><strong>Número Cliente (n_pedido_cliente):</strong> ${dados.numeroCliente}</div>
                                 <div><strong>PEDIDOV:</strong> ${dados.pedidov || 'N/A'}</div>
                                 <div><strong>Objeto (numero_objeto):</strong> ${dados.numeroObjeto || 'N/A'}</div>
@@ -662,8 +662,8 @@
                             <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
                                 <strong>Busca Direta:</strong><br>
                                 • Filtro: N_PEDIDO_CLIENTE = "${numeroPedido}"<br>
-                                • Retorno: cod_pedidov = "${dados.codigoSaida}"<br>
-                                • Mapeamento: ecommerce_number → N_PEDIDO_CLIENTE → cod_pedidov
+                                • Retorno: pedidov = "${dados.codigoSaida}"<br>
+                                • Mapeamento: ecommerce_number → N_PEDIDO_CLIENTE → pedidov
                             </div>
                         </div>
                     `;
