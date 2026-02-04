@@ -447,36 +447,63 @@
                 const methods = [
                     { name: 'Basic', auth: 'Basic ' + btoa(`${config.username}:${config.password}`) },
                     { name: 'NTLM', auth: 'NTLM ' + btoa(`${config.username}:${config.password}`) },
-                    { name: 'Bearer', auth: 'Bearer ' + btoa(`${config.username}:${config.password}`) }
+                    { name: 'Bearer', auth: 'Bearer ' + btoa(`${config.username}:${config.password}`) },
+                    { name: 'Custom Token', auth: btoa(`${config.username}:${config.password}`) },
+                    { name: 'Username/Password', auth: `${config.username}:${config.password}` },
+                    { name: 'Sem Auth', auth: null }
                 ];
                 
-                for (const method of methods) {
-                    try {
-                        console.log(`🔄 Testando ${method.name}...`);
-                        
-                        const response = await fetch(`${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, {
-                            method: 'POST',
-                            headers: {
+                // Também testar diferentes formatos de corpo
+                const bodyFormats = [
+                    { name: 'Original', body: testBody },
+                    { name: 'Lowercase', body: { ...testBody, VITRINE: "101", PEDIDO: "TESTE" } },
+                    { name: 'String Fields', body: {
+                        vitrine: "101",
+                        pedido: "TESTE",
+                        data: new Date().toISOString().split('T')[0],
+                        hora: new Date().toTimeString().split(' ')[0],
+                        usuario: config.username,
+                        motivo: "TESTE_AUTENTICACAO",
+                        status: "TESTE"
+                    }}
+                ];
+                
+                for (const bodyFormat of bodyFormats) {
+                    console.log(`🧪 Testando formato de corpo: ${bodyFormat.name}`);
+                    
+                    for (const method of methods) {
+                        try {
+                            console.log(`🔄 Testando ${method.name} com corpo ${bodyFormat.name}...`);
+                            
+                            const headers = {
                                 'Content-Type': 'application/json',
-                                'Authorization': method.auth,
                                 'Access-Control-Allow-Credentials': 'true'
-                            },
-                            body: JSON.stringify(testBody),
-                            credentials: 'include'
-                        });
-                        
-                        console.log(`📊 ${method.name} - Status: ${response.status} ${response.statusText}`);
-                        
-                        if (response.status !== 401) {
-                            console.log(`✅ ${method.name} funcionou!`);
-                            alert(`✅ Autenticação ${method.name} funcionou! Status: ${response.status}`);
-                            return;
-                        } else {
-                            console.log(`❌ ${method.name} falhou (401)`);
+                            };
+                            
+                            if (method.auth) {
+                                headers['Authorization'] = method.auth;
+                            }
+                            
+                            const response = await fetch(`${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, {
+                                method: 'POST',
+                                headers: headers,
+                                body: JSON.stringify(bodyFormat.body),
+                                credentials: 'include'
+                            });
+                            
+                            console.log(`📊 ${method.name} (${bodyFormat.name}) - Status: ${response.status} ${response.statusText}`);
+                            
+                            if (response.status !== 401) {
+                                console.log(`✅ ${method.name} com corpo ${bodyFormat.name} funcionou!`);
+                                alert(`✅ Autenticação ${method.name} funcionou!\nFormato corpo: ${bodyFormat.name}\nStatus: ${response.status}`);
+                                return;
+                            } else {
+                                console.log(`❌ ${method.name} (${bodyFormat.name}) falhou (401)`);
+                            }
+                            
+                        } catch (error) {
+                            console.log(`❌ Erro no ${method.name} (${bodyFormat.name}):`, error.message);
                         }
-                        
-                    } catch (error) {
-                        console.log(`❌ Erro no ${method.name}:`, error.message);
                     }
                 }
                 

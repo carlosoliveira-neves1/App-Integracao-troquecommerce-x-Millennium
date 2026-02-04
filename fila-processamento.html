@@ -810,34 +810,54 @@
             const methods = [
                 { name: 'Basic', auth: 'Basic ' + btoa(`${config.username}:${config.password}`) },
                 { name: 'NTLM', auth: 'NTLM ' + btoa(`${config.username}:${config.password}`) },
-                { name: 'Bearer', auth: 'Bearer ' + btoa(`${config.username}:${config.password}`) }
+                { name: 'Bearer', auth: 'Bearer ' + btoa(`${config.username}:${config.password}`) },
+                { name: 'Custom Token', auth: btoa(`${config.username}:${config.password}`) },
+                { name: 'Username/Password', auth: `${config.username}:${config.password}` }
             ];
             
-            for (const method of methods) {
-                try {
-                    console.log(`🔄 Tentando autenticação ${method.name}...`);
-                    
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': method.auth,
-                            'Access-Control-Allow-Credentials': 'true'
-                        },
-                        body: JSON.stringify(body),
-                        credentials: 'include'
-                    });
-                    
-                    // Se não for 401, funcionou!
-                    if (response.status !== 401) {
-                        console.log(`✅ Autenticação ${method.name} funcionou!`);
-                        return response;
+            // Também testar diferentes formatos de corpo
+            const bodyFormats = [
+                { name: 'Original', body: body },
+                { name: 'String Fields', body: {
+                    vitrine: body.VITRINE,
+                    pedido: body.PEDIDO,
+                    data: body.DATA,
+                    hora: body.HORA,
+                    usuario: body.USUARIO,
+                    motivo: body.MOTIVO,
+                    status: body.STATUS
+                }}
+            ];
+            
+            for (const bodyFormat of bodyFormats) {
+                console.log(`🔄 Testando formato de corpo: ${bodyFormat.name}`);
+                
+                for (const method of methods) {
+                    try {
+                        console.log(`🔄 Tentando autenticação ${method.name} com corpo ${bodyFormat.name}...`);
+                        
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': method.auth,
+                                'Access-Control-Allow-Credentials': 'true'
+                            },
+                            body: JSON.stringify(bodyFormat.body),
+                            credentials: 'include'
+                        });
+                        
+                        // Se não for 401, funcionou!
+                        if (response.status !== 401) {
+                            console.log(`✅ Autenticação ${method.name} com corpo ${bodyFormat.name} funcionou!`);
+                            return response;
+                        }
+                        
+                        console.log(`❌ Autenticação ${method.name} (${bodyFormat.name}) falhou (401)`);
+                        
+                    } catch (error) {
+                        console.log(`❌ Erro na autenticação ${method.name} (${bodyFormat.name}):`, error.message);
                     }
-                    
-                    console.log(`❌ Autenticação ${method.name} falhou (401)`);
-                    
-                } catch (error) {
-                    console.log(`❌ Erro na autenticação ${method.name}:`, error.message);
                 }
             }
             
