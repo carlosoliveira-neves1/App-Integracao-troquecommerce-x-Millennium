@@ -625,49 +625,99 @@
                 
                 const data = await response.json();
                 console.log('📋 Resposta Millennium (busca direta):', data);
+                console.log('📊 Data length:', data?.length);
+                console.log('🔍 Buscando pedido:', numeroPedido);
                 
                 if (data && data.length > 0) {
+                    console.log('✅ Encontrados', data.length, 'pedidos');
                     const pedido = data[0];
-                    console.log('✅ Pedido encontrado:', pedido);
+                    console.log('✅ Primeiro pedido:', pedido);
+                    console.log('📋 n_pedido_cliente:', pedido.n_pedido_cliente);
+                    console.log('📋 pedidov:', pedido.pedidov);
+                    console.log('📋 nf:', pedido.nf);
                     
-                    const dados = {
-                        codigoSaida: pedido.pedidov, // pedidov do response
-                        notaFiscal: pedido.nf, // nf do response
-                        codigoPedido: pedido.cod_pedidov,
-                        numeroObjeto: pedido.numero_objeto,
-                        numeroCliente: pedido.n_pedido_cliente,
-                        pedidov: pedido.pedidov,
-                        codPedidoMktPlace: pedido.cod_pedido_mkt_place
-                    };
+                    // Verificar se o pedido corresponde ao buscado
+                    const pedidoCorrespondente = data.find(p => 
+                        p.n_pedido_cliente === numeroPedido ||
+                        p.n_pedido_cliente?.toString() === numeroPedido
+                    );
                     
-                    state.dadosMillennium = dados;
-                    document.getElementById('codigoSaidaSelecionado').value = dados.codigoSaida;
-                    document.getElementById('notaFiscal').value = dados.notaFiscal;
+                    console.log('🎯 Pedido correspondente:', pedidoCorrespondente);
                     
-                    resultadoDiv.innerHTML = `
-                        <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
-                            <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-size: 14px;">
-                                <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-                                    <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">📋 Código Saída (pedidov)</div>
-                                    <div style="font-size: 18px; font-weight: bold;">${dados.codigoSaida}</div>
+                    if (pedidoCorrespondente) {
+                        const dados = {
+                            codigoSaida: pedidoCorrespondente.pedidov, // pedidov do response
+                            notaFiscal: pedidoCorrespondente.nf, // nf do response
+                            codigoPedido: pedidoCorrespondente.cod_pedidov,
+                            numeroObjeto: pedidoCorrespondente.numero_objeto,
+                            numeroCliente: pedidoCorrespondente.n_pedido_cliente,
+                            pedidov: pedidoCorrespondente.pedidov,
+                            codPedidoMktPlace: pedidoCorrespondente.cod_pedido_mkt_place
+                        };
+                        
+                        console.log('📊 Dados mapeados:', dados);
+                        
+                        state.dadosMillennium = dados;
+                        
+                        // Preencher campos do card 3
+                        const codigoSaidaField = document.getElementById('codigoSaidaSelecionado');
+                        const notaFiscalField = document.getElementById('notaFiscal');
+                        
+                        console.log('📝 Campos encontrados:', {
+                            codigoSaidaField: !!codigoSaidaField,
+                            notaFiscalField: !!notaFiscalField
+                        });
+                        
+                        if (codigoSaidaField) {
+                            codigoSaidaField.value = dados.codigoSaida;
+                            console.log('✅ Código de saída preenchido:', dados.codigoSaida);
+                        }
+                        
+                        if (notaFiscalField) {
+                            notaFiscalField.value = dados.notaFiscal;
+                            console.log('✅ Nota fiscal preenchida:', dados.notaFiscal);
+                        }
+                        
+                        resultadoDiv.innerHTML = `
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                                <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-size: 14px;">
+                                    <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                        <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">📋 Código Saída (pedidov)</div>
+                                        <div style="font-size: 18px; font-weight: bold;">${dados.codigoSaida}</div>
+                                    </div>
+                                    <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
+                                        <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">🧾 Nota Fiscal (nf)</div>
+                                        <div style="font-size: 18px; font-weight: bold;">${dados.notaFiscal}</div>
+                                    </div>
                                 </div>
-                                <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
-                                    <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">🧾 Nota Fiscal (nf)</div>
-                                    <div style="font-size: 18px; font-weight: bold;">${dados.notaFiscal}</div>
+                                <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                    <strong>Response Millennium:</strong><br>
+                                    • pedidov: <strong>${dados.codigoSaida}</strong><br>
+                                    • nf: <strong>${dados.notaFiscal}</strong><br>
+                                    • n_pedido_cliente: <strong>${dados.numeroCliente}</strong><br>
+                                    • Campos Card 3 preenchidos: <strong>Código Saída=${dados.codigoSaida}, Nota Fiscal=${dados.notaFiscal}</strong>
                                 </div>
                             </div>
-                            <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
-                                <strong>Response Millennium:</strong><br>
-                                • pedidov: <strong>${dados.codigoSaida}</strong><br>
-                                • nf: <strong>${dados.notaFiscal}</strong><br>
-                                • n_pedido_cliente: <strong>${dados.numeroCliente}</strong>
+                        `;
+                        
+                        showAlert('Código de saída encontrado com sucesso!', 'success');
+                    } else {
+                        console.log('❌ Pedido não corresponde ao buscado');
+                        resultadoDiv.innerHTML = `
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7;">
+                                <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ Pedido Não Correspondente</h4>
+                                <p>Foram encontrados ${data.length} pedidos, mas nenhum corresponde a <strong>${numeroPedido}</strong>.</p>
+                                <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                    <strong>Pedidos encontrados:</strong><br>
+                                    ${data.map(p => `• n_pedido_cliente: ${p.n_pedido_cliente || 'N/A'}`).join('<br>')}
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    
-                    showAlert('Código de saída encontrado com sucesso!', 'success');
+                        `;
+                        showAlert('Pedido não corresponde ao buscado', 'warning');
+                    }
                 } else {
+                    console.log('❌ Nenhum pedido encontrado');
                     resultadoDiv.innerHTML = `
                         <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
                             <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Pedido Não Encontrado</h4>
