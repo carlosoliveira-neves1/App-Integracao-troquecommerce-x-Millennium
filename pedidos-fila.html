@@ -878,7 +878,6 @@
                     cod_endereco: 24002,
                     tipo_pgto_credito: 120,
                     troca_pelo_valor_bruto: 'T',
-                    pedido: pedidoId,
                     data: new Date().toISOString().split('T')[0],
                     hora: new Date().toTimeString().split(' ')[0],
                     usuario: 'integracao'
@@ -886,13 +885,22 @@
             };
 
             // Adicionar produtos se encontrados
-            if (detalhes.products && detalhes.products.length > 0) {
+            if (detalhes.items && detalhes.items.length > 0) {
+                console.log('✅ Usando produtos do array items:', detalhes.items);
+                filaItem.body.produtos = detalhes.items.map(produto => ({
+                    quantidade: parseInt(produto.quantity) || 1,
+                    preco: parseFloat(produto.price) || 0.01,
+                    barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                }));
+            } else if (detalhes.products && detalhes.products.length > 0) {
+                console.log('✅ Usando produtos do array products:', detalhes.products);
                 filaItem.body.produtos = detalhes.products.map(produto => ({
                     quantidade: parseInt(produto.quantity) || 1,
                     preco: parseFloat(produto.price) || 0.01,
                     barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
                 }));
             } else {
+                console.log('⚠️ Nenhum produto encontrado, usando produto padrão');
                 // Produto padrão
                 filaItem.body.produtos = [{
                     quantidade: 1.00,
