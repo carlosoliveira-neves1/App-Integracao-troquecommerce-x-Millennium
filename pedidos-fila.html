@@ -611,7 +611,8 @@
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
-                        N_PEDIDO_CLIENTE: numeroPedido, // Filtro direto
+                        N_PEDIDO_CLIENTE: "", // Deixar vazio
+                        cod_pedido_mkt_place: numeroPedido, // Usar este campo
                         EFETUADO: 2,
                         FILTROPRO: false,
                         OPCAO_DATA: 0,
@@ -631,12 +632,13 @@
                     console.log('✅ Pedido encontrado:', pedido);
                     
                     const dados = {
-                        codigoSaida: pedido.COD_PEDIDOV || pedido.PEDIDOV || 20577, // Usar COD_PEDIDOV como código de saída
-                        notaFiscal: pedido.NF || 366,
-                        codigoPedido: pedido.COD_PEDIDOV,
-                        numeroObjeto: pedido.NUMERO_OBJETO,
-                        numeroCliente: pedido.N_PEDIDO_CLIENTE,
-                        pedidov: pedido.PEDIDOV // Manter referência do PEDIDOV também
+                        codigoSaida: pedido.cod_pedidov || pedido.pedidov || 20577, // Usar cod_pedidov como código de saída
+                        notaFiscal: pedido.nf || 366,
+                        codigoPedido: pedido.cod_pedidov,
+                        numeroObjeto: pedido.numero_objeto,
+                        numeroCliente: pedido.n_pedido_cliente,
+                        pedidov: pedido.pedidov, // Manter referência do pedidov também
+                        codPedidoMktPlace: pedido.cod_pedido_mkt_place // Adicionar campo do marketplace
                     };
                     
                     // Armazenar dados globalmente
@@ -650,18 +652,19 @@
                         <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
                             <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
-                                <div><strong>Código Saída (COD_PEDIDOV):</strong> ${dados.codigoSaida}</div>
-                                <div><strong>Nota Fiscal:</strong> ${dados.notaFiscal}</div>
+                                <div><strong>Código Saída (cod_pedidov):</strong> ${dados.codigoSaida}</div>
+                                <div><strong>Nota Fiscal (nf):</strong> ${dados.notaFiscal}</div>
                                 <div><strong>Código Pedido:</strong> ${dados.codigoPedido || 'N/A'}</div>
-                                <div><strong>Número Cliente (N_PEDIDO_CLIENTE):</strong> ${dados.numeroCliente}</div>
+                                <div><strong>Número Cliente (n_pedido_cliente):</strong> ${dados.numeroCliente}</div>
                                 <div><strong>PEDIDOV:</strong> ${dados.pedidov || 'N/A'}</div>
-                                <div><strong>Objeto:</strong> ${dados.numeroObjeto || 'N/A'}</div>
+                                <div><strong>Objeto (numero_objeto):</strong> ${dados.numeroObjeto || 'N/A'}</div>
+                                <div><strong>Cod Pedido MKT:</strong> ${dados.codPedidoMktPlace || 'N/A'}</div>
                             </div>
                             <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
                                 <strong>Busca Direta:</strong><br>
-                                • Filtro: N_PEDIDO_CLIENTE = "${numeroPedido}"<br>
-                                • Retorno: COD_PEDIDOV = "${dados.codigoSaida}"<br>
-                                • Mapeamento: ecommerce_number → N_PEDIDO_CLIENTE → COD_PEDIDOV
+                                • Filtro: cod_pedido_mkt_place = "${numeroPedido}"<br>
+                                • Retorno: cod_pedidov = "${dados.codigoSaida}"<br>
+                                • Mapeamento: ecommerce_number → cod_pedido_mkt_place → cod_pedidov
                             </div>
                         </div>
                     `;
@@ -1105,7 +1108,8 @@
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
-                        N_PEDIDO_CLIENTE: numeroPedidoCliente,
+                        N_PEDIDO_CLIENTE: "", // Deixar vazio
+                        cod_pedido_mkt_place: numeroPedidoCliente, // Usar este campo
                         EFETUADO: 2,
                         FILTROPRO: false, // Otimização 2: Desabilitar filtro de produtos
                         OPCAO_DATA: 0,
