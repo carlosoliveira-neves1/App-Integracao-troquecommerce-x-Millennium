@@ -721,18 +721,18 @@
                         error: null,
                         response: null,
                         body: {
-                            vitrine: config.vitrine,
-                            faturar: 'A',
-                            autorizar_nfe: 'T',
-                            tipo_autorizacao_troca: 3,
+                            vitrine: parseInt(config.vitrine) || 101, // Código da vitrine/loja
+                            faturar: 'A', // Flag para faturamento ("A" = Automático)
+                            autorizar_nfe: 'T', // Autorizar nota fiscal ("T" = True/Sim)
+                            tipo_autorizacao_troca: 3, // Tipo de autorização da troca
                             produtos: [], // Será preenchido com produtos reais
-                            nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
-                            saida: 20577,
-                            cod_endereco: 24002,
+                            nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
+                            saida: 20577, // Código da saída/pedido original
+                            cod_endereco: 24002, // Código do endereço
                             pagamentos: [{
-                                tipo_pgto: parseInt(config.tipoPgtoCredito) || 120
+                                tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
                             }],
-                            troca_pelo_valor_bruto: 'T',
+                            troca_pelo_valor_bruto: 'T', // Troca pelo valor bruto ("T" = True/Sim)
                             pedido: pedidoId,
                             data: new Date().toISOString().split('T')[0],
                             hora: new Date().toTimeString().split(' ')[0],

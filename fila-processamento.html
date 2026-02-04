@@ -782,39 +782,39 @@
             // Se encontrou o item na fila, usar o body já preparado com produtos reais
             if (queueItem && queueItem.body && queueItem.body.produtos) {
                 return {
-                    vitrine: parseInt(queueItem.body.vitrine || config.vitrine || '101'),
-                    faturar: queueItem.body.faturar || "A",
-                    autorizar_nfe: queueItem.body.autorizar_nfe || "T",
-                    tipo_autorizacao_troca: queueItem.body.tipo_autorizacao_troca || 3,
+                    vitrine: parseInt(queueItem.body.vitrine || config.vitrine || 101), // Código da vitrine/loja
+                    faturar: queueItem.body.faturar || 'A', // Flag para faturamento ("A" = Automático)
+                    autorizar_nfe: queueItem.body.autorizar_nfe || 'T', // Autorizar nota fiscal ("T" = True/Sim)
+                    tipo_autorizacao_troca: queueItem.body.tipo_autorizacao_troca || 3, // Tipo de autorização da troca
                     produtos: queueItem.body.produtos, // Produtos reais do pedido
-                    nota: parseInt(queueItem.body.nota || pedidoId.toString().replace(/\D/g, '')) || 366,
-                    saida: queueItem.body.saida || 20577,
-                    cod_endereco: queueItem.body.cod_endereco || 24002,
+                    nota: parseInt(queueItem.body.nota || pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
+                    saida: queueItem.body.saida || 20577, // Código da saída/pedido original
+                    cod_endereco: queueItem.body.cod_endereco || 24002, // Código do endereço
                     pagamentos: queueItem.body.pagamentos || [{
-                        tipo_pgto: parseInt(config.tipoPgtoCredito) || 120
+                        tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
                     }],
-                    troca_pelo_valor_bruto: queueItem.body.troca_pelo_valor_bruto || "T"
+                    troca_pelo_valor_bruto: queueItem.body.troca_pelo_valor_bruto || 'T' // Troca pelo valor bruto ("T" = True/Sim)
                 };
             }
             
             // Fallback: usar produto padrão se não encontrar na fila
             return {
-                vitrine: parseInt(config.vitrine || '101'),
-                faturar: "A",
-                autorizar_nfe: "T",
-                tipo_autorizacao_troca: 3,
+                vitrine: parseInt(config.vitrine) || 101, // Código da vitrine/loja
+                faturar: 'A', // Flag para faturamento ("A" = Automático)
+                autorizar_nfe: 'T', // Autorizar nota fiscal ("T" = True/Sim)
+                tipo_autorizacao_troca: 3, // Tipo de autorização da troca
                 produtos: [{
                     quantidade: 1.00,
                     preco: 0.01,
                     barra: "07300230816192"
                 }],
-                nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
-                saida: 20577,
-                cod_endereco: 24002,
+                nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
+                saida: 20577, // Código da saída/pedido original
+                cod_endereco: 24002, // Código do endereço
                 pagamentos: [{
-                    tipo_pgto: parseInt(config.tipoPgtoCredito) || 120
+                    tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
                 }],
-                troca_pelo_valor_bruto: "T"
+                troca_pelo_valor_bruto: 'T' // Troca pelo valor bruto ("T" = True/Sim)
             };
         }
         
