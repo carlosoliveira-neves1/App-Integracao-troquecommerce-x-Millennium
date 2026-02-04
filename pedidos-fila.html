@@ -384,11 +384,11 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- Seção de Pedidos -->
+            <!-- Card 1: Buscar Pedidos no Troque -->
             <div class="section">
                 <h2>
-                    <i class="fas fa-list"></i>
-                    Pedidos
+                    <i class="fas fa-search"></i>
+                    1. Buscar Pedidos (Troquecommerce)
                 </h2>
 
                 <!-- Filtros -->
@@ -429,59 +429,123 @@
                 </div>
             </div>
 
-            <!-- Seção da Fila -->
+            <!-- Card 2: Buscar Código de Saída -->
             <div class="section">
                 <h2>
-                    <i class="fas fa-tasks"></i>
-                    Fila de Processamento
+                    <i class="fas fa-barcode"></i>
+                    2. Buscar Código de Saída (Millennium)
                 </h2>
 
-                <!-- Estatísticas -->
-                <div class="queue-stats">
-                    <div class="stat-card">
-                        <div class="stat-number stat-pendente" id="pendenteCount">0</div>
-                        <div class="stat-label">Pendentes</div>
+                <div class="filters">
+                    <div class="form-group">
+                        <label for="pedidoParaBusca">Número do Pedido</label>
+                        <input type="text" id="pedidoParaBusca" placeholder="Ex: 1608110505620-01">
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number stat-processando" id="processandoCount">0</div>
-                        <div class="stat-label">Processando</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number stat-concluido" id="concluidoCount">0</div>
-                        <div class="stat-label">Concluídos</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number stat-erro" id="erroCount">0</div>
-                        <div class="stat-label">Erros</div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" onclick="buscarCodigoSaida()">
+                            <i class="fas fa-search"></i>
+                            Buscar Código de Saída
+                        </button>
                     </div>
                 </div>
 
-                <!-- Controles da Fila -->
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <button class="btn btn-success" onclick="adicionarSelecionadosAFila()">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Selecionados
-                    </button>
-                    <button class="btn btn-primary" onclick="startProcessing()">
-                        <i class="fas fa-play"></i>
-                        Iniciar Processamento
-                    </button>
-                    <button class="btn btn-secondary" onclick="pauseProcessing()">
-                        <i class="fas fa-pause"></i>
-                        Pausar
-                    </button>
-                    <button class="btn btn-danger" onclick="clearQueue()">
-                        <i class="fas fa-trash"></i>
-                        Limpar Fila
-                    </button>
-                </div>
-
-                <!-- Lista da Fila -->
-                <div id="listaFila">
+                <!-- Resultado da Busca -->
+                <div id="resultadoBuscaSaida">
                     <div class="empty-state">
-                        <i class="fas fa-clipboard-list"></i>
-                        <p>Nenhum item na fila de processamento</p>
+                        <i class="fas fa-barcode"></i>
+                        <p>Digite o número do pedido e clique em "Buscar Código de Saída"</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Montar Payload e Enviar -->
+            <div class="section">
+                <h2>
+                    <i class="fas fa-cogs"></i>
+                    3. Montar Payload e Enviar para Fila
+                </h2>
+
+                <div class="filters">
+                    <div class="form-group">
+                        <label for="pedidoSelecionado">Pedido Selecionado</label>
+                        <input type="text" id="pedidoSelecionado" readonly placeholder="Selecione um pedido no card 1">
+                    </div>
+                    <div class="form-group">
+                        <label for="codigoSaidaSelecionado">Código de Saída</label>
+                        <input type="text" id="codigoSaidaSelecionado" readonly placeholder="Busque no card 2">
+                    </div>
+                    <div class="form-group">
+                        <label for="notaFiscal">Nota Fiscal</label>
+                        <input type="text" id="notaFiscal" readonly placeholder="Será preenchido automaticamente">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-success" onclick="montarPayloadEnviar()">
+                            <i class="fas fa-rocket"></i>
+                            Montar Payload e Enviar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview do Payload -->
+                <div id="payloadPreview">
+                    <div class="empty-state">
+                        <i class="fas fa-code"></i>
+                        <p>O payload será exibido aqui após montar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção da Fila (mantida) -->
+        <div class="section" style="margin-top: 20px;">
+            <h2>
+                <i class="fas fa-tasks"></i>
+                Fila de Processamento
+            </h2>
+
+            <!-- Estatísticas -->
+            <div class="queue-stats">
+                <div class="stat-card">
+                    <div class="stat-number stat-pendente" id="pendenteCount">0</div>
+                    <div class="stat-label">Pendentes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-processando" id="processandoCount">0</div>
+                    <div class="stat-label">Processando</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-concluido" id="concluidoCount">0</div>
+                    <div class="stat-label">Concluídos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number stat-erro" id="erroCount">0</div>
+                    <div class="stat-label">Erros</div>
+                </div>
+            </div>
+
+            <!-- Controles da Fila -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn btn-success" onclick="startProcessing()">
+                    <i class="fas fa-play"></i>
+                    Iniciar Processamento
+                </button>
+                <button class="btn btn-secondary" onclick="pauseProcessing()">
+                    <i class="fas fa-pause"></i>
+                    Pausar
+                </button>
+                <button class="btn btn-danger" onclick="clearQueue()">
+                    <i class="fas fa-trash"></i>
+                    Limpar Fila
+                </button>
+            </div>
+
+            <!-- Lista da Fila -->
+            <div id="listaFila">
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>Nenhum item na fila de processamento</p>
                 </div>
             </div>
         </div>
@@ -496,7 +560,8 @@
             pedidoAtual: null,
             selectedPedidos: new Set(),
             fila: [],
-            processando: false
+            processando: false,
+            dadosMillennium: null // Armazenar dados do Millennium
         };
 
         // Funções de alerta
@@ -510,6 +575,222 @@
             setTimeout(() => {
                 alertDiv.remove();
             }, 5000);
+        }
+
+        // Card 2: Buscar Código de Saída
+        async function buscarCodigoSaida() {
+            const numeroPedido = document.getElementById('pedidoParaBusca').value.trim();
+            
+            if (!numeroPedido) {
+                showAlert('Digite o número do pedido', 'warning');
+                return;
+            }
+
+            const resultadoDiv = document.getElementById('resultadoBuscaSaida');
+            resultadoDiv.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Buscando código de saída...</p></div>';
+
+            try {
+                const username = 'integracao';
+                const password = '@5z5u2hmc4u';
+                const baseUrl = 'http://179.124.195.107:6017';
+                const authHeader = 'Basic ' + btoa(`${username}:${password}`);
+                
+                console.log('🔍 Buscando código de saída para:', numeroPedido);
+                
+                const response = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        SCRIPTFILIAL: null,
+                        DATAI: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString(),
+                        DATAF: new Date().toISOString(),
+                        TIPO: "AC",
+                        COD_PEDIDOV: "",
+                        N_PEDIDO_CLIENTE: numeroPedido,
+                        EFETUADO: 2,
+                        FILTROPRO: false,
+                        OPCAO_DATA: 0,
+                        ORDEM: 0
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const data = await response.json();
+                console.log('📋 Resposta Millennium:', data);
+                
+                if (data && data.length > 0) {
+                    const pedido = data[0];
+                    const dados = {
+                        codigoSaida: pedido.PEDIDOV || 20577,
+                        notaFiscal: pedido.NF || 366,
+                        codigoPedido: pedido.COD_PEDIDOV,
+                        numeroObjeto: pedido.NUMERO_OBJETO,
+                        numeroCliente: pedido.N_PEDIDO_CLIENTE
+                    };
+                    
+                    // Armazenar dados globalmente
+                    state.dadosMillennium = dados;
+                    
+                    // Preencher campos do card 3
+                    document.getElementById('codigoSaidaSelecionado').value = dados.codigoSaida;
+                    document.getElementById('notaFiscal').value = dados.notaFiscal;
+                    
+                    resultadoDiv.innerHTML = `
+                        <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                            <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                                <div><strong>Código Saída:</strong> ${dados.codigoSaida}</div>
+                                <div><strong>Nota Fiscal:</strong> ${dados.notaFiscal}</div>
+                                <div><strong>Código Pedido:</strong> ${dados.codigoPedido || 'N/A'}</div>
+                                <div><strong>Número Cliente:</strong> ${dados.numeroCliente}</div>
+                                <div><strong>Objeto:</strong> ${dados.numeroObjeto || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    showAlert('Código de saída encontrado com sucesso!', 'success');
+                } else {
+                    resultadoDiv.innerHTML = `
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Pedido Não Encontrado</h4>
+                            <p>Nenhum pedido encontrado com o número: ${numeroPedido}</p>
+                        </div>
+                    `;
+                    showAlert('Pedido não encontrado no Millennium', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao buscar código de saída:', error);
+                resultadoDiv.innerHTML = `
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
+                        <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Erro na Busca</h4>
+                        <p>Erro: ${error.message}</p>
+                    </div>
+                `;
+                showAlert('Erro ao buscar código de saída: ' + error.message, 'error');
+            }
+        }
+
+        // Card 3: Montar Payload e Enviar
+        async function montarPayloadEnviar() {
+            const pedidoSelecionado = document.getElementById('pedidoSelecionado').value;
+            const codigoSaida = document.getElementById('codigoSaidaSelecionado').value;
+            const notaFiscal = document.getElementById('notaFiscal').value;
+            
+            if (!pedidoSelecionado || !codigoSaida || !notaFiscal) {
+                showAlert('Preencha todos os campos anteriores primeiro', 'warning');
+                return;
+            }
+
+            try {
+                // Buscar detalhes do pedido para obter produtos
+                const pedidoId = pedidoSelecionado.split(' - ')[0]; // Extrair ID do pedido
+                const pedido = state.pedidos.find(p => p.id === pedidoId || p.ecommerce_number === pedidoSelecionado);
+                
+                if (!pedido) {
+                    throw new Error('Pedido não encontrado. Selecione um pedido no card 1.');
+                }
+
+                const config = {
+                    baseUrl: 'https://www.troquecommerce.com.br',
+                    token: 'a7bf11c0-ef38-45b3-b336-9009df528385'
+                };
+                
+                const response = await fetch(`${window.BACKEND_BASE_URL}/api/troquecommerce/order-detail`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        id: pedido.id
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const detalhes = await response.json();
+                
+                // Montar payload
+                const payload = {
+                    vitrine: 101,
+                    faturar: 'A',
+                    autorizar_nfe: 'T',
+                    tipo_autorizacao_troca: 3,
+                    produtos: [],
+                    nota: parseInt(notaFiscal),
+                    saida: parseInt(codigoSaida),
+                    cod_endereco: 24002,
+                    tipo_pgto_credito: 120,
+                    troca_pelo_valor_bruto: 'T'
+                };
+
+                // Adicionar produtos
+                if (detalhes.items && detalhes.items.length > 0) {
+                    payload.produtos = detalhes.items.map(produto => ({
+                        quantidade: parseInt(produto.quantity) || 1,
+                        preco: parseFloat(produto.price) || 0.01,
+                        barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                    }));
+                } else if (detalhes.products && detalhes.products.length > 0) {
+                    payload.produtos = detalhes.products.map(produto => ({
+                        quantidade: parseInt(produto.quantity) || 1,
+                        preco: parseFloat(produto.price) || 0.01,
+                        barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                    }));
+                } else {
+                    payload.produtos = [{
+                        quantidade: 3.00,
+                        preco: 249.9000,
+                        barra: "07300230816192"
+                    }];
+                }
+
+                // Mostrar preview do payload
+                const previewDiv = document.getElementById('payloadPreview');
+                previewDiv.innerHTML = `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6;">
+                        <h4 style="margin: 0 0 15px 0;">📦 Payload Gerado:</h4>
+                        <pre style="background: white; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px;">${JSON.stringify(payload, null, 2)}</pre>
+                    </div>
+                `;
+
+                // Adicionar à fila
+                const filaItem = {
+                    id: Date.now() + Math.random(),
+                    pedidoId: pedido.id,
+                    pedidoNumero: pedido.ecommerce_number,
+                    status: 'pendente',
+                    priority: 'medium',
+                    addedAt: new Date().toISOString(),
+                    startedAt: null,
+                    completedAt: null,
+                    attempts: 0,
+                    error: null,
+                    response: null,
+                    body: payload
+                };
+
+                state.fila.push(filaItem);
+                saveFila();
+                renderFila();
+                updateStats();
+
+                showAlert('Payload montado e adicionado à fila com sucesso!', 'success');
+                
+            } catch (error) {
+                console.error('Erro ao montar payload:', error);
+                showAlert('Erro ao montar payload: ' + error.message, 'error');
+            }
         }
 
         // Buscar pedidos
@@ -602,12 +883,9 @@
                     ${state.pedidos.map(pedido => `
                         <div class="pedido-item">
                             <div class="pedido-header">
-                                <div class="checkbox-wrapper">
-                                    <input type="checkbox" name="pedidoSelecionado" value="${pedido.id}" onchange="togglePedidoSelection('${pedido.id}')">
-                                    <div>
-                                        <strong>${pedido.ecommerce_number}</strong>
-                                        <div style="color: #666; font-size: 12px;">${pedido.client?.name || 'Cliente não informado'}</div>
-                                    </div>
+                                <div>
+                                    <strong>${pedido.ecommerce_number}</strong>
+                                    <div style="color: #666; font-size: 12px;">${pedido.client?.name || 'Cliente não informado'}</div>
                                 </div>
                                 <span class="queue-status status-${pedido.status?.toLowerCase().replace(' ', '-')}">
                                     ${pedido.status || 'Sem status'}
@@ -632,15 +910,26 @@
                                     <i class="fas fa-eye"></i>
                                     Ver Detalhes
                                 </button>
-                                <button class="btn btn-success btn-sm" onclick="adicionarIndividualAFila('${pedido.id}')">
-                                    <i class="fas fa-plus"></i>
-                                    Adicionar à Fila
+                                <button class="btn btn-success btn-sm" onclick="selecionarPedido('${pedido.id}', '${pedido.ecommerce_number}')">
+                                    <i class="fas fa-check"></i>
+                                    Selecionar
                                 </button>
                             </div>
                         </div>
                     `).join('')}
                 </div>
             `;
+        }
+
+        // Selecionar pedido para o card 3
+        function selecionarPedido(pedidoId, numeroPedido) {
+            document.getElementById('pedidoSelecionado').value = numeroPedido;
+            document.getElementById('pedidoParaBusca').value = numeroPedido;
+            
+            showAlert(`Pedido ${numeroPedido} selecionado! Agora busque o código de saída no card 2.`, 'success');
+            
+            // Rolar para o card 2
+            document.getElementById('resultadoBuscaSaida').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Toggle seleção de todos
