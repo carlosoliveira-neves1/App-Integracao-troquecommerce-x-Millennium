@@ -1053,13 +1053,29 @@
                             }
                         };
 
-                        // Adicionar produtos - usar produto padrão que existe no Millennium
-                        // pois os SKUs dos pedidos podem não estar cadastrados na saída correspondente
-                        filaItem.body.produtos = [{
-                            quantidade: 3.00,
-                            preco: 249.9000,
-                            barra: "07300230816192"
-                        }];
+                        // Adicionar produtos - usar códigos de barra reais dos produtos do pedido
+                        if (detalhes.items && detalhes.items.length > 0) {
+                            console.log('✅ Usando produtos do array items:', detalhes.items);
+                            filaItem.body.produtos = detalhes.items.map(produto => ({
+                                quantidade: parseInt(produto.quantity) || 1,
+                                preco: parseFloat(produto.price) || 0.01,
+                                barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                            }));
+                        } else if (detalhes.products && detalhes.products.length > 0) {
+                            console.log('✅ Usando produtos do array products:', detalhes.products);
+                            filaItem.body.produtos = detalhes.products.map(produto => ({
+                                quantidade: parseInt(produto.quantity) || 1,
+                                preco: parseFloat(produto.price) || 0.01,
+                                barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                            }));
+                        } else {
+                            console.log('⚠️ Nenhum produto encontrado, usando produto padrão');
+                            filaItem.body.produtos = [{
+                                quantidade: 3.00,
+                                preco: 249.9000,
+                                barra: "07300230816192"
+                            }];
+                        }
 
                         // Adicionar à fila
                         state.fila.push(filaItem);
@@ -1176,7 +1192,6 @@
                 }));
             } else {
                 console.log('⚠️ Nenhum produto encontrado, usando produto padrão');
-                // Produto padrão
                 filaItem.body.produtos = [{
                     quantidade: 3.00,
                     preco: 249.9000,
