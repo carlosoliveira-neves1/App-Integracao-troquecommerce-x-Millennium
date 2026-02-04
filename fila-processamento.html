@@ -775,8 +775,27 @@
         
         // Preparar body para API do Millennium
         function prepareNotaBody(pedidoId, config) {
-            // Payload correto para API do Millennium
-            // Usando código de barras válido ou removendo produto se não tiver dados
+            // Buscar o item da fila para obter os produtos reais
+            const queueData = JSON.parse(localStorage.getItem('troque_devolucao_fila') || '[]');
+            const queueItem = queueData.find(item => item.pedidoId === pedidoId);
+            
+            // Se encontrou o item na fila, usar o body já preparado com produtos reais
+            if (queueItem && queueItem.body && queueItem.body.produtos) {
+                return {
+                    vitrine: parseInt(queueItem.body.vitrine || config.vitrine || '101'),
+                    faturar: queueItem.body.faturar || "A",
+                    autorizar_nfe: queueItem.body.autorizar_nfe || "T",
+                    tipo_autorizacao_troca: queueItem.body.tipo_autorizacao_troca || 3,
+                    produtos: queueItem.body.produtos, // Produtos reais do pedido
+                    nota: parseInt(queueItem.body.nota || pedidoId.toString().replace(/\D/g, '')) || 366,
+                    saida: queueItem.body.saida || 20577,
+                    cod_endereco: queueItem.body.cod_endereco || 24002,
+                    tipo_pgto_credito: parseInt(queueItem.body.tipo_pgto_credito || config.tipoPgtoCredito || 120),
+                    troca_pelo_valor_bruto: queueItem.body.troca_pelo_valor_bruto || "T"
+                };
+            }
+            
+            // Fallback: usar produto padrão se não encontrar na fila
             return {
                 vitrine: parseInt(config.vitrine || '101'),
                 faturar: "A",
@@ -785,7 +804,7 @@
                 produtos: [{
                     quantidade: 1.00,
                     preco: 0.01,
-                    barra: "07300230816192" // Código de barras válido do exemplo
+                    barra: "07300230816192"
                 }],
                 nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
                 saida: 20577,

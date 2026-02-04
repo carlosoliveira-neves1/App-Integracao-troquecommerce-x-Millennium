@@ -713,17 +713,38 @@
                         response: null,
                         body: {
                             vitrine: config.vitrine,
-                            faturar: 'T',
-                            autorizar_nfe: config.autorizarNfe,
-                            tipo_autorizacao_troca: config.tipoAutorizacaoTroca,
+                            faturar: 'A',
+                            autorizar_nfe: 'T',
+                            tipo_autorizacao_troca: 3,
+                            produtos: [], // Será preenchido com produtos reais
+                            nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
+                            saida: 20577,
+                            cod_endereco: 24002,
+                            tipo_pgto_credito: config.tipoPgtoCredito || 120,
+                            troca_pelo_valor_bruto: 'T',
                             pedido: pedidoId,
-                            tipo_pgto_credito: config.tipoPgtoCredito,
-                            troca_pelo_valor_bruto: config.trocaValorBruto,
                             data: new Date().toISOString().split('T')[0],
                             hora: new Date().toTimeString().split(' ')[0],
                             usuario: config.username || 'system'
                         }
                     };
+                    
+                    // Adicionar produtos reais do pedido ao body
+                    const pedido = state.pedidos.find(p => p.id === pedidoId);
+                    if (pedido && pedido.produtos && pedido.produtos.length > 0) {
+                        filaItem.body.produtos = pedido.produtos.map(produto => ({
+                            quantidade: parseInt(produto.quantidade_solicitada) || 1,
+                            preco: parseFloat(produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
+                            barra: produto.codigo_ean || "07300230816192"
+                        }));
+                    } else {
+                        // Produto padrão se não tiver dados
+                        filaItem.body.produtos = [{
+                            quantidade: 1.00,
+                            preco: 0.01,
+                            barra: "07300230816192"
+                        }];
+                    }
                     
                     // Adicionar à fila global
                     addToQueue(pedidoId, 'medium', filaItem.body);
