@@ -736,9 +736,7 @@
                             nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
                             saida: 20577, // Código da saída/pedido original
                             cod_endereco: 24002, // Código do endereço
-                            pagamentos: [{
-                                tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
-                            }],
+                            tipo_pgto_credito: parseInt(config.tipoPgtoCredito) || 120, // Tipo de pagamento/crédito (campo direto)
                             troca_pelo_valor_bruto: 'T', // Troca pelo valor bruto ("T" = True/Sim)
                             pedido: pedidoId,
                             data: new Date().toISOString().split('T')[0],
@@ -751,6 +749,7 @@
                     const pedido = state.pedidoAtual; // Usar pedido atual carregado
                     console.log('📦 Pedido atual completo:', pedido);
                     console.log('🛍️ Produtos do pedido:', pedido?.produtos);
+                    console.log('🔍 Estrutura completa do pedido:', JSON.stringify(pedido, null, 2));
                     
                     if (pedido && pedido.produtos && pedido.produtos.length > 0) {
                         console.log('✅ Produtos encontrados, quantity:', pedido.produtos.length);
@@ -768,12 +767,35 @@
                     } else {
                         console.log('⚠️ Usando produto padrão - produtos não encontrados no pedido');
                         console.log('🔍 Estrutura do pedido:', Object.keys(pedido || {}));
-                        // Produto padrão se não tiver dados
-                        filaItem.body.produtos = [{
-                            quantidade: 1.00,
-                            preco: 0.01,
-                            barra: "07300230816192"
-                        }];
+                        
+                        // Tentar encontrar produtos em outros campos possíveis
+                        const possibleProductFields = ['items', 'products', 'itens', 'order_items', 'reverse_items'];
+                        let foundProducts = null;
+                        
+                        for (const field of possibleProductFields) {
+                            if (pedido && pedido[field] && Array.isArray(pedido[field])) {
+                                console.log(`✅ Produtos encontrados no campo "${field}":`, pedido[field]);
+                                foundProducts = pedido[field];
+                                break;
+                            }
+                        }
+                        
+                        if (foundProducts && foundProducts.length > 0) {
+                            console.log('🎯 Usando produtos encontrados:', foundProducts);
+                            filaItem.body.produtos = foundProducts.map(produto => ({
+                                quantidade: parseInt(produto.quantity || produto.quantidade || produto.quantidade_solicitada) || 1,
+                                preco: parseFloat(produto.price || produto.preco || produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
+                                barra: produto.sku || produto.barcode || produto.codigo_barras || produto.codigo_ean || "07300230816192"
+                            }));
+                        } else {
+                            console.log('⚠️ Nenhum produto encontrado em nenhum campo - usando padrão');
+                            // Produto padrão se não tiver dados
+                            filaItem.body.produtos = [{
+                                quantidade: 1.00,
+                                preco: 0.01,
+                                barra: "07300230816192"
+                            }];
+                        }
                     }
                     
                     // Adicionar à fila global
@@ -818,9 +840,7 @@
                 nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
                 saida: 20577, // Código da saída/pedido original
                 cod_endereco: 24002, // Código do endereço
-                pagamentos: [{
-                    tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
-                }],
+                tipo_pgto_credito: parseInt(config.tipoPgtoCredito) || 120, // Tipo de pagamento/crédito (campo direto)
                 troca_pelo_valor_bruto: 'T', // Troca pelo valor bruto ("T" = True/Sim)
                 pedido: pedidoId,
                 data: new Date().toISOString().split('T')[0],
@@ -831,6 +851,7 @@
             // Adicionar produtos reais do pedido ao body
             const pedido = state.pedidoAtual; // Usar pedido atual carregado
             console.log('📦 Pedido atual (individual):', pedido);
+            console.log('🔍 Estrutura completa (individual):', JSON.stringify(pedido, null, 2));
             
             if (pedido && pedido.produtos && pedido.produtos.length > 0) {
                 console.log('✅ Produtos encontrados (individual):', pedido.produtos.length);
@@ -841,12 +862,35 @@
                 }));
                 console.log('🎯 Produtos finais (individual):', body.produtos);
             } else {
-                console.log('⚠️ Usando produto padrão (individual)');
-                body.produtos = [{
-                    quantidade: 1.00,
-                    preco: 0.01,
-                    barra: "07300230816192"
-                }];
+                console.log('⚠️ Usando produto padrão (individual) - buscando em outros campos');
+                
+                // Tentar encontrar produtos em outros campos possíveis
+                const possibleProductFields = ['items', 'products', 'itens', 'order_items', 'reverse_items'];
+                let foundProducts = null;
+                
+                for (const field of possibleProductFields) {
+                    if (pedido && pedido[field] && Array.isArray(pedido[field])) {
+                        console.log(`✅ Produtos encontrados no campo "${field}" (individual):`, pedido[field]);
+                        foundProducts = pedido[field];
+                        break;
+                    }
+                }
+                
+                if (foundProducts && foundProducts.length > 0) {
+                    console.log('🎯 Usando produtos encontrados (individual):', foundProducts);
+                    body.produtos = foundProducts.map(produto => ({
+                        quantidade: parseInt(produto.quantity || produto.quantidade || produto.quantidade_solicitada) || 1,
+                        preco: parseFloat(produto.price || produto.preco || produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
+                        barra: produto.sku || produto.barcode || produto.codigo_barras || produto.codigo_ean || "07300230816192"
+                    }));
+                } else {
+                    console.log('⚠️ Nenhum produto encontrado (individual) - usando padrão');
+                    body.produtos = [{
+                        quantidade: 1.00,
+                        preco: 0.01,
+                        barra: "07300230816192"
+                    }];
+                }
             }
 
             const filaItem = {

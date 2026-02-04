@@ -790,9 +790,7 @@
                     nota: parseInt(queueItem.body.nota || pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
                     saida: queueItem.body.saida || 20577, // Código da saída/pedido original
                     cod_endereco: queueItem.body.cod_endereco || 24002, // Código do endereço
-                    pagamentos: queueItem.body.pagamentos || [{
-                        tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
-                    }],
+                    tipo_pgto_credito: parseInt(queueItem.body.tipo_pgto_credito || config.tipoPgtoCredito || 120), // Tipo de pagamento/crédito
                     troca_pelo_valor_bruto: queueItem.body.troca_pelo_valor_bruto || 'T' // Troca pelo valor bruto ("T" = True/Sim)
                 };
             }
@@ -811,9 +809,7 @@
                 nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366, // Número da nota fiscal original
                 saida: 20577, // Código da saída/pedido original
                 cod_endereco: 24002, // Código do endereço
-                pagamentos: [{
-                    tipo_pgto: parseInt(config.tipoPgtoCredito) || 120 // Tipo de pagamento/crédito
-                }],
+                tipo_pgto_credito: parseInt(config.tipoPgtoCredito) || 120, // Tipo de pagamento/crédito
                 troca_pelo_valor_bruto: 'T' // Troca pelo valor bruto ("T" = True/Sim)
             };
         }
