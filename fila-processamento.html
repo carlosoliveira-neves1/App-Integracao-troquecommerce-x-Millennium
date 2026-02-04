@@ -709,15 +709,15 @@
                     throw error;
                 }
                 
-                // Se receber 401, tentar NTLM
+                // Se receber 401, tentar diferentes métodos de autenticação
                 if (response.status === 401) {
-                    console.log('🔄 Basic Auth falhou (401), tentando NTLM...');
-                    showAlert('🔄 Tentando autenticação NTLM...', 'info');
+                    console.log('🔄 Basic Auth falhou (401), tentando outros métodos...');
+                    showAlert('🔄 Tentando diferentes métodos de autenticação...', 'info');
                     
                     try {
-                        response = await tryNTLMAuth(`${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, body, config);
-                    } catch (ntlmError) {
-                        throw new Error(`Falha na autenticação NTLM: ${ntlmError.message}. Verifique suas credenciais.`);
+                        response = await tryDifferentAuthMethods(`${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, body, config);
+                    } catch (authError) {
+                        throw new Error(`Falha na autenticação: ${authError.message}. Verifique suas credenciais e permissões no Millennium.`);
                     }
                 }
                 
@@ -805,29 +805,43 @@
             return 'Basic ' + btoa(`${username}:${password}`);
         }
         
-        // Tentar autenticação NTLM (fallback)
-        async function tryNTLMAuth(url, body, config) {
-            try {
-                // Tentar com credenciais incluídas na URL (formato NTLM)
-                const username = encodeURIComponent(config.username || '');
-                const password = encodeURIComponent(config.password || '');
-                const authUrl = url.replace('://', `://${username}:${password}@`);
-                
-                const response = await fetch(authUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Credentials': 'true'
-                    },
-                    body: JSON.stringify(body),
-                    credentials: 'include' // Incluir credenciais
-                });
-                
-                return response;
-            } catch (error) {
-                console.error('Erro na tentativa NTLM:', error);
-                throw error;
+        // Tentar diferentes métodos de autenticação
+        async function tryDifferentAuthMethods(url, body, config) {
+            const methods = [
+                { name: 'Basic', auth: 'Basic ' + btoa(`${config.username}:${config.password}`) },
+                { name: 'NTLM', auth: 'NTLM ' + btoa(`${config.username}:${config.password}`) },
+                { name: 'Bearer', auth: 'Bearer ' + btoa(`${config.username}:${config.password}`) }
+            ];
+            
+            for (const method of methods) {
+                try {
+                    console.log(`🔄 Tentando autenticação ${method.name}...`);
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': method.auth,
+                            'Access-Control-Allow-Credentials': 'true'
+                        },
+                        body: JSON.stringify(body),
+                        credentials: 'include'
+                    });
+                    
+                    // Se não for 401, funcionou!
+                    if (response.status !== 401) {
+                        console.log(`✅ Autenticação ${method.name} funcionou!`);
+                        return response;
+                    }
+                    
+                    console.log(`❌ Autenticação ${method.name} falhou (401)`);
+                    
+                } catch (error) {
+                    console.log(`❌ Erro na autenticação ${method.name}:`, error.message);
+                }
             }
+            
+            throw new Error('Todos os métodos de autenticação falharam. Verifique suas credenciais e permissões.');
         }
         
         // Retentar item

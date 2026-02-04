@@ -400,9 +400,90 @@
                         <li>Senha: Senha correspondente ao usuário</li>
                         <li>URL: http://179.124.195.107:6017 (padrão)</li>
                     </ul>
+                    <p><strong>Diagnóstico:</strong></p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Sistema tentará: Basic → NTLM → Bearer</li>
+                        <li>Verifique o console para ver qual método funcionou</li>
+                        <li>Se todos falharem, credenciais podem estar incorretas</li>
+                    </ul>
+                </div>
+                
+                <!-- Botão de Teste -->
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="testMillenniumAuth()" style="background: #0ea5e9; border: none; padding: 8px 16px; border-radius: 4px; color: white; cursor: pointer;">
+                        🧪 Testar Autenticação Millennium
+                    </button>
                 </div>
             </div>
         </div>
+        
+        <!-- Script de Teste de Autenticação -->
+        <script>
+            async function testMillenniumAuth() {
+                const config = {
+                    baseUrl: document.getElementById('millenniumBaseUrl').value || 'http://179.124.195.107:6017',
+                    username: document.getElementById('millenniumUsername').value || '',
+                    password: document.getElementById('millenniumPassword').value || ''
+                };
+                
+                if (!config.username || !config.password) {
+                    alert('Por favor, preencha usuário e senha do Millennium primeiro.');
+                    return;
+                }
+                
+                console.log('🧪 Testando autenticação Millennium...');
+                alert('Testando autenticação. Verifique o console para detalhes.');
+                
+                const testBody = {
+                    VITRINE: "101",
+                    PEDIDO: "TESTE",
+                    DATA: new Date().toISOString().split('T')[0],
+                    HORA: new Date().toTimeString().split(' ')[0],
+                    USUARIO: config.username,
+                    MOTIVO: "TESTE_AUTENTICACAO",
+                    STATUS: "TESTE"
+                };
+                
+                const methods = [
+                    { name: 'Basic', auth: 'Basic ' + btoa(`${config.username}:${config.password}`) },
+                    { name: 'NTLM', auth: 'NTLM ' + btoa(`${config.username}:${config.password}`) },
+                    { name: 'Bearer', auth: 'Bearer ' + btoa(`${config.username}:${config.password}`) }
+                ];
+                
+                for (const method of methods) {
+                    try {
+                        console.log(`🔄 Testando ${method.name}...`);
+                        
+                        const response = await fetch(`${config.baseUrl}/api/MILLENIUM_ECO.troca_devolucao/inclui`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': method.auth,
+                                'Access-Control-Allow-Credentials': 'true'
+                            },
+                            body: JSON.stringify(testBody),
+                            credentials: 'include'
+                        });
+                        
+                        console.log(`📊 ${method.name} - Status: ${response.status} ${response.statusText}`);
+                        
+                        if (response.status !== 401) {
+                            console.log(`✅ ${method.name} funcionou!`);
+                            alert(`✅ Autenticação ${method.name} funcionou! Status: ${response.status}`);
+                            return;
+                        } else {
+                            console.log(`❌ ${method.name} falhou (401)`);
+                        }
+                        
+                    } catch (error) {
+                        console.log(`❌ Erro no ${method.name}:`, error.message);
+                    }
+                }
+                
+                console.log('❌ Todos os métodos falharam');
+                alert('❌ Todos os métodos de autenticação falharam. Verifique suas credenciais.');
+            }
+        </script>
         
         <!-- Configurações de Processamento -->
         <div class="config-section">
