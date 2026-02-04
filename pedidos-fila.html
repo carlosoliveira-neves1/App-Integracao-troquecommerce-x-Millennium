@@ -597,8 +597,8 @@
                 
                 console.log('🔍 Buscando código de saída para:', numeroPedido);
                 
-                // Busca direta com filtro N_PEDIDO_CLIENTE
-                console.log('📋 Fazendo busca direta com N_PEDIDO_CLIENTE:', numeroPedido);
+                // Busca ampla para mostrar todos os pedidos e seus campos
+                console.log('📋 Fazendo busca ampla para mostrar todos os pedidos...');
                 const response = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
                     method: 'POST',
                     headers: {
@@ -611,7 +611,7 @@
                         DATAF: new Date().toISOString(),
                         TIPO: "AC",
                         COD_PEDIDOV: "",
-                        N_PEDIDO_CLIENTE: numeroPedido, // Usar este campo
+                        N_PEDIDO_CLIENTE: "", // Busca ampla
                         EFETUADO: 2,
                         FILTROPRO: false,
                         OPCAO_DATA: 0,
@@ -624,65 +624,109 @@
                 }
                 
                 const data = await response.json();
-                console.log('📋 Resposta Millennium (busca direta):', data);
+                console.log('📋 Resposta Millennium (busca ampla):', data);
                 
                 if (data && data.length > 0) {
-                    const pedido = data[0];
-                    console.log('✅ Pedido encontrado:', pedido);
+                    // Tentar encontrar pedido específico
+                    const pedidoEspecifico = data.find(p => 
+                        p.n_pedido_cliente === numeroPedido ||
+                        p.cod_pedido_mkt_place === numeroPedido
+                    );
                     
-                    const dados = {
-                        codigoSaida: pedido.pedidov, // Usar pedidov como código de saída
-                        notaFiscal: pedido.nf, // Usar nf como nota fiscal
-                        codigoPedido: pedido.cod_pedidov,
-                        numeroObjeto: pedido.numero_objeto,
-                        numeroCliente: pedido.n_pedido_cliente,
-                        pedidov: pedido.pedidov, // Manter referência do pedidov também
-                        codPedidoMktPlace: pedido.cod_pedido_mkt_place // Adicionar campo do marketplace
-                    };
-                    
-                    // Armazenar dados globalmente
-                    state.dadosMillennium = dados;
-                    
-                    // Preencher campos do card 3
-                    document.getElementById('codigoSaidaSelecionado').value = dados.codigoSaida;
-                    document.getElementById('notaFiscal').value = dados.notaFiscal;
-                    
-                    resultadoDiv.innerHTML = `
-                        <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
-                            <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
-                                <div><strong>Código Saída (pedidov):</strong> ${dados.codigoSaida}</div>
-                                <div><strong>Nota Fiscal (nf):</strong> ${dados.notaFiscal}</div>
-                                <div><strong>Código Pedido (cod_pedidov):</strong> ${dados.codigoPedido || 'N/A'}</div>
-                                <div><strong>Número Cliente (n_pedido_cliente):</strong> ${dados.numeroCliente}</div>
-                                <div><strong>PEDIDOV:</strong> ${dados.pedidov || 'N/A'}</div>
-                                <div><strong>Objeto (numero_objeto):</strong> ${dados.numeroObjeto || 'N/A'}</div>
-                                <div><strong>Cod Pedido MKT:</strong> ${dados.codPedidoMktPlace || 'N/A'}</div>
+                    if (pedidoEspecifico) {
+                        // Pedido encontrado - mostrar dados específicos
+                        const dados = {
+                            codigoSaida: pedidoEspecifico.pedidov,
+                            notaFiscal: pedidoEspecifico.nf,
+                            codigoPedido: pedidoEspecifico.cod_pedidov,
+                            numeroObjeto: pedidoEspecifico.numero_objeto,
+                            numeroCliente: pedidoEspecifico.n_pedido_cliente,
+                            pedidov: pedidoEspecifico.pedidov,
+                            codPedidoMktPlace: pedidoEspecifico.cod_pedido_mkt_place
+                        };
+                        
+                        state.dadosMillennium = dados;
+                        document.getElementById('codigoSaidaSelecionado').value = dados.codigoSaida;
+                        document.getElementById('notaFiscal').value = dados.notaFiscal;
+                        
+                        resultadoDiv.innerHTML = `
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
+                                <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                                    <div><strong>Código Saída (pedidov):</strong> ${dados.codigoSaida}</div>
+                                    <div><strong>Nota Fiscal (nf):</strong> ${dados.notaFiscal}</div>
+                                    <div><strong>Código Pedido (cod_pedidov):</strong> ${dados.codigoPedido || 'N/A'}</div>
+                                    <div><strong>Número Cliente (n_pedido_cliente):</strong> ${dados.numeroCliente}</div>
+                                    <div><strong>PEDIDOV:</strong> ${dados.pedidov || 'N/A'}</div>
+                                    <div><strong>Objeto (numero_objeto):</strong> ${dados.numeroObjeto || 'N/A'}</div>
+                                    <div><strong>Cod Pedido MKT:</strong> ${dados.codPedidoMktPlace || 'N/A'}</div>
+                                </div>
+                                <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                    <strong>Busca Direta:</strong><br>
+                                    • Filtro: N_PEDIDO_CLIENTE = "${numeroPedido}"<br>
+                                    • Retorno: pedidov = "${dados.codigoSaida}"<br>
+                                    • Mapeamento: ecommerce_number → N_PEDIDO_CLIENTE → pedidov
+                                </div>
                             </div>
-                            <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
-                                <strong>Busca Direta:</strong><br>
-                                • Filtro: N_PEDIDO_CLIENTE = "${numeroPedido}"<br>
-                                • Retorno: pedidov = "${dados.codigoSaida}"<br>
-                                • Mapeamento: ecommerce_number → N_PEDIDO_CLIENTE → pedidov
+                        `;
+                        
+                        showAlert('Código de saída encontrado com sucesso!', 'success');
+                    } else {
+                        // Pedido não encontrado - mostrar todos os pedidos disponíveis
+                        resultadoDiv.innerHTML = `
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7;">
+                                <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ Pedido Não Encontrado</h4>
+                                <p>Pedido <strong>${numeroPedido}</strong> não encontrado, mas foram encontrados <strong>${data.length}</strong> pedidos no Millennium:</p>
+                                
+                                <details style="margin-top: 15px;">
+                                    <summary style="cursor: pointer; font-weight: bold; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                                        📋 Ver todos os pedidos (pedidov e nf):
+                                    </summary>
+                                    <div style="margin-top: 10px; max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                            <thead style="background: #f8f9fa; position: sticky; top: 0;">
+                                                <tr>
+                                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">n_pedido_cliente</th>
+                                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">pedidov</th>
+                                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">nf</th>
+                                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">cod_pedidov</th>
+                                                    <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">numero_objeto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.map(pedido => `
+                                                    <tr style="${pedido.n_pedido_cliente === numeroPedido ? 'background: #d4edda;' : ''}">
+                                                        <td style="padding: 6px; border: 1px solid #ddd;">${pedido.n_pedido_cliente || 'N/A'}</td>
+                                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold;">${pedido.pedidov || 'N/A'}</td>
+                                                        <td style="padding: 6px; border: 1px solid #ddd; font-weight: bold;">${pedido.nf || 'N/A'}</td>
+                                                        <td style="padding: 6px; border: 1px solid #ddd;">${pedido.cod_pedidov || 'N/A'}</td>
+                                                        <td style="padding: 6px; border: 1px solid #ddd;">${pedido.numero_objeto || 'N/A'}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </details>
+                                
+                                <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
+                                    <strong>Verifique:</strong><br>
+                                    • Use um dos n_pedido_cliente da lista acima<br>
+                                    • Verifique se o pedido foi integrado com o Millennium<br>
+                                    • O período de busca inclui o pedido?
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    
-                    showAlert('Código de saída encontrado com sucesso!', 'success');
+                        `;
+                        
+                        showAlert(`Pedido não encontrado, mas ${data.length} pedidos disponíveis`, 'warning');
+                    }
                 } else {
                     resultadoDiv.innerHTML = `
                         <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
-                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Pedido Não Encontrado</h4>
-                            <p>Pedido <strong>${numeroPedido}</strong> não encontrado no Millennium.</p>
-                            <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
-                                <strong>Verifique:</strong><br>
-                                • O número do pedido está correto?<br>
-                                • O pedido foi integrado com o Millennium?<br>
-                                • O período de busca inclui o pedido?
-                            </div>
+                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Nenhum Pedido Encontrado</h4>
+                            <p>Nenhum pedido encontrado no período pesquisado no Millennium.</p>
                         </div>
                     `;
-                    showAlert('Pedido não encontrado no Millennium', 'error');
+                    showAlert('Nenhum pedido encontrado no Millennium', 'error');
                 }
                 
             } catch (error) {
