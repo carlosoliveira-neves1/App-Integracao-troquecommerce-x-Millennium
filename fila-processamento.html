@@ -676,18 +676,21 @@
             updateStats();
             
             try {
-                // Carregar configurações do localStorage ou usar padrão
-                const config = loadConfig();
+                // Forçar uso das credenciais corretas diretamente
+                const username = 'integracao';
+                const password = '@5z5u2hmc4u';
+                const baseUrl = 'http://179.124.195.107:6017';
                 
-                // Usar credenciais padrão diretamente
-                const username = config.username || 'integracao';
-                const password = config.password || '@5z5u2hmc4u';
-                const baseUrl = config.baseUrl || 'http://179.124.195.107:6017';
+                // Carregar configurações apenas para vitrine e tipo_pgto_credito
+                const config = loadConfig();
                 
                 // Preparar body para API do Millennium
                 const body = prepareNotaBody(item.pedidoId, config);
                 
-                // Usar Basic Auth diretamente (já sabemos que funciona)
+                console.log('🔐 Usando credenciais diretas:', { username, password: '***' });
+                console.log('📦 Payload:', body);
+                
+                // Usar Basic Auth diretamente com credenciais corretas
                 const response = await fetch(`${baseUrl}/api/millenium_eco/troca_devolucao/inclui`, {
                     method: 'POST',
                     headers: {
@@ -697,7 +700,22 @@
                     body: JSON.stringify(body)
                 });
                 
-                const data = await response.json();
+                console.log('📊 Status:', response.status, response.statusText);
+                
+                // Verificar se tem conteúdo antes de fazer parse
+                const text = await response.text();
+                console.log('📄 Response text:', text);
+                
+                let data;
+                if (text) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        data = { message: text };
+                    }
+                } else {
+                    data = { message: 'Empty response' };
+                }
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
