@@ -628,15 +628,48 @@
                 console.log('📊 Data length:', data?.length);
                 console.log('🔍 Buscando pedido:', numeroPedido);
                 
+                // Sempre mostrar o response completo
+                resultadoDiv.innerHTML = `
+                    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border: 1px solid #b3d9ff;">
+                        <h4 style="color: #0056b3; margin: 0 0 10px 0;">📋 Resposta Millennium</h4>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Busca por:</strong> ${numeroPedido}<br>
+                            <strong>Resultados encontrados:</strong> ${data?.length || 0}
+                        </div>
+                        
+                        <details style="margin-bottom: 15px;">
+                            <summary style="cursor: pointer; font-weight: bold; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                                📊 Response Completo (${data?.length || 0} pedidos)
+                            </summary>
+                            <div style="margin-top: 10px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+                                <pre style="padding: 10px; margin: 0; font-size: 11px; background: #f8f9fa; white-space: pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
+                            </div>
+                        </details>
+                        
+                        ${data && data.length > 0 ? `
+                            <div style="background: #d4edda; padding: 10px; border-radius: 4px; border: 1px solid #c3e6cb;">
+                                <strong>✅ Pedidos Encontrados:</strong><br>
+                                ${data.map((pedido, index) => `
+                                    <div style="margin-top: 5px; padding: 5px; background: rgba(255,255,255,0.7); border-radius: 3px; font-size: 12px;">
+                                        <strong>Pedido ${index + 1}:</strong><br>
+                                        • n_pedido_cliente: <code>${pedido.n_pedido_cliente || 'N/A'}</code><br>
+                                        • pedidov: <code>${pedido.pedidov || 'N/A'}</code><br>
+                                        • nf: <code>${pedido.nf || 'N/A'}</code><br>
+                                        • cod_pedidov: <code>${pedido.cod_pedidov || 'N/A'}</code><br>
+                                        • numero_objeto: <code>${pedido.numero_objeto || 'N/A'}</code>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <div style="background: #f8d7da; padding: 10px; border-radius: 4px; border: 1px solid #f5c6cb;">
+                                <strong>❌ Nenhum pedido encontrado no response</strong>
+                            </div>
+                        `}
+                    </div>
+                `;
+                
+                // Tentar processar o pedido correspondente
                 if (data && data.length > 0) {
-                    console.log('✅ Encontrados', data.length, 'pedidos');
-                    const pedido = data[0];
-                    console.log('✅ Primeiro pedido:', pedido);
-                    console.log('📋 n_pedido_cliente:', pedido.n_pedido_cliente);
-                    console.log('📋 pedidov:', pedido.pedidov);
-                    console.log('📋 nf:', pedido.nf);
-                    
-                    // Verificar se o pedido corresponde ao buscado
                     const pedidoCorrespondente = data.find(p => 
                         p.n_pedido_cliente === numeroPedido ||
                         p.n_pedido_cliente?.toString() === numeroPedido
@@ -646,8 +679,8 @@
                     
                     if (pedidoCorrespondente) {
                         const dados = {
-                            codigoSaida: pedidoCorrespondente.pedidov, // pedidov do response
-                            notaFiscal: pedidoCorrespondente.nf, // nf do response
+                            codigoSaida: pedidoCorrespondente.pedidov,
+                            notaFiscal: pedidoCorrespondente.nf,
                             codigoPedido: pedidoCorrespondente.cod_pedidov,
                             numeroObjeto: pedidoCorrespondente.numero_objeto,
                             numeroCliente: pedidoCorrespondente.n_pedido_cliente,
@@ -678,9 +711,10 @@
                             console.log('✅ Nota fiscal preenchida:', dados.notaFiscal);
                         }
                         
-                        resultadoDiv.innerHTML = `
-                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
-                                <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
+                        // Adicionar sucesso ao resultado
+                        resultadoDiv.innerHTML += `
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb; margin-top: 10px;">
+                                <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Correspondente Encontrado!</h4>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-size: 14px;">
                                     <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 4px;">
                                         <div style="font-weight: bold; color: #155724; margin-bottom: 5px;">📋 Código Saída (pedidov)</div>
@@ -692,45 +726,41 @@
                                     </div>
                                 </div>
                                 <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
-                                    <strong>Response Millennium:</strong><br>
-                                    • pedidov: <strong>${dados.codigoSaida}</strong><br>
-                                    • nf: <strong>${dados.notaFiscal}</strong><br>
-                                    • n_pedido_cliente: <strong>${dados.numeroCliente}</strong><br>
-                                    • Campos Card 3 preenchidos: <strong>Código Saída=${dados.codigoSaida}, Nota Fiscal=${dados.notaFiscal}</strong>
+                                    <strong>Campos Card 3 preenchidos:</strong><br>
+                                    • Código Saída: <strong>${dados.codigoSaida}</strong><br>
+                                    • Nota Fiscal: <strong>${dados.notaFiscal}</strong>
                                 </div>
                             </div>
                         `;
                         
                         showAlert('Código de saída encontrado com sucesso!', 'success');
                     } else {
-                        console.log('❌ Pedido não corresponde ao buscado');
-                        resultadoDiv.innerHTML = `
-                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7;">
+                        resultadoDiv.innerHTML += `
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7; margin-top: 10px;">
                                 <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ Pedido Não Correspondente</h4>
-                                <p>Foram encontrados ${data.length} pedidos, mas nenhum corresponde a <strong>${numeroPedido}</strong>.</p>
+                                <p>Nenhum dos ${data.length} pedidos corresponde a <strong>${numeroPedido}</strong>.</p>
                                 <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
-                                    <strong>Pedidos encontrados:</strong><br>
-                                    ${data.map(p => `• n_pedido_cliente: ${p.n_pedido_cliente || 'N/A'}`).join('<br>')}
+                                    <strong>Verifique os n_pedido_cliente disponíveis no response acima.</strong>
                                 </div>
                             </div>
                         `;
                         showAlert('Pedido não corresponde ao buscado', 'warning');
                     }
                 } else {
-                    console.log('❌ Nenhum pedido encontrado');
-                    resultadoDiv.innerHTML = `
-                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb;">
-                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Pedido Não Encontrado</h4>
-                            <p>Pedido <strong>${numeroPedido}</strong> não encontrado no Millennium.</p>
+                    resultadoDiv.innerHTML += `
+                        <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb; margin-top: 10px;">
+                            <h4 style="color: #721c24; margin: 0 0 10px 0;">❌ Nenhum Pedido Encontrado</h4>
+                            <p>A busca retornou vazia. Verifique:</p>
                             <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
                                 <strong>Verifique:</strong><br>
                                 • O número do pedido está correto?<br>
                                 • O pedido foi integrado com o Millennium?<br>
-                                • O período de busca inclui o pedido?
+                                • O período de busca inclui o pedido?<br>
+                                • As credenciais estão corretas?
                             </div>
                         </div>
                     `;
-                    showAlert('Pedido não encontrado no Millennium', 'error');
+                    showAlert('Nenhum pedido encontrado no Millennium', 'error');
                 }
                 
             } catch (error) {
