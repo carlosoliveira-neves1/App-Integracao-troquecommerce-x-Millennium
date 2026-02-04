@@ -751,6 +751,73 @@
             }
         }
 
+        // Buscar dados do pedido no Millennium
+        async function buscarDadosPedidoMillennium(numeroPedidoCliente) {
+            try {
+                const username = 'integracao';
+                const password = '@5z5u2hmc4u';
+                const baseUrl = 'http://179.124.195.107:6017';
+                const authHeader = 'Basic ' + btoa(`${username}:${password}`);
+                
+                console.log('🔍 Buscando dados do pedido no Millennium:', numeroPedidoCliente);
+                
+                const response = await fetch(`${baseUrl}/api/millenium.PEDIDO_VENDA.Lista_Data`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        SCRIPTFILIAL: null,
+                        DATAI: new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString(), // 3 meses atrás
+                        DATAF: new Date().toISOString(),
+                        TIPO: "AC",
+                        COD_PEDIDOV: "",
+                        N_PEDIDO_CLIENTE: numeroPedidoCliente,
+                        EFETUADO: 2,
+                        FILTROPRO: true,
+                        OPCAO_DATA: 0,
+                        ORDEM: 0
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const data = await response.json();
+                console.log('📋 Resposta Millennium:', data);
+                
+                if (data && data.length > 0) {
+                    const pedido = data[0];
+                    console.log('✅ Pedido encontrado no Millennium:', pedido);
+                    return {
+                        saida: pedido.PEDIDOV || 20577,
+                        nota: pedido.NF || 366,
+                        codigoPedido: pedido.COD_PEDIDOV,
+                        numeroObjeto: pedido.NUMERO_OBJETO
+                    };
+                } else {
+                    console.log('⚠️ Pedido não encontrado no Millennium');
+                    return {
+                        saida: 20577,
+                        nota: 366,
+                        codigoPedido: null,
+                        numeroObjeto: null
+                    };
+                }
+                
+            } catch (error) {
+                console.error('Erro ao buscar dados no Millennium:', error);
+                return {
+                    saida: 20577,
+                    nota: 366,
+                    codigoPedido: null,
+                    numeroObjeto: null
+                };
+            }
+        }
+
         // Adicionar individual à fila
         async function adicionarIndividualAFila(pedidoId) {
             const pedido = state.pedidos.find(p => p.id === pedidoId);
@@ -782,6 +849,11 @@
 
             const detalhes = await response.json();
             
+            // Buscar dados do Millennium para obter saida e nota
+            const dadosMillennium = await buscarDadosPedidoMillennium(pedido.ecommerce_number);
+            
+            console.log('🔗 Dados Millennium:', dadosMillennium);
+            
             // Preparar item para a fila
             const filaItem = {
                 id: Date.now() + Math.random(),
@@ -801,8 +873,8 @@
                     autorizar_nfe: 'T',
                     tipo_autorizacao_troca: 3,
                     produtos: [],
-                    nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
-                    saida: 20577,
+                    nota: dadosMillennium.nota,
+                    saida: dadosMillennium.saida,
                     cod_endereco: 24002,
                     tipo_pgto_credito: 120,
                     troca_pelo_valor_bruto: 'T',
@@ -834,6 +906,9 @@
             saveFila();
             renderFila();
             updateStats();
+            
+            console.log('📦 Item adicionado à fila:', filaItem);
+            showAlert(`Pedido ${pedido.ecommerce_number} adicionado à fila!`, 'success');
         }
 
         // Renderizar fila
