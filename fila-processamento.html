@@ -777,10 +777,13 @@
         function prepareNotaBody(pedidoId, config) {
             // Buscar o item da fila para obter os produtos reais
             const queueData = JSON.parse(localStorage.getItem('troque_devolucao_fila') || '[]');
+            console.log('🔍 Dados completos da fila:', queueData);
             const queueItem = queueData.find(item => item.pedidoId === pedidoId);
+            console.log('📋 Item encontrado na fila:', queueItem);
             
             // Se encontrou o item na fila, usar o body já preparado com produtos reais
             if (queueItem && queueItem.body && queueItem.body.produtos) {
+                console.log('✅ Produtos encontrados no item da fila:', queueItem.body.produtos);
                 return {
                     vitrine: parseInt(queueItem.body.vitrine || config.vitrine || 101), // Código da vitrine/loja
                     faturar: queueItem.body.faturar || 'A', // Flag para faturamento ("A" = Automático)

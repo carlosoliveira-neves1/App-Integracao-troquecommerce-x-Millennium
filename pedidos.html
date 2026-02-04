@@ -785,7 +785,7 @@
                             filaItem.body.produtos = foundProducts.map(produto => ({
                                 quantidade: parseInt(produto.quantity || produto.quantidade || produto.quantidade_solicitada) || 1,
                                 preco: parseFloat(produto.price || produto.preco || produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
-                                barra: produto.sku || produto.barcode || produto.codigo_barras || produto.codigo_ean || "07300230816192"
+                                barra: produto.sku || produto.ecommerce_product_id || produto.barcode || produto.codigo_barras || produto.codigo_ean || "07300230816192"
                             }));
                         } else {
                             console.log('⚠️ Nenhum produto encontrado em nenhum campo - usando padrão');
@@ -881,7 +881,7 @@
                     body.produtos = foundProducts.map(produto => ({
                         quantidade: parseInt(produto.quantity || produto.quantidade || produto.quantidade_solicitada) || 1,
                         preco: parseFloat(produto.price || produto.preco || produto.preco_unitario?.replace('R$', '').replace(',', '.')) || 0.01,
-                        barra: produto.sku || produto.barcode || produto.codigo_barras || produto.codigo_ean || "07300230816192"
+                        barra: produto.sku || produto.ecommerce_product_id || produto.barcode || produto.codigo_barras || produto.codigo_ean || "07300230816192"
                     }));
                 } else {
                     console.log('⚠️ Nenhum produto encontrado (individual) - usando padrão');
