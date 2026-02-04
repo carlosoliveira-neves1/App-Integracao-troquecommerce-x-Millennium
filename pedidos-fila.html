@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos e Fila de Processamento</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .pedido-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .pedido-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+        }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pedido-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .pedido-info span {
+            color: #666;
+        }
+
+        .pedido-info strong {
+            color: #333;
+        }
+
+        .pedido-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .queue-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .stat-pendente { color: #ffc107; }
+        .stat-processando { color: #17a2b8; }
+        .stat-concluido { color: #28a745; }
+        .stat-erro { color: #dc3545; }
+
+        .queue-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            position: relative;
+        }
+
+        .queue-item.processando {
+            border-left: 4px solid #17a2b8;
+        }
+
+        .queue-item.concluido {
+            border-left: 4px solid #28a745;
+        }
+
+        .queue-item.erro {
+            border-left: 4px solid #dc3545;
+        }
+
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .queue-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pendente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processando {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-concluido {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-erro {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .badge {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-shopping-cart"></i>
+                Pedidos e Fila de Processamento
+            </h1>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Seção de Pedidos -->
+            <div class="section">
+                <h2>
+                    <i class="fas fa-list"></i>
+                    Pedidos
+                </h2>
+
+                <!-- Filtros -->
+                <div class="filters">
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="">Todos</option>
+                            <option value="Em Análise">Em Análise</option>
+                            <option value="Aguardando Pagamento">Aguardando Pagamento</option>
+                            <option value="Em Trânsito">Em Trânsito</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataInicial">Data Inicial</label>
+                        <input type="date" id="dataInicial">
+                    </div>
+                    <div class="form-group">
+                        <label for="dataFinal">Data Final</label>
+                        <input type="date" id="dataFinal">
+                    </div>
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" onclick="buscarPedidos()">
+                            <i class="fas fa-search"></i>
+                            Buscar Pedidos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Pedidos -->
+                <div id="listaPedidos">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Clique em "Buscar Pedidos" para carregar as reversas</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção da Fila -->
+            <div class="section">
+                <h2>
+                    <i class="fas fa-tasks"></i>
+                    Fila de Processamento
+                </h2>
+
+                <!-- Estatísticas -->
+                <div class="queue-stats">
+                    <div class="stat-card">
+                        <div class="stat-number stat-pendente" id="pendenteCount">0</div>
+                        <div class="stat-label">Pendentes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number stat-processando" id="processandoCount">0</div>
+                        <div class="stat-label">Processando</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number stat-concluido" id="concluidoCount">0</div>
+                        <div class="stat-label">Concluídos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number stat-erro" id="erroCount">0</div>
+                        <div class="stat-label">Erros</div>
+                    </div>
+                </div>
+
+                <!-- Controles da Fila -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn btn-success" onclick="adicionarSelecionadosAFila()">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Selecionados
+                    </button>
+                    <button class="btn btn-primary" onclick="startProcessing()">
+                        <i class="fas fa-play"></i>
+                        Iniciar Processamento
+                    </button>
+                    <button class="btn btn-secondary" onclick="pauseProcessing()">
+                        <i class="fas fa-pause"></i>
+                        Pausar
+                    </button>
+                    <button class="btn btn-danger" onclick="clearQueue()">
+                        <i class="fas fa-trash"></i>
+                        Limpar Fila
+                    </button>
+                </div>
+
+                <!-- Lista da Fila -->
+                <div id="listaFila">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Nenhum item na fila de processamento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.BACKEND_BASE_URL = window.BACKEND_BASE_URL || 'https://app-integracao-troquecommerce-x-mil-iota.vercel.app';
+
+        // Estado global
+        const state = {
+            pedidos: [],
+            pedidoAtual: null,
+            selectedPedidos: new Set(),
+            fila: [],
+            processando: false
+        };
+
+        // Funções de alerta
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            alertContainer.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Buscar pedidos
+        async function buscarPedidos() {
+            const status = document.getElementById('status').value;
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+            
+            const listaPedidos = document.getElementById('listaPedidos');
+            listaPedidos.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Buscando pedidos...</p></div>';
+            
+            try {
+                const config = {
+                    baseUrl: 'https://www.troquecommerce.com.br',
+                    token: 'a7bf11c0-ef38-45b3-b336-9009df528385'
+                };
+                
+                const response = await fetch(`${window.BACKEND_BASE_URL}/api/troquecommerce/order-list`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        status: status || undefined,
+                        start_date: dataInicial || undefined,
+                        end_date: dataFinal || undefined,
+                        unchecked_by_integration: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                const pedidos = data.list || data.data || data.orders || [];
+                
+                if (pedidos.length === 0) {
+                    listaPedidos.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Nenhuma reversa encontrada com os filtros selecionados.</p>
+                        </div>
+                    `;
+                    showAlert('Nenhuma reversa encontrada', 'warning');
+                    return;
+                }
+                
+                state.pedidos = pedidos;
+                renderPedidos();
+                showAlert(`${pedidos.length} pedidos encontrados!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao buscar pedidos:', error);
+                listaPedidos.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Erro ao buscar pedidos: ${error.message}</p>
+                    </div>
+                `;
+                showAlert('Erro ao buscar pedidos: ' + error.message, 'error');
+            }
+        }
+
+        // Renderizar pedidos
+        function renderPedidos() {
+            const listaPedidos = document.getElementById('listaPedidos');
+            
+            if (state.pedidos.length === 0) {
+                listaPedidos.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhum pedido encontrado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            listaPedidos.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <label for="selectAll"><strong>Selecionar Todos</strong></label>
+                    </div>
+                    <span class="badge">${state.selectedPedidos.size} selecionados</span>
+                </div>
+                <div style="display: grid; gap: 15px;">
+                    ${state.pedidos.map(pedido => `
+                        <div class="pedido-item">
+                            <div class="pedido-header">
+                                <div class="checkbox-wrapper">
+                                    <input type="checkbox" name="pedidoSelecionado" value="${pedido.id}" onchange="togglePedidoSelection('${pedido.id}')">
+                                    <div>
+                                        <strong>${pedido.ecommerce_number}</strong>
+                                        <div style="color: #666; font-size: 12px;">${pedido.client?.name || 'Cliente não informado'}</div>
+                                    </div>
+                                </div>
+                                <span class="queue-status status-${pedido.status?.toLowerCase().replace(' ', '-')}">
+                                    ${pedido.status || 'Sem status'}
+                                </span>
+                            </div>
+                            <div class="pedido-info">
+                                <div>
+                                    <span>Data:</span>
+                                    <strong>${new Date(pedido.created_at).toLocaleDateString('pt-BR')}</strong>
+                                </div>
+                                <div>
+                                    <span>Valor:</span>
+                                    <strong>R$ ${(pedido.price || 0).toFixed(2)}</strong>
+                                </div>
+                                <div>
+                                    <span>Tipo:</span>
+                                    <strong>${pedido.reverse_type || 'Não informado'}</strong>
+                                </div>
+                            </div>
+                            <div class="pedido-actions">
+                                <button class="btn btn-primary btn-sm" onclick="verDetalhes('${pedido.id}')">
+                                    <i class="fas fa-eye"></i>
+                                    Ver Detalhes
+                                </button>
+                                <button class="btn btn-success btn-sm" onclick="adicionarIndividualAFila('${pedido.id}')">
+                                    <i class="fas fa-plus"></i>
+                                    Adicionar à Fila
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Toggle seleção de todos
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('input[name="pedidoSelecionado"]');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const pedidoId = checkbox.value;
+                if (selectAll.checked) {
+                    state.selectedPedidos.add(pedidoId);
+                } else {
+                    state.selectedPedidos.delete(pedidoId);
+                }
+            });
+            
+            updateSelectedCount();
+        }
+
+        // Toggle seleção individual
+        function togglePedidoSelection(pedidoId) {
+            if (state.selectedPedidos.has(pedidoId)) {
+                state.selectedPedidos.delete(pedidoId);
+            } else {
+                state.selectedPedidos.add(pedidoId);
+            }
+            updateSelectedCount();
+        }
+
+        // Atualizar contador de selecionados
+        function updateSelectedCount() {
+            const badge = document.querySelector('.badge');
+            if (badge) {
+                badge.textContent = `${state.selectedPedidos.size} selecionados`;
+            }
+        }
+
+        // Ver detalhes
+        async function verDetalhes(pedidoId) {
+            try {
+                const config = {
+                    baseUrl: 'https://www.troquecommerce.com.br',
+                    token: 'a7bf11c0-ef38-45b3-b336-9009df528385'
+                };
+                
+                const response = await fetch(`${window.BACKEND_BASE_URL}/api/troquecommerce/order-detail`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        baseUrl: config.baseUrl,
+                        token: config.token,
+                        id: pedidoId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+
+                const detalhes = await response.json();
+                state.pedidoAtual = detalhes;
+                
+                // Mostrar detalhes em um modal ou expandir o item
+                alert(`Detalhes do pedido ${pedido.ecommerce_number}:\n\n` + 
+                      `Cliente: ${detalhes.client?.name}\n` +
+                      `Status: ${detalhes.status}\n` +
+                      `Produtos: ${detalhes.products?.length || 0} itens`);
+                
+            } catch (error) {
+                console.error('Erro ao buscar detalhes:', error);
+                showAlert('Erro ao buscar detalhes: ' + error.message, 'error');
+            }
+        }
+
+        // Adicionar selecionados à fila
+        async function adicionarSelecionadosAFila() {
+            if (state.selectedPedidos.size === 0) {
+                showAlert('Nenhum pedido selecionado.', 'warning');
+                return;
+            }
+
+            let adicionados = 0;
+            let erros = 0;
+
+            for (const pedidoId of state.selectedPedidos) {
+                try {
+                    await adicionarIndividualAFila(pedidoId);
+                    adicionados++;
+                } catch (error) {
+                    console.error(`Erro ao adicionar pedido ${pedidoId}:`, error);
+                    erros++;
+                }
+            }
+
+            // Limpar seleção
+            state.selectedPedidos.clear();
+            document.getElementById('selectAll').checked = false;
+            updateSelectedCount();
+            renderPedidos();
+
+            if (adicionados > 0) {
+                showAlert(`${adicionados} pedido(s) adicionado(s) à fila com sucesso${erros > 0 ? ` e ${erros} erro(s)` : ''}.`, erros > 0 ? 'warning' : 'success');
+            } else {
+                showAlert('Não foi possível adicionar nenhum pedido à fila.', 'error');
+            }
+        }
+
+        // Adicionar individual à fila
+        async function adicionarIndividualAFila(pedidoId) {
+            const pedido = state.pedidos.find(p => p.id === pedidoId);
+            if (!pedido) {
+                throw new Error('Pedido não encontrado');
+            }
+
+            // Buscar detalhes completos para obter produtos
+            const config = {
+                baseUrl: 'https://www.troquecommerce.com.br',
+                token: 'a7bf11c0-ef38-45b3-b336-9009df528385'
+            };
+            
+            const response = await fetch(`${window.BACKEND_BASE_URL}/api/troquecommerce/order-detail`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    baseUrl: config.baseUrl,
+                    token: config.token,
+                    id: pedidoId
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+            }
+
+            const detalhes = await response.json();
+            
+            // Preparar item para a fila
+            const filaItem = {
+                id: Date.now() + Math.random(),
+                pedidoId: pedidoId,
+                pedidoNumero: pedido.ecommerce_number,
+                status: 'pendente',
+                priority: 'medium',
+                addedAt: new Date().toISOString(),
+                startedAt: null,
+                completedAt: null,
+                attempts: 0,
+                error: null,
+                response: null,
+                body: {
+                    vitrine: 101,
+                    faturar: 'A',
+                    autorizar_nfe: 'T',
+                    tipo_autorizacao_troca: 3,
+                    produtos: [],
+                    nota: parseInt(pedidoId.toString().replace(/\D/g, '')) || 366,
+                    saida: 20577,
+                    cod_endereco: 24002,
+                    tipo_pgto_credito: 120,
+                    troca_pelo_valor_bruto: 'T',
+                    pedido: pedidoId,
+                    data: new Date().toISOString().split('T')[0],
+                    hora: new Date().toTimeString().split(' ')[0],
+                    usuario: 'integracao'
+                }
+            };
+
+            // Adicionar produtos se encontrados
+            if (detalhes.products && detalhes.products.length > 0) {
+                filaItem.body.produtos = detalhes.products.map(produto => ({
+                    quantidade: parseInt(produto.quantity) || 1,
+                    preco: parseFloat(produto.price) || 0.01,
+                    barra: produto.sku || produto.ecommerce_product_id || "07300230816192"
+                }));
+            } else {
+                // Produto padrão
+                filaItem.body.produtos = [{
+                    quantidade: 1.00,
+                    preco: 0.01,
+                    barra: "07300230816192"
+                }];
+            }
+
+            // Adicionar à fila
+            state.fila.push(filaItem);
+            saveFila();
+            renderFila();
+            updateStats();
+        }
+
+        // Renderizar fila
+        function renderFila() {
+            const listaFila = document.getElementById('listaFila');
+            
+            if (state.fila.length === 0) {
+                listaFila.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Nenhum item na fila de processamento</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listaFila.innerHTML = state.fila.map(item => `
+                <div class="queue-item ${item.status}">
+                    <div class="queue-header">
+                        <div>
+                            <strong>${item.pedidoNumero || item.pedidoId}</strong>
+                            <div style="color: #666; font-size: 12px;">
+                                Adicionado em ${new Date(item.addedAt).toLocaleString('pt-BR')}
+                            </div>
+                        </div>
+                        <span class="queue-status status-${item.status}">
+                            ${getStatusText(item.status)}
+                        </span>
+                    </div>
+                    
+                    ${item.status === 'processando' ? '<div class="progress-bar"><div class="progress-fill" style="width: 50%;"></div></div>' : ''}
+                    
+                    <div style="font-size: 14px; margin: 10px 0;">
+                        <strong>Produtos:</strong> ${item.body.produtos?.length || 0} itens
+                    </div>
+                    
+                    ${item.error ? `<div style="color: #dc3545; font-size: 12px; margin: 5px 0;">Erro: ${item.error}</div>` : ''}
+                    
+                    <div class="queue-actions">
+                        ${item.status === 'pendente' ? `
+                            <button class="btn btn-danger btn-sm" onclick="removeFromQueue('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                                Remover
+                            </button>
+                        ` : ''}
+                        ${item.status === 'erro' ? `
+                            <button class="btn btn-primary btn-sm" onclick="retryItem('${item.id}')">
+                                <i class="fas fa-redo"></i>
+                                Tentar Novamente
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Obter texto do status
+        function getStatusText(status) {
+            const statusMap = {
+                'pendente': 'Pendente',
+                'processando': 'Processando',
+                'concluido': 'Concluído',
+                'erro': 'Erro'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Remover da fila
+        function removeFromQueue(itemId) {
+            state.fila = state.fila.filter(item => item.id !== itemId);
+            saveFila();
+            renderFila();
+            updateStats();
+            showAlert('Item removido da fila', 'success');
+        }
+
+        // Tentar novamente
+        function retryItem(itemId) {
+            const item = state.fila.find(i => i.id === itemId);
+            if (item) {
+                item.status = 'pendente';
+                item.error = null;
+                item.attempts = 0;
+                saveFila();
+                renderFila();
+                updateStats();
+                
+                if (!state.processando) {
+                    processNextItem();
+                }
+            }
+        }
+
+        // Iniciar processamento
+        async function startProcessing() {
+            if (state.processando) {
+                showAlert('Processamento já está em andamento', 'warning');
+                return;
+            }
+
+            state.processando = true;
+            updateProcessingButton();
+            processNextItem();
+        }
+
+        // Pausar processamento
+        function pauseProcessing() {
+            state.processando = false;
+            updateProcessingButton();
+            showAlert('Processamento pausado', 'info');
+        }
+
+        // Limpar fila
+        function clearQueue() {
+            if (confirm('Tem certeza que deseja limpar toda a fila?')) {
+                state.fila = [];
+                saveFila();
+                renderFila();
+                updateStats();
+                showAlert('Fila limpa com sucesso', 'success');
+            }
+        }
+
+        // Processar próximo item
+        async function processNextItem() {
+            if (!state.processando) return;
+
+            const item = state.fila.find(i => i.status === 'pendente');
+            if (!item) {
+                state.processando = false;
+                updateProcessingButton();
+                showAlert('Todos os itens foram processados!', 'success');
+                return;
+            }
+
+            await processItem(item);
+        }
+
+        // Processar item
+        async function processItem(item) {
+            item.status = 'processando';
+            item.startedAt = new Date().toISOString();
+            item.attempts++;
+            
+            renderFila();
+            updateStats();
+            
+            try {
+                // Credenciais corretas
+                const username = 'integracao';
+                const password = '@5z5u2hmc4u';
+                const baseUrl = 'http://179.124.195.107:6017';
+                const authHeader = 'Basic ' + btoa(`${username}:${password}`);
+                
+                console.log('🔐 Processando item:', item.pedidoId);
+                console.log('📦 Payload:', item.body);
+                
+                const response = await fetch(`${baseUrl}/api/millenium_eco/troca_devolucao/inclui`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(item.body)
+                });
+                
+                const text = await response.text();
+                console.log('📊 Status:', response.status);
+                console.log('📄 Response:', text);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                }
+                
+                item.status = 'concluido';
+                item.completedAt = new Date().toISOString();
+                item.response = text;
+                
+                showAlert(`✅ Pedido ${item.pedidoNumero || item.pedidoId} processado com sucesso!`, 'success');
+                
+            } catch (error) {
+                console.error('Erro ao processar item:', error);
+                item.status = 'erro';
+                item.error = error.message;
+                item.completedAt = new Date().toISOString();
+                
+                showAlert(`❌ Erro ao processar pedido ${item.pedidoNumero || item.pedidoId}: ${error.message}`, 'error');
+            }
+            
+            saveFila();
+            renderFila();
+            updateStats();
+            
+            // Processar próximo item
+            setTimeout(() => {
+                processNextItem();
+            }, 1000);
+        }
+
+        // Atualizar botão de processamento
+        function updateProcessingButton() {
+            const btn = document.querySelector('.btn-success');
+            if (btn) {
+                if (state.processando) {
+                    btn.innerHTML = '<i class="fas fa-pause"></i> Pausar';
+                    btn.onclick = pauseProcessing;
+                    btn.className = 'btn btn-secondary';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-play"></i> Iniciar Processamento';
+                    btn.onclick = startProcessing;
+                    btn.className = 'btn btn-success';
+                }
+            }
+        }
+
+        // Atualizar estatísticas
+        function updateStats() {
+            const pendentes = state.fila.filter(i => i.status === 'pendente').length;
+            const processando = state.fila.filter(i => i.status === 'processando').length;
+            const concluidos = state.fila.filter(i => i.status === 'concluido').length;
+            const erros = state.fila.filter(i => i.status === 'erro').length;
+            
+            document.getElementById('pendenteCount').textContent = pendentes;
+            document.getElementById('processandoCount').textContent = processando;
+            document.getElementById('concluidoCount').textContent = concluidos;
+            document.getElementById('erroCount').textContent = erros;
+        }
+
+        // Salvar fila no localStorage
+        function saveFila() {
+            localStorage.setItem('troque_devolucao_fila', JSON.stringify(state.fila));
+            localStorage.setItem('fila_troca_devolucao', JSON.stringify(state.fila));
+        }
+
+        // Carregar fila do localStorage
+        function loadFila() {
+            const savedFila = localStorage.getItem('troque_devolucao_fila');
+            if (savedFila) {
+                try {
+                    state.fila = JSON.parse(savedFila);
+                    renderFila();
+                    updateStats();
+                } catch (error) {
+                    console.error('Erro ao carregar fila:', error);
+                }
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFila();
+            console.log('✅ Página de Pedidos e Fila carregada!');
+        });
+    </script>
+</body>
+</html>
