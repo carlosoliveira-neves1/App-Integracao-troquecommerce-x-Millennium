@@ -276,6 +276,13 @@
     </div>
 
     <script>
+        // Estado global da aplicação
+        const state = {
+            pedidos: [],
+            pedidoAtual: null,
+            selectedReversas: new Set()
+        };
+        
         // Funções de alerta
         function showAlert(message, type = 'success') {
             const alertContainer = document.getElementById('alertContainer');
