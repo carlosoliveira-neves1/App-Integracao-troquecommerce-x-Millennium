@@ -638,7 +638,7 @@
                         });
                     });
                     
-                    // Tentar encontrar correspondência
+                    // Encontrar pedido correspondente
                     const pedidoEncontrado = dataTodos.find(p => 
                         p.N_PEDIDO_CLIENTE === numeroPedido ||
                         p.COD_PEDIDOV === numeroPedido ||
@@ -646,14 +646,19 @@
                         p.N_PEDIDO_CLIENTE?.includes(numeroPedido) ||
                         numeroPedido.includes(p.N_PEDIDO_CLIENTE)
                     );
-                    
+
                     if (pedidoEncontrado) {
+                        console.log('✅ Pedido encontrado no Millennium:', pedidoEncontrado);
+                        
+                        // Retornar dados usando COD_PEDIDOV como código de saída
                         const dados = {
-                            codigoSaida: pedidoEncontrado.PEDIDOV || 20577,
-                            notaFiscal: pedidoEncontrado.NF || 366,
+                            codigoSaida: pedidoEncontrado.COD_PEDIDOV || pedidoEncontrado.PEDIDOV || 20577,
+                            nota: pedidoEncontrado.NF || 366,
                             codigoPedido: pedidoEncontrado.COD_PEDIDOV,
+                            numeroCliente: pedidoEncontrado.N_PEDIDO_CLIENTE,
+                            pedidov: pedidoEncontrado.PEDIDOV,
                             numeroObjeto: pedidoEncontrado.NUMERO_OBJETO,
-                            numeroCliente: pedidoEncontrado.N_PEDIDO_CLIENTE
+                            dadosCompletos: pedidoEncontrado
                         };
                         
                         // Armazenar dados globalmente
@@ -667,14 +672,18 @@
                             <div style="background: #d4edda; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb;">
                                 <h4 style="color: #155724; margin: 0 0 10px 0;">✅ Pedido Encontrado!</h4>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
-                                    <div><strong>Código Saída:</strong> ${dados.codigoSaida}</div>
+                                    <div><strong>Código Saída (COD_PEDIDOV):</strong> ${dados.codigoSaida}</div>
                                     <div><strong>Nota Fiscal:</strong> ${dados.notaFiscal}</div>
                                     <div><strong>Código Pedido:</strong> ${dados.codigoPedido || 'N/A'}</div>
-                                    <div><strong>Número Cliente:</strong> ${dados.numeroCliente}</div>
+                                    <div><strong>Número Cliente (N_PEDIDO_CLIENTE):</strong> ${dados.numeroCliente}</div>
+                                    <div><strong>PEDIDOV:</strong> ${dados.pedidov || 'N/A'}</div>
                                     <div><strong>Objeto:</strong> ${dados.numeroObjeto || 'N/A'}</div>
                                 </div>
                                 <div style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 12px;">
-                                    <strong>Debug:</strong> Encontrado usando busca ampla e correspondência flexível
+                                    <strong>Mapeamento:</strong><br>
+                                    • ecommerce_number → N_PEDIDO_CLIENTE<br>
+                                    • COD_PEDIDOV → código de saída<br>
+                                    • PEDIDOV → código interno
                                 </div>
                             </div>
                         `;
